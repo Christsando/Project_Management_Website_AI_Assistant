@@ -54,7 +54,7 @@
                         </div>
 
                         <div class="flex items-center justify-end mt-12">
-                            <x-primary-button class="w-full justify-center h-10 bg-important">
+                            <x-primary-button class="w-full justify-center h-10">
                                 {{ __('Log in') }}
                             </x-primary-button>
                         </div>

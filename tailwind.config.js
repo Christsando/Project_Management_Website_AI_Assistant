@@ -13,11 +13,19 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                playfair: ['"Playfair Display"', 'serif'],
+                lato: ['"Lato"', 'sans-serif'],
             },
             colors: {
                 important: '#F59E0B',
+                importantHover: '#d28a0c',
+
                 primary: '#3B82F6',
-                secondarytext: '#64748B',
+
+                primaryText: '#1E293B',
+                secondaryText: '#64748B',
+
+                cardSection: '#F6F6F6',
             },
         },
     },

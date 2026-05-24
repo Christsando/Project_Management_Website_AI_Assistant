@@ -81,4 +81,28 @@ class Project extends Model
     {
         return $this->hasMany(TimelineItem::class, 'project_id');
     }
+
+    /**
+     * Get the budget plan associated with the project.
+     */
+    public function budgetPlan(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(BudgetPlan::class, 'project_id');
+    }
+
+    /**
+     * Get the human resource plan associated with the project.
+     */
+    public function humanResourcePlan(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(HumanResourcePlan::class, 'project_id');
+    }
+
+    /**
+     * Get the risk plan associated with the project.
+     */
+    public function riskPlan(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(RiskManagementPlan::class, 'project_id');
+    }
 }

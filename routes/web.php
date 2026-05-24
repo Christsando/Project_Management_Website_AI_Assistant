@@ -8,6 +8,9 @@ use App\Http\Controllers\ProjectCharterController;
 use App\Http\Controllers\ProjectScopeController;
 use App\Http\Controllers\ProjectWbsController;
 use App\Http\Controllers\ProjectTimelineController;
+use App\Http\Controllers\ProjectBudgetController;
+use App\Http\Controllers\ProjectHumanResourceController;
+use App\Http\Controllers\ProjectRiskManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -82,6 +85,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/projects/{project}/timeline/{timelineItem}', [ProjectTimelineController::class, 'update'])->name('projects.timeline.update');
         Route::delete('/projects/{project}/timeline/{timelineItem}', [ProjectTimelineController::class, 'destroy'])->name('projects.timeline.destroy');
         Route::post('/projects/{project}/timeline/finalize', [ProjectTimelineController::class, 'finalize'])->name('projects.timeline.finalize');
+
+        // Project Budget routes
+        Route::get('/project-planning/budget', [ProjectBudgetController::class, 'index'])->name('project-planning.budget.index');
+        Route::get('/projects/{project}/budget', [ProjectBudgetController::class, 'show'])->name('projects.budget.show');
+        Route::get('/projects/{project}/budget/create', [ProjectBudgetController::class, 'create'])->name('projects.budget.create');
+        Route::post('/projects/{project}/budget', [ProjectBudgetController::class, 'store'])->name('projects.budget.store');
+        Route::get('/projects/{project}/budget/edit', [ProjectBudgetController::class, 'edit'])->name('projects.budget.edit');
+        Route::put('/projects/{project}/budget', [ProjectBudgetController::class, 'update'])->name('projects.budget.update');
+        Route::post('/projects/{project}/budget/items', [ProjectBudgetController::class, 'addItem'])->name('projects.budget.items.add');
+        Route::put('/projects/{project}/budget/items/{budgetItem}', [ProjectBudgetController::class, 'updateItem'])->name('projects.budget.items.update');
+        Route::delete('/projects/{project}/budget/items/{budgetItem}', [ProjectBudgetController::class, 'deleteItem'])->name('projects.budget.items.delete');
+        Route::post('/projects/{project}/budget/finalize', [ProjectBudgetController::class, 'finalize'])->name('projects.budget.finalize');
+
+        // Project Human Resource routes
+        Route::get('/project-planning/human-resource', [ProjectHumanResourceController::class, 'index'])->name('project-planning.human-resource.index');
+        Route::get('/projects/{project}/human-resource', [ProjectHumanResourceController::class, 'show'])->name('projects.human-resource.show');
+        Route::get('/projects/{project}/human-resource/create', [ProjectHumanResourceController::class, 'create'])->name('projects.human-resource.create');
+        Route::post('/projects/{project}/human-resource', [ProjectHumanResourceController::class, 'store'])->name('projects.human-resource.store');
+        Route::get('/projects/{project}/human-resource/edit', [ProjectHumanResourceController::class, 'edit'])->name('projects.human-resource.edit');
+        Route::put('/projects/{project}/human-resource', [ProjectHumanResourceController::class, 'update'])->name('projects.human-resource.update');
+        Route::post('/projects/{project}/human-resource/items', [ProjectHumanResourceController::class, 'addItem'])->name('projects.human-resource.items.add');
+        Route::put('/projects/{project}/human-resource/items/{humanResourceItem}', [ProjectHumanResourceController::class, 'updateItem'])->name('projects.human-resource.items.update');
+        Route::delete('/projects/{project}/human-resource/items/{humanResourceItem}', [ProjectHumanResourceController::class, 'deleteItem'])->name('projects.human-resource.items.delete');
+        Route::post('/projects/{project}/human-resource/finalize', [ProjectHumanResourceController::class, 'finalize'])->name('projects.human-resource.finalize');
+
+        // Project Risk Management routes
+        Route::get('/project-planning/risk-management', [ProjectRiskManagementController::class, 'index'])->name('project-planning.risk-management.index');
+        Route::get('/projects/{project}/risk-management', [ProjectRiskManagementController::class, 'show'])->name('projects.risk-management.show');
+        Route::get('/projects/{project}/risk-management/create', [ProjectRiskManagementController::class, 'create'])->name('projects.risk-management.create');
+        Route::post('/projects/{project}/risk-management', [ProjectRiskManagementController::class, 'store'])->name('projects.risk-management.store');
+        Route::get('/projects/{project}/risk-management/edit', [ProjectRiskManagementController::class, 'edit'])->name('projects.risk-management.edit');
+        Route::put('/projects/{project}/risk-management', [ProjectRiskManagementController::class, 'update'])->name('projects.risk-management.update');
+        Route::post('/projects/{project}/risk-management/items', [ProjectRiskManagementController::class, 'addItem'])->name('projects.risk-management.items.add');
+        Route::put('/projects/{project}/risk-management/items/{riskItem}', [ProjectRiskManagementController::class, 'updateItem'])->name('projects.risk-management.items.update');
+        Route::delete('/projects/{project}/risk-management/items/{riskItem}', [ProjectRiskManagementController::class, 'deleteItem'])->name('projects.risk-management.items.delete');
+        Route::post('/projects/{project}/risk-management/generate-ai', [ProjectRiskManagementController::class, 'generateAi'])->name('projects.risk-management.generate_ai');
+        Route::post('/projects/{project}/risk-management/finalize', [ProjectRiskManagementController::class, 'finalize'])->name('projects.risk-management.finalize');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

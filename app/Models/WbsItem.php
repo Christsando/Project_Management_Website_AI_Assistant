@@ -83,4 +83,20 @@ class WbsItem extends Model
     {
         return $this->hasOne(TimelineItem::class, 'wbs_item_id');
     }
+
+    /**
+     * Get the human resource items assigned to this WBS task.
+     */
+    public function humanResourceItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(HumanResourceItem::class, 'wbs_item_id');
+    }
+
+    /**
+     * Get the risk items associated with this WBS task.
+     */
+    public function riskItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RiskItem::class, 'related_wbs_item_id');
+    }
 }

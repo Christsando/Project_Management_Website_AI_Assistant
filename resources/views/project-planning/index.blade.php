@@ -75,25 +75,36 @@
                 </div>
 
                 <!-- Resource & Budget Card -->
-                <div class="bg-white p-6 rounded-xl border border-[#e3e3e0] shadow-sm flex flex-col justify-between">
+                <div class="bg-white p-6 rounded-xl border border-[#e3e3e0] shadow-sm flex flex-col justify-between hover:border-primary/50 transition">
                     <div>
                         <div class="flex items-center gap-3 mb-3">
                             <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                                <i class="fas fa-users-cog text-lg"></i>
+                                <i class="fas fa-wallet text-lg"></i>
                             </div>
-                            <h4 class="font-semibold text-lg text-primaryText">{{ __('Resources & Budget') }}</h4>
+                            <h4 class="font-semibold text-lg text-primaryText">{{ __('Resource & Budget') }}</h4>
                         </div>
                         <p class="text-sm text-secondaryText mb-4">{{ __('Alokasikan tim pelaksana (HR), atur penanggung jawab (PIC), dan susun rencana anggaran belanja proyek.') }}</p>
                     </div>
-                    <div>
-                        <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                            {{ __('Under Development') }}
+                    <div class="flex items-center justify-between mt-4">
+                        <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-green-50 text-green-800 border border-green-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            {{ __('Aktif') }}
                         </span>
+                        <div class="flex flex-col items-end gap-1">
+                            @if(in_array(strtolower(Auth::user()->role), ['manager', 'pmo', 'project management officer']))
+                                <a href="{{ route('project-planning.human-resource.index') }}" class="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1">
+                                    {{ __('HR Planning') }} <i class="fas fa-arrow-right text-[10px]"></i>
+                                </a>
+                                <a href="{{ route('project-planning.budget.index') }}" class="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1">
+                                    {{ __('Budget Planning') }} <i class="fas fa-arrow-right text-[10px]"></i>
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
                 <!-- Risk Management Card -->
-                <div class="bg-white p-6 rounded-xl border border-[#e3e3e0] shadow-sm flex flex-col justify-between">
+                <div class="bg-white p-6 rounded-xl border border-[#e3e3e0] shadow-sm flex flex-col justify-between hover:border-primary/50 transition">
                     <div>
                         <div class="flex items-center gap-3 mb-3">
                             <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
@@ -103,10 +114,16 @@
                         </div>
                         <p class="text-sm text-secondaryText mb-4">{{ __('Identifikasi daftar potensi risiko proyek, tentukan kategori dampak, dan susun matriks rencana mitigasi.') }}</p>
                     </div>
-                    <div>
-                        <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                            {{ __('Under Development') }}
+                    <div class="flex items-center justify-between mt-4">
+                        <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-green-50 text-green-800 border border-green-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            {{ __('Aktif') }}
                         </span>
+                        @if(in_array(strtolower(Auth::user()->role), ['manager', 'pmo', 'project management officer']))
+                            <a href="{{ route('project-planning.risk-management.index') }}" class="text-sm text-primary hover:underline font-medium inline-flex items-center gap-1">
+                                {{ __('Buka') }} <i class="fas fa-arrow-right text-xs"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

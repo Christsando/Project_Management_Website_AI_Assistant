@@ -167,6 +167,101 @@ EOT;
     }
 
     /**
+     * Generate suggestions for Project Risk Management using OpenRouter API.
+     *
+     * @param Project $project
+     * @return string
+     * @throws Exception
+     */
+    public function generateRiskManagementSuggestions(Project $project): string
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(180);
+        }
+
+        $apiKey = config('services.openrouter.api_key');
+        $baseUrl = config('services.openrouter.base_url', 'https://openrouter.ai/api/v1');
+        $model = config('services.openrouter.model', 'openai/gpt-oss-20b:free');
+
+        if (empty($apiKey)) {
+            Log::error('OpenRouter API key is missing or not configured.');
+            throw new Exception('API Key OpenRouter belum dikonfigurasi. Silakan periksa file .env Anda.');
+        }
+
+        $scope = $project->scope;
+        $scopeText = $scope ? sprintf(
+            "Objective: %s\nDescription: %s\nIn Scope: %s\nDeliverables: %s\nConstraints: %s",
+            $scope->objective,
+            $scope->scope_description,
+            $scope->in_scope,
+            $scope->deliverables,
+            $scope->constraints
+        ) : "Belum diisi.";
+
+        $wbsCount = $project->wbsItems()->count();
+        $wbsItemsText = $project->wbsItems()->take(15)->pluck('title')->implode(', ');
+        $wbsContext = "Total WBS: {$wbsCount} items. Contoh item: {$wbsItemsText}.";
+
+        $timelineCount = $project->timelineItems()->count();
+        $timelineContext = "Total Timeline Items: {$timelineCount} tasks scheduled.";
+
+        $totalBudget = $project->budgetPlan ? number_format($project->budgetPlan->total_budget, 2) : '0.00';
+        $budgetContext = "Total Budget RAB: {$totalBudget}";
+
+        $hrPlan = $project->humanResourcePlan;
+        $hrRoles = $hrPlan ? $hrPlan->humanResourceItems()->pluck('role_name')->unique()->implode(', ') : '-';
+        $hrCount = $hrPlan ? $hrPlan->humanResourceItems()->sum('quantity') : 0;
+        $hrContext = "Total SDM: {$hrCount} orang. Peran utama: {$hrRoles}.";
+
+        $prompt = <<<EOT
+Anda adalah AI Asisten Manajemen Risiko Proyek. Bantu PMO (Project Management Officer) menganalisis potensi risiko proyek berdasarkan konteks proyek berikut:
+
+Nama Proyek: {$project->title}
+Deskripsi Proyek: {$project->description}
+
+Konteks Scope Proyek:
+{$scopeText}
+
+Konteks WBS Proyek:
+{$wbsContext}
+
+Konteks Jadwal (Timeline):
+{$timelineContext}
+
+Konteks Anggaran (Budget):
+{$budgetContext}
+
+Konteks Sumber Daya Manusia (HR):
+{$hrContext}
+
+Tolong berikan draf rekomendasi minimal 3 potensi risiko utama untuk proyek ini beserta rencana penanganannya.
+Anda WAJIB menjawab HANYA dalam format JSON valid berupa array dari objek dengan struktur persis seperti berikut:
+[
+  {
+    "risk_title": "Judul Risiko...",
+    "risk_description": "Deskripsi potensi risiko secara detail...",
+    "risk_cause": "Faktor penyebab risiko terjadi...",
+    "impact": "Dampak risiko terhadap biaya/waktu/kualitas...",
+    "probability": "low/medium/high",
+    "severity": "low/medium/high",
+    "mitigation_plan": "Rencana tindakan preventif untuk meminimalisir peluang terjadinya risiko...",
+    "contingency_plan": "Rencana tindakan jika risiko tersebut benar-benar terjadi...",
+    "risk_owner": "Peran PIC/Pemilik Risiko (misal: Project Manager, Lead Developer)..."
+  }
+]
+
+ATURAN PENTING:
+1. JANGAN memberikan teks pembuka, penjelasan, atau penutup apa pun diluar JSON array. Kembalikan HANYA JSON array valid.
+2. Nilai untuk 'probability' dan 'severity' harus tepat berupa string lowercase salah satu dari: 'low', 'medium', atau 'high'.
+3. Jawab dalam Bahasa Indonesia formal dan profesional.
+4. Pastikan teks rekomendasi mudah dipahami, logis, dan siap digunakan atau disesuaikan.
+5. Pastikan semua tanda petik dua di dalam nilai teks di-escape dengan benar agar format JSON tidak rusak.
+EOT;
+
+        return $this->executeOpenRouterCall($prompt, $apiKey, $baseUrl, $model, $project->id);
+    }
+
+    /**
      * Reusable OpenRouter completion caller helper.
      *
      * @param string $prompt

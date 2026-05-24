@@ -22,7 +22,16 @@
             <!-- User detail -->
             <div class="font-lato tracking-wide">
                 <p class="text-sm">{{ Auth::user()->name }}</p>
-                <p class="text-xs text-secondaryText">{{ Auth::user()->email }}</p>
+                <div class="flex items-center gap-2">
+                    <p class="text-xs text-secondaryText">{{ Auth::user()->email }}</p>
+                    <span class="text-gray-300 text-xs">|</span>
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:underline inline-flex items-center gap-1 font-semibold">
+                            <i class="fas fa-sign-out-alt text-[10px]"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

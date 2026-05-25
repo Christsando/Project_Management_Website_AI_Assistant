@@ -24,17 +24,18 @@
 </head>
 
 <body class="font-sans antialiased bg-white">
-    <div class="flex min-h-screen p-4">
+    <div class="flex min-h-screen pl-4 py-4">
         <div class="w-60">
             @include('layouts.navigation')
         </div>
 
 
         <!-- Page Content -->
-        <main class="flex-1">
+        <main class="flex-1 px-4">
+
             <!-- Page Heading -->
             @isset($header)
-                <header class="pl-4">
+                <header>
                     {{ $header }}
                 </header>
             @endisset

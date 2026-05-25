@@ -3,63 +3,76 @@
         <x-header-component />
     </x-slot>
 
-    <div class="pl-4 pt-4">
-        <div class="bg-cardSection rounded-xl p-6 max-w-3xl mx-auto">
-            <!-- Header Section -->
-            <div class="mb-6">
-                <a href="{{ route('project-planning.risk-management.index') }}" class="inline-flex items-center text-xs font-semibold text-gray-500 hover:text-gray-800 mb-2 transition gap-1">
+    <div class="pl-4 pt-2 pb-12">
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-3xl mx-auto">
+            <!-- Back Navigation -->
+            <div class="mb-4">
+                <a href="{{ route('project-planning.risk-management.index') }}" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 transition gap-1.5">
                     <i class="fas fa-arrow-left"></i>
                     {{ __('Kembali ke Daftar') }}
                 </a>
-                <h2 class="font-semibold text-2xl text-primaryText leading-tight">
-                    {{ __('Inisialisasi Risk Management Plan') }}
-                </h2>
-                <h3 class="text-sm text-secondaryText mt-1">
-                    {{ __('Proyek:') }} <span class="font-bold text-primaryText">{{ $project->title }}</span>
-                </h3>
+            </div>
+
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-50 pb-5">
+                <div>
+                    <h2 class="font-extrabold text-2xl text-slate-800 leading-tight">
+                        {{ __('Inisialisasi Risk Management Plan') }}
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">
+                        {{ __('Buat draft perencanaan manajemen risiko untuk proyek ini.') }}
+                    </p>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-slate-400 font-medium">
+                        <span>{{ __('Proyek:') }}</span>
+                        <span class="font-bold text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{{ $project->title }}</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Form -->
-            <div class="bg-white rounded-xl border border-[#e3e3e0] shadow-sm p-6">
-                <form action="{{ route('projects.risk-management.store', $project->id) }}" method="POST">
-                    @csrf
+            <form action="{{ route('projects.risk-management.store', $project->id) }}" method="POST">
+                @csrf
 
-                    <!-- Info Alert -->
-                    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-xs flex items-start gap-2.5">
-                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
-                        <div>
-                            <span class="font-bold">{{ __('Informasi Inisialisasi:') }}</span>
-                            <p class="mt-0.5 text-secondaryText leading-relaxed">
-                                {{ __('Inisialisasi ini akan membuat draf Rencana Manajemen Risiko baru untuk proyek ini. Setelah diinisialisasi, Anda (PMO) dapat mulai memetakan potensi risiko proyek, menetapkan peluang (probability), keparahan (severity), pemilik risiko (risk owner), menautkannya dengan tugas WBS, serta memanfaatkan AI Assistant untuk memberikan rekomendasi risiko awal berdasarkan dokumen proyek yang sudah diselesaikan.') }}
-                            </p>
-                        </div>
+                <!-- Info Alert Card -->
+                <div class="mb-6 p-5 rounded-2xl bg-blue-600 text-white shadow-sm flex items-start gap-4">
+                    <div class="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <i class="fas fa-info-circle"></i>
                     </div>
+                    <div>
+                        <h4 class="text-sm font-bold">{{ __('Informasi Inisialisasi') }}</h4>
+                        <p class="text-xs text-blue-100 mt-1 leading-relaxed font-semibold">
+                            {{ __('Inisialisasi ini akan membuat draf Rencana Manajemen Risiko baru untuk proyek ini. Setelah diinisialisasi, Anda (PMO) dapat mulai memetakan potensi risiko proyek, menetapkan peluang (probability), keparahan (severity), pemilik risiko (risk owner), menautkannya dengan tugas WBS, serta memanfaatkan AI Assistant untuk memberikan rekomendasi risiko awal.') }}
+                        </p>
+                    </div>
+                </div>
 
-                    <!-- Notes -->
-                    <div class="mb-6">
-                        <label for="notes" class="block text-sm font-semibold text-primaryText mb-1.5">
-                            {{ __('Catatan Rencana Manajemen Risiko (Opsional)') }}
-                        </label>
-                        <textarea name="notes" id="notes" rows="4" 
-                                  class="w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 text-sm"
-                                  placeholder="Tuliskan catatan umum atau filosofi manajemen risiko untuk proyek ini di sini...">{{ old('notes') }}</textarea>
-                        @error('notes')
-                            <p class="text-rose-600 text-xs mt-1.5 font-medium">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <!-- Notes -->
+                <div class="mb-6">
+                    <label for="notes" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        {{ __('Catatan Rencana Manajemen Risiko (Opsional)') }}
+                    </label>
+                    <textarea name="notes" id="notes" rows="4" 
+                              class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50"
+                              placeholder="Tuliskan catatan umum atau filosofi manajemen risiko untuk proyek ini di sini...">{{ old('notes') }}</textarea>
+                    @error('notes')
+                        <p class="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
 
-                    <!-- Actions -->
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                        <a href="{{ route('project-planning.risk-management.index') }}" class="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm font-semibold transition">
-                            {{ __('Batal') }}
-                        </a>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg shadow-blue-500/10 transition flex items-center gap-1.5">
-                            <i class="fas fa-check"></i>
-                            {{ __('Inisialisasi Risk Plan') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
+                    <a href="{{ route('project-planning.risk-management.index') }}" class="px-4 py-2 border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl text-xs font-bold transition">
+                        {{ __('Batal') }}
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                        <i class="fas fa-check"></i>
+                        {{ __('Inisialisasi Risk Plan') }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </x-app-layout>

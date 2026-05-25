@@ -23,9 +23,9 @@
     <script href=""></script>
 </head>
 
-<body class="font-sans antialiased bg-white">
-    <div class="flex min-h-screen pl-4 py-4">
-        <div class="w-60">
+<body class="font-sans antialiased bg-[#F8FAFC]">
+    <div class="flex min-h-screen p-4">
+        <div class="w-60 shrink-0">
             @include('layouts.navigation')
         </div>
 

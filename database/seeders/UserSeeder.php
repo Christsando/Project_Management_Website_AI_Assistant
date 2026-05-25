@@ -15,18 +15,42 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Admin
-        User::create([
-            'name' => 'TeamIT',
-            'email' => 'teamit@psm.com',
-            'password' => Hash::make('teamit123'),
-            'role' => 'IT'
-        ]);
+        User::updateOrCreate(
+            ['email' => 'teamit@psm.com'],
+            [
+                'name' => 'TeamIT',
+                'password' => Hash::make('teamit123'),
+                'role' => 'IT'
+            ]
+        );
 
-        User::create([
-            'name' => 'PMO',
-            'email' => 'pmo@psm.com',
-            'password' => Hash::make('pmo123'),
-            'role' => 'Project Management Officer',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'pmo@psm.com'],
+            [
+                'name' => 'PMO',
+                'password' => Hash::make('pmo123'),
+                'role' => 'Project Management Officer',
+            ]
+        );
+
+        // Project Manager
+        User::updateOrCreate(
+            ['email' => 'pm@psm.com'],
+            [
+                'name' => 'Project Manager',
+                'password' => Hash::make('pm123'),
+                'role' => 'Project Manager',
+            ]
+        );
+
+        // Manager
+        User::updateOrCreate(
+            ['email' => 'manager@psm.com'],
+            [
+                'name' => 'Manager',
+                'password' => Hash::make('manager123'),
+                'role' => 'Manager',
+            ]
+        );
     }
 }

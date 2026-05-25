@@ -1,0 +1,120 @@
+<x-app-layout>
+    <x-slot name="header">
+        <x-header-component :title="'Ubah Item WBS'" icon="fa-solid fa-edit text-blue-600 text-lg" />
+    </x-slot>
+
+    <div class="px-4 py-2">
+        <div class="max-w-3xl mx-auto">
+            <!-- Breadcrumb Navigation -->
+            <div class="mb-6">
+                <a href="{{ route('projects.wbs.show', $project->id) }}" class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition gap-1.5">
+                    <i class="fas fa-arrow-left text-[10px]"></i>
+                    {{ __('Kembali ke WBS Proyek') }}
+                </a>
+            </div>
+
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ __('Ubah Item WBS') }}</h2>
+                <p class="text-xs text-slate-500 mt-1">
+                    {{ __('Proyek:') }} <span class="font-extrabold text-blue-600">{{ $project->title }}</span>
+                </p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <form action="{{ route('projects.wbs.update', [$project->id, $wbsItem->id]) }}" method="POST" id="wbsForm" class="space-y-6">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- WBS Title -->
+                    <div>
+                        <label for="title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">{{ __('Judul / Nama Tugas *') }}</label>
+                        <input type="text" name="title" id="title" value="{{ old('title', $wbsItem->title) }}"
+                               class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition duration-150 placeholder-slate-400" 
+                               placeholder="Tuliskan judul tugas atau bagian kerja..." required>
+                        @error('title')
+                            <p class="text-rose-500 text-[10px] font-bold mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- WBS Description -->
+                    <div>
+                        <label for="description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">{{ __('Deskripsi Pekerjaan *') }}</label>
+                        <textarea name="description" id="description" rows="4" 
+                                  class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition duration-150 placeholder-slate-400" 
+                                  placeholder="Jelaskan secara detail apa yang akan dikerjakan pada tugas ini..." required>{{ old('description', $wbsItem->description) }}</textarea>
+                        @error('description')
+                            <p class="text-rose-500 text-[10px] font-bold mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Deliverable -->
+                    <div>
+                        <label for="deliverable" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">{{ __('Hasil Kerja / Deliverable (Optional)') }}</label>
+                        <input type="text" name="deliverable" id="deliverable" value="{{ old('deliverable', $wbsItem->deliverable) }}"
+                               class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition duration-150 placeholder-slate-400" 
+                               placeholder="Hasil akhir fisik atau dokumen dari tugas ini...">
+                        @error('deliverable')
+                            <p class="text-rose-500 text-[10px] font-bold mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Priority -->
+                        <div>
+                            <label for="priority" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">{{ __('Prioritas Tugas *') }}</label>
+                            <select name="priority" id="priority" 
+                                    class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition duration-150">
+                                <option value="low" {{ old('priority', $wbsItem->priority) === 'low' ? 'selected' : '' }}>{{ __('Low (Rendah)') }}</option>
+                                <option value="medium" {{ old('priority', $wbsItem->priority) === 'medium' ? 'selected' : '' }}>{{ __('Medium (Sedang)') }}</option>
+                                <option value="high" {{ old('priority', $wbsItem->priority) === 'high' ? 'selected' : '' }}>{{ __('High (Tinggi)') }}</option>
+                            </select>
+                            @error('priority')
+                                <p class="text-rose-500 text-[10px] font-bold mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Estimated Duration -->
+                        <div>
+                            <label for="estimated_duration_days" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">{{ __('Estimasi Durasi (Hari) (Optional)') }}</label>
+                            <input type="number" name="estimated_duration_days" id="estimated_duration_days" min="1" value="{{ old('estimated_duration_days', $wbsItem->estimated_duration_days) }}"
+                                   class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition duration-150 placeholder-slate-400" 
+                                   placeholder="Jumlah hari yang dibutuhkan">
+                            @error('estimated_duration_days')
+                                <p class="text-rose-500 text-[10px] font-bold mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Parent WBS Item (Hierarchy) -->
+                    <div>
+                        <label for="parent_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">{{ __('Parent Tugas / Sub-Task Dari (Optional)') }}</label>
+                        <select name="parent_id" id="parent_id" 
+                                class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition duration-150">
+                            <option value="">-- {{ __('Tugas Utama / Root Task (Tanpa Parent)') }} --</option>
+                            @foreach($parentItems as $parent)
+                                <option value="{{ $parent->id }}" {{ old('parent_id', $wbsItem->parent_id) == $parent->id ? 'selected' : '' }}>
+                                    {{ $parent->title }} (ID: #{{ $parent->id }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('parent_id')
+                            <p class="text-rose-500 text-[10px] font-bold mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+                        <a href="{{ route('projects.wbs.show', $project->id) }}" class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold shadow-sm transition duration-150">
+                            {{ __('Batal') }}
+                        </a>
+                        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg shadow-blue-500/10 transition duration-150">
+                            {{ __('Simpan Perubahan') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</x-app-layout>

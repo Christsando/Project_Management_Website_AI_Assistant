@@ -10,7 +10,7 @@
         <main class="grid grid-cols-1 lg:grid-cols-3 w-full min-h-screen">
 
             <!-- Kolom kiri -->
-            <div class="flex items-center justify-center">
+            <div class="hidden lg:flex items-center justify-center">
                 <img src={{ asset('images/welcome_image1.png') }} alt="Welcome-Image"
                     class="w-full h-full object-cover object-center" />
             </div>

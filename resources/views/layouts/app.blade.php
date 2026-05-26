@@ -24,22 +24,26 @@
 </head>
 
 <body class="font-sans antialiased bg-[#F8FAFC]">
-    <div class="flex min-h-screen p-4">
+    <div class="flex h-screen p-4 gap-4">
+        
         <div class="w-60 shrink-0">
             @include('layouts.navigation')
         </div>
 
 
         <!-- Page Content -->
-        <main class="flex-1">
+        <main class="flex-1 flex flex-col">
+
             <!-- Page Heading -->
             @isset($header)
-                <header class="pl-4">
+                <header>
                     {{ $header }}
                 </header>
             @endisset
-
-            {{ $slot }}
+            
+            <div class="flex-1 overflow-y-auto">
+                {{ $slot }}
+            </div>
         </main>
     </div>
 </body>

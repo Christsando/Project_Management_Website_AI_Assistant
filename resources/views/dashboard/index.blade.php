@@ -135,9 +135,9 @@
         <x-header-component />
     </x-slot>
 
-    <div class="pl-4 pt-2 pb-8 pr-2 flex flex-col gap-6">
+    <div class="pt-2 pb-8 flex flex-col gap-4">
         <!-- Row 1: Welcome Banner & Quick Access -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <!-- Welcome Banner (2/3 width) -->
             <div class="lg:col-span-2 bg-[#1964D4] rounded-2xl p-7 text-white relative overflow-hidden flex flex-col justify-between min-h-[220px] shadow-sm">
                 <!-- Graphic overlay -->
@@ -266,7 +266,7 @@
         </div>
 
         <!-- Row 3: Workflow Progress & Next Actions -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <!-- Left: Workflow Progress (2/3 width) -->
             <div class="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
                 <div class="flex items-center justify-between mb-8">

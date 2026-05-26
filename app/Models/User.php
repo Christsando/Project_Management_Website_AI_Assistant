@@ -13,6 +13,22 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Take all user data row then count
+     */
+    public static function getTotalUser()
+    {
+        return self::count();
+    }
+
+    /**
+     * Take all user data
+     */
+    public static function getAllUser()
+    {
+        return self::all();
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

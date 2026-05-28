@@ -2,14 +2,7 @@
     <div>
         <!-- Logo -->
         <div class="flex items-center px-2 py-4 mb-4">
-            <div class="bg-blue-600 rounded-xl p-2 flex items-center justify-center shadow-md shadow-blue-500/20 mr-2.5">
-                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-            </div>
-            <span class="text-xl font-bold tracking-tight text-blue-900">KelolaIN</span>
+            <x-application-logo/>
         </div>
 
         <!-- Create Project Button (PM Only) -->
@@ -40,7 +33,7 @@
             @endif
 
             <!-- Perencanaan Proyek Link (Manager & PMO) -->
-            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['manager', 'project management officer', 'pmo']))
+            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['manager', 'project management officer']))
                 <x-nav-link :active="request()->routeIs('project-planning')" href="{{ route('project-planning') }}">
                     <i class="fa-regular fa-calendar text-base"></i>
                     <span>{{ __('Perencanaan Proyek') }}</span>
@@ -53,11 +46,13 @@
                 <span>{{ __('Manajemen Tim') }}</span>
             </x-nav-link>
 
-            <!-- Manajemen Tim Link -->
+            <!-- Manajemen Task Link -->
+            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['it']))
             <x-nav-link :active="request()->routeIs('taskManagement')" href="{{ route('taskManagement') }}">
                 <i class="fas fa-tasks text-base"></i>
                 <span>{{ __('Manajemen Task') }}</span>
             </x-nav-link>
+            @endif
         </div>
     </div>
 

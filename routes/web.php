@@ -11,6 +11,8 @@ use App\Http\Controllers\ProjectTimelineController;
 use App\Http\Controllers\ProjectBudgetController;
 use App\Http\Controllers\ProjectHumanResourceController;
 use App\Http\Controllers\ProjectRiskManagementController;
+use App\Http\Controllers\TaskManagementController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,9 +20,7 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Project Initiation (Project Manager & Manager)
     Route::middleware('role:project_manager,manager')->group(function () {
@@ -37,6 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/team-management', [TeamManagementController::class, 'index'])->name('teamManagement');
+
+    Route::middleware('role:project_manager,pmo,it')->group(function () {
+        Route::get('/task-management', [TaskManagementController::class, 'index'])->name('taskManagement');
+    });
 
     Route::middleware('role:project_manager,manager,pmo')->group(function () {
         Route::resource('projects', ProjectController::class);

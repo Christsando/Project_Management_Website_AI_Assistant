@@ -23,7 +23,38 @@ class UserSeeder extends Seeder
                 'role' => 'IT'
             ]
         );
+        
+        // Team it
+        User::updateOrCreate(
+            ['email' => 'ariel@psm.com'],
+            [
+                'name' => 'Ariel Christsando',
+                'password' => Hash::make('teamit123'),
+                'role' => 'IT'
+            ]
+        );
+        
+        // Team it
+        User::updateOrCreate(
+            ['email' => 'ulhaq@psm.com'],
+            [
+                'name' => 'Dhifulloh Dhiya Ulhaq',
+                'password' => Hash::make('teamit123'),
+                'role' => 'IT'
+            ]
+        );
 
+        // project manager officer
+        User::updateOrCreate(
+            ['email' => 'abid@psm.com'],
+            [
+                'name' => 'Abid Naufal',
+                'password' => Hash::make('teamit123'),
+                'role' => 'Project Management Officer'
+            ]
+        );
+
+        // project manager officer
         User::updateOrCreate(
             ['email' => 'pmo@psm.com'],
             [

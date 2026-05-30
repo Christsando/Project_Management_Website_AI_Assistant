@@ -1,7 +1,7 @@
-<div class="bg-gradient-to-br from-green to-gradientGreen border border-slate-100 rounded-2xl p-5 shadow-sm hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between">
+<div class="border border-slate-200 bg-gradient-to-br from-green to-gradientGreen rounded-2xl p-5 shadow-sm hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between">
     <!-- Card title -->
     <div class="flex items-center justify-between">
-        <span class="text-xl font-semibold text-white tracking-wider block">{{ __('On Planning') }}</span>
+        <span class="text-xl font-semibold text-white tracking-wider block">{{ __('Done') }}</span>
         <button class="flex items-center justify-center rounded-full bg-white w-8 h-8">
             <i class="text-xs text-slate-500 fa-solid fa-arrow-up-right-from-square"></i>
         </button>
@@ -18,6 +18,6 @@
         <p class="border rounded-md px-2 flex items-center justify-center gap-1">
             0<i class="mt-0.5 fas fa-caret-up"></i>
         </p>
-        <p>No porject has done yet this month</p>
+        <p>No project done this month</p>
     </div>
 </div>

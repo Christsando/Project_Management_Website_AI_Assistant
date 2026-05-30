@@ -5,17 +5,6 @@
             <x-application-logo/>
         </div>
 
-        <!-- Create Project Button (PM Only) -->
-        @if (Auth::check() && strtolower(Auth::user()->role) === 'project manager')
-            <div class="px-2 mb-6">
-                <a href="{{ route('projects.create') }}"
-                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-500/10 hover:shadow-lg">
-                    <i class="fas fa-plus text-[10px]"></i>
-                    <span>{{ __('Buat Proyek Baru') }}</span>
-                </a>
-            </div>
-        @endif
-
         <!-- Menu Links -->
         <div class="flex flex-col gap-1.5 px-2">
             <!-- Dashboard Link -->

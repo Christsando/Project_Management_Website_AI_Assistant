@@ -1,4 +1,4 @@
-<div class="bg-gradient-to-br from-blue-600 to-gradientBlue border border-slate-100 rounded-2xl p-5 shadow-sm hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between">
+<div class="border border-slate-200 bg-gradient-to-br from-blue-600 to-gradientBlue rounded-2xl p-5 shadow-sm hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between">
     <!-- Card title -->
     <div class="flex items-center justify-between">
         <span class="text-xl font-semibold text-white tracking-wider block">{{ __('Total Proyek') }}</span>

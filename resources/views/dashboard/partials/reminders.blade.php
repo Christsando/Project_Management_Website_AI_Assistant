@@ -1,4 +1,4 @@
-<div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex flex-col">
+<div class="border border-slate-200 bg-white rounded-2xl p-6 shadow-sm flex flex-col">
     <!-- title section -->
     <h2 class="text-xl font-semibold text-black tracking-wider block">
         {{ __('Reminders') }}
@@ -6,7 +6,7 @@
 
     <!-- reminder section -->
     <div class="mb-10">
-        <h2 class="mt-10 text-2xl font-bold block text-zoomButton">
+        <h2 class="mt-10 mb-2 text-2xl font-bold block text-zoomButton">
             {{ __('Meeting with PT. Up and Down') }}
         </h2>
         <P class="text-slate-400">

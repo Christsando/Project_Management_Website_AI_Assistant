@@ -1,11 +1,11 @@
 <!-- project analystic card -->
-<div class="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
+<div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
     
     <!-- upper section -->
     <div class="flex items-center justify-between mb-8">
         <!-- title section -->
         <h2 class="text-xl font-semibold text-black tracking-wider block">
-            {{ __('On Request') }}
+            {{ __('Projects Analytic') }}
         </h2>
 
         <!-- symbol description -->

@@ -5,6 +5,7 @@
 
     <div class="pl-4 pt-4">
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            
             <!-- Header Section -->
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-50 pb-5">
                 <div>

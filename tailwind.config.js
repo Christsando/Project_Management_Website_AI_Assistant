@@ -19,11 +19,26 @@ export default {
             colors: {
                 important: '#F59E0B',
                 importantHover: '#d28a0c',
+                
+                // Background color
+                gradientBlue: '#002C71',
+                orangeBg: '#FF7700',
+                gradientOrange: '#9e4c04',
+                greenBg: '#22C55E',
+                gradientGreen: '#076328',
+
+                // barChart color
+                blueColor: '#2556A1',
 
                 primary: '#3B82F6',
+                purple: '#8B5CF6',
+                green: '#22C55E',
 
                 primaryText: '#1E293B',
                 secondaryText: '#64748B',
+
+                // button zoom
+                zoombutton: '#264B83',
 
                 cardSection: '#F6F6F6',
             },

@@ -76,6 +76,101 @@ class ProjectBudgetController extends Controller
     }
 
     /**
+     * Parse Rupiah or currency string to integer safely.
+     */
+    public static function parseBudgetNumeric($value): ?int
+    {
+        if (is_null($value) || $value === '') {
+            return null;
+        }
+        if (is_numeric($value)) {
+            return (int) round((float) $value);
+        }
+        
+        $str = trim((string)$value);
+        
+        // Remove currency symbols/words like "Rp", "IDR", "rupiah" (case-insensitive)
+        $cleaned = preg_replace('/(?i)\b(rp|idr|rupiah)\b/', '', $str);
+        $cleaned = str_ireplace(['rp.', 'rp', 'idr'], '', $cleaned);
+        
+        // Check if there are any alphabetical characters left (e.g. "juta", "ribu", "untuk...")
+        if (preg_match('/[a-zA-Z]/', $cleaned)) {
+            return null;
+        }
+        
+        $cleaned = str_replace(' ', '', $cleaned);
+        
+        $dotCount = substr_count($cleaned, '.');
+        $commaCount = substr_count($cleaned, ',');
+        
+        if ($dotCount > 1 && $commaCount <= 1) {
+            $cleaned = str_replace('.', '', $cleaned);
+            if ($commaCount === 1) {
+                $cleaned = str_replace(',', '.', $cleaned);
+            }
+        } elseif ($commaCount > 1 && $dotCount <= 1) {
+            $cleaned = str_replace(',', '', $cleaned);
+        } elseif ($dotCount === 1 && $commaCount === 1) {
+            $dotPos = strpos($cleaned, '.');
+            $commaPos = strpos($cleaned, ',');
+            if ($dotPos < $commaPos) {
+                $cleaned = str_replace('.', '', $cleaned);
+                $cleaned = str_replace(',', '.', $cleaned);
+            } else {
+                $cleaned = str_replace(',', '', $cleaned);
+            }
+        } elseif ($dotCount === 1 && $commaCount === 0) {
+            if (preg_match('/\.\d{3}$/', $cleaned)) {
+                $cleaned = str_replace('.', '', $cleaned);
+            }
+        } elseif ($commaCount === 1 && $dotCount === 0) {
+            if (preg_match('/,\d{3}$/', $cleaned)) {
+                $cleaned = str_replace(',', '', $cleaned);
+            } else {
+                $cleaned = str_replace(',', '.', $cleaned);
+            }
+        }
+        
+        $cleaned = preg_replace('/[^0-9\.-]/', '', $cleaned);
+        
+        if (is_numeric($cleaned)) {
+            return (int) round((float) $cleaned);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get baseline budget from Project Charter or Project Proposal.
+     */
+    public static function getBaselineBudget(Project $project): array
+    {
+        $baseline = null;
+        $source = null;
+
+        if ($project->charter) {
+            $charterVal = self::parseBudgetNumeric($project->charter->budget_summary);
+            if (!is_null($charterVal) && $charterVal > 0) {
+                $baseline = $charterVal;
+                $source = 'Project Charter';
+            }
+        }
+
+        if (is_null($baseline) && $project->proposal) {
+            $proposalVal = self::parseBudgetNumeric($project->proposal->estimated_budget);
+            if (!is_null($proposalVal) && $proposalVal > 0) {
+                $baseline = $proposalVal;
+                $source = 'Project Proposal';
+            }
+        }
+
+        return [
+            'value' => $baseline,
+            'source' => $source,
+        ];
+    }
+
+    /**
      * Display the specified project's budget plan and items.
      */
     public function show(Project $project)
@@ -97,7 +192,38 @@ class ProjectBudgetController extends Controller
         $budgetItems = $budgetPlan ? $budgetPlan->budgetItems()->orderBy('category')->get() : collect();
         $isBudgetFinalized = $budgetPlan && $budgetPlan->status === 'finalized';
 
-        return view('project-planning.budget.show', compact('project', 'budgetPlan', 'budgetItems', 'isBudgetFinalized'));
+        $baselineInfo = self::getBaselineBudget($project);
+        $baselineBudget = $baselineInfo['value'];
+        $baselineSource = $baselineInfo['source'];
+        
+        $totalRab = $budgetPlan ? (int) $budgetPlan->total_budget : 0;
+        $remainingBudget = !is_null($baselineBudget) ? ($baselineBudget - $totalRab) : null;
+        $usagePercentage = !is_null($baselineBudget) && $baselineBudget > 0 ? round(($totalRab / $baselineBudget) * 100) : 0;
+        
+        if (is_null($baselineBudget)) {
+            $budgetStatus = 'Baseline belum tersedia';
+        } else {
+            if ($usagePercentage <= 80) {
+                $budgetStatus = 'Aman';
+            } elseif ($usagePercentage <= 100) {
+                $budgetStatus = 'Mendekati Batas';
+            } else {
+                $budgetStatus = 'Melebihi Estimasi';
+            }
+        }
+
+        return view('project-planning.budget.show', compact(
+            'project', 
+            'budgetPlan', 
+            'budgetItems', 
+            'isBudgetFinalized',
+            'baselineBudget',
+            'baselineSource',
+            'totalRab',
+            'remainingBudget',
+            'usagePercentage',
+            'budgetStatus'
+        ));
     }
 
     /**
@@ -177,7 +303,37 @@ class ProjectBudgetController extends Controller
 
         $budgetItems = $budgetPlan->budgetItems()->orderBy('created_at', 'desc')->get();
 
-        return view('project-planning.budget.edit', compact('project', 'budgetPlan', 'budgetItems'));
+        $baselineInfo = self::getBaselineBudget($project);
+        $baselineBudget = $baselineInfo['value'];
+        $baselineSource = $baselineInfo['source'];
+        
+        $totalRab = (int) $budgetPlan->total_budget;
+        $remainingBudget = !is_null($baselineBudget) ? ($baselineBudget - $totalRab) : null;
+        $usagePercentage = !is_null($baselineBudget) && $baselineBudget > 0 ? round(($totalRab / $baselineBudget) * 100) : 0;
+        
+        if (is_null($baselineBudget)) {
+            $budgetStatus = 'Baseline belum tersedia';
+        } else {
+            if ($usagePercentage <= 80) {
+                $budgetStatus = 'Aman';
+            } elseif ($usagePercentage <= 100) {
+                $budgetStatus = 'Mendekati Batas';
+            } else {
+                $budgetStatus = 'Melebihi Estimasi';
+            }
+        }
+
+        return view('project-planning.budget.edit', compact(
+            'project', 
+            'budgetPlan', 
+            'budgetItems',
+            'baselineBudget',
+            'baselineSource',
+            'totalRab',
+            'remainingBudget',
+            'usagePercentage',
+            'budgetStatus'
+        ));
     }
 
     /**
@@ -397,6 +553,21 @@ class ProjectBudgetController extends Controller
                 ->with('error', 'Budget Plan tidak dapat difinalisasi karena belum memiliki item anggaran.');
         }
 
+        // Validate against baseline budget
+        $baselineInfo = self::getBaselineBudget($project);
+        $baselineBudget = $baselineInfo['value'];
+
+        if (is_null($baselineBudget)) {
+            return redirect()->route('projects.budget.edit', $project->id)
+                ->with('error', 'Budget Planning belum dapat difinalisasi karena baseline anggaran dari Proposal/Charter belum tersedia.');
+        }
+
+        $totalRab = (int) $budgetPlan->total_budget;
+        if ($totalRab > $baselineBudget) {
+            return redirect()->route('projects.budget.edit', $project->id)
+                ->with('error', 'Budget Planning tidak dapat difinalisasi karena total RAB melebihi baseline anggaran awal.');
+        }
+
         $budgetPlan->status = 'finalized';
         $budgetPlan->updated_by = Auth::id();
         $budgetPlan->save();
@@ -405,3 +576,4 @@ class ProjectBudgetController extends Controller
             ->with('success', 'Budget Plan berhasil difinalisasi.');
     }
 }
+

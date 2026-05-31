@@ -345,4 +345,100 @@ class ProjectCharterTest extends TestCase
         $response = $this->actingAs($pmo)->post(route('projects.charter.generate_ai', $project->id));
         $response->assertStatus(403);
     }
+
+    /**
+     * Test guest cannot download charter PDF.
+     */
+    public function test_guests_cannot_download_charter_pdf(): void
+    {
+        $project = Project::factory()->create();
+        
+        $response = $this->get(route('projects.charter.download', $project->id));
+        $response->assertRedirect('/login');
+    }
+
+    /**
+     * Test PM charter PDF download ownership isolation.
+     */
+    public function test_pm_download_charter_pdf_ownership_isolation(): void
+    {
+        $pm1 = User::factory()->create(['role' => 'Project Manager']);
+        $pm2 = User::factory()->create(['role' => 'Project Manager']);
+
+        $project1 = Project::factory()->create(['owner_id' => $pm1->id, 'status' => 'approved']);
+        $project2 = Project::factory()->create(['owner_id' => $pm2->id, 'status' => 'approved']);
+
+        ProjectCharter::factory()->create(['project_id' => $project1->id]);
+        ProjectCharter::factory()->create(['project_id' => $project2->id]);
+
+        // PM1 can download own project's charter PDF
+        $response = $this->actingAs($pm1)->get(route('projects.charter.download', $project1->id));
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+
+        // PM1 cannot download PM2's project's charter PDF
+        $response = $this->actingAs($pm1)->get(route('projects.charter.download', $project2->id));
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Test PMO charter PDF download restrictions.
+     */
+    public function test_pmo_download_charter_pdf_restrictions(): void
+    {
+        $pmo = User::factory()->create(['role' => 'Project Management Officer']);
+        $pm = User::factory()->create(['role' => 'Project Manager']);
+
+        $draftProject = Project::factory()->create(['owner_id' => $pm->id, 'status' => 'draft']);
+        $planningProject = Project::factory()->create(['owner_id' => $pm->id, 'status' => 'planning']);
+
+        ProjectCharter::factory()->create(['project_id' => $draftProject->id]);
+        ProjectCharter::factory()->create(['project_id' => $planningProject->id]);
+
+        // PMO cannot download draft project charter PDF
+        $response = $this->actingAs($pmo)->get(route('projects.charter.download', $draftProject->id));
+        $response->assertStatus(403);
+
+        // PMO can download planning project charter PDF
+        $response = $this->actingAs($pmo)->get(route('projects.charter.download', $planningProject->id));
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+    }
+
+    /**
+     * Test Manager can download any charter PDF.
+     */
+    public function test_manager_can_download_all_charter_pdfs(): void
+    {
+        $manager = User::factory()->create(['role' => 'Manager']);
+        $pm = User::factory()->create(['role' => 'Project Manager']);
+
+        $project1 = Project::factory()->create(['owner_id' => $pm->id, 'status' => 'approved']);
+        $project2 = Project::factory()->create(['owner_id' => $pm->id, 'status' => 'planning']);
+
+        ProjectCharter::factory()->create(['project_id' => $project1->id]);
+        ProjectCharter::factory()->create(['project_id' => $project2->id]);
+
+        $response = $this->actingAs($manager)->get(route('projects.charter.download', $project1->id));
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+
+        $response = $this->actingAs($manager)->get(route('projects.charter.download', $project2->id));
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+    }
+
+    /**
+     * Test download charter PDF fails if charter does not exist.
+     */
+    public function test_download_charter_pdf_fails_if_not_found(): void
+    {
+        $manager = User::factory()->create(['role' => 'Manager']);
+        $project = Project::factory()->create(['status' => 'approved']);
+
+        // Charter does not exist
+        $response = $this->actingAs($manager)->get(route('projects.charter.download', $project->id));
+        $response->assertRedirect(route('projects.show', $project->id));
+        $response->assertSessionHas('error', 'Project Charter belum dibuat.');
+    }
 }

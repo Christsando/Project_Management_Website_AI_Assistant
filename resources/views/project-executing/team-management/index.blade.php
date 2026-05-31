@@ -23,8 +23,7 @@
     <div>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-full mx-auto">
             <!-- Header Section -->
-            <div
-                class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-50 pb-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-50 pb-5">
                 <div>
                     <h2 class="font-extrabold text-2xl text-slate-800 leading-tight flex items-center gap-2">
                         {{ __('Manajemen Tim') }}
@@ -42,87 +41,90 @@
                 </div>
             </div>
 
-            <!-- Custom Mock Alerts Container -->
-            <div id="mock-alert"
-                class="hidden mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl text-xs flex items-center justify-between shadow-sm transition-all">
-                <div class="flex items-center gap-2.5">
-                    <i class="fas fa-check-circle text-emerald-500"></i>
-                    <span id="mock-alert-text" class="font-semibold"></span>
+            <!-- Alerts Container -->
+            @if (session('success'))
+                <div class="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl text-xs flex items-center justify-between shadow-sm transition-all">
+                    <div class="flex items-center gap-2.5">
+                        <i class="fas fa-check-circle text-emerald-500 text-sm"></i>
+                        <span class="font-semibold">{{ session('success') }}</span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <button onclick="document.getElementById('mock-alert').classList.add('hidden')"
-                    class="text-slate-400 hover:text-slate-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-800 rounded-xl text-xs shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fas fa-exclamation-circle text-rose-500 text-sm"></i>
+                            <span class="font-bold">{{ __('Terjadi Kesalahan Validasi') }}</span>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <ul class="list-disc pl-5 space-y-1 font-semibold">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <!-- Summary Cards Row -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Card 1: Total Anggota -->
-                <div
-                    class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center justify-between min-h-[110px] relative overflow-hidden">
+                <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center justify-between min-h-[110px] relative overflow-hidden">
                     <div>
                         <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">
                             {{ __('Total Anggota') }}
                         </span>
                         <h3 class="text-3xl font-extrabold text-slate-800 mt-2 tracking-tight">
-                            {{ $totalUser }}
+                            {{ $totalMembers }}
                         </h3>
                         <div class="mt-2 text-[10px] font-bold text-emerald-600 flex items-center gap-1">
                             <i class="fa-solid fa-arrow-trend-up"></i>
-                            <span>{{ __('+3 bulan ini') }}</span>
+                            <span>{{ __('Aktif di sistem') }}</span>
                         </div>
                     </div>
-                    <div
-                        class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm shadow-sm border border-blue-100">
+                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm shadow-sm border border-blue-100">
                         <i class="fas fa-user-friends"></i>
                     </div>
                 </div>
 
                 <!-- Card 2: Beban Rata-rata -->
-                <div
-                    class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center justify-between min-h-[110px] relative overflow-hidden">
+                <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center justify-between min-h-[110px] relative overflow-hidden">
                     <div>
                         <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">
                             {{ __('Beban Rata-rata') }}
                         </span>
                         <h3 class="text-3xl font-extrabold text-slate-800 mt-2 tracking-tight">
-                            78%
+                            {{ $avgWorkload }}%
                         </h3>
-                        <div class="mt-2 text-[10px] font-bold text-amber-600 flex items-center gap-1">
-                            <span>{{ __('Status: Produktif') }}</span>
+                        <div class="mt-2 text-[10px] font-bold {{ $avgWorkload > 80 ? 'text-amber-600' : 'text-emerald-600' }} flex items-center gap-1">
+                            <span>Status: {{ $avgWorkload > 80 ? __('Padat') : __('Produktif') }}</span>
                         </div>
                     </div>
-                    <div
-                        class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-sm shadow-sm border border-purple-100">
+                    <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-sm shadow-sm border border-purple-100">
                         <i class="fas fa-chart-line"></i>
                     </div>
                 </div>
 
                 <!-- Card 3: Alokasi Tim Proyek -->
-                <div
-                    class="bg-blue-600 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden text-white">
+                <div class="bg-blue-600 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden text-white">
                     <div>
                         <span class="text-blue-100 text-[10px] font-bold uppercase tracking-wider block">
                             {{ __('Alokasi Tim Proyek') }}
                         </span>
                         <p class="text-[10px] text-blue-100 mt-1 font-semibold leading-relaxed">
-                            {{ __('Distribusi anggota pada 5 proyek aktif yang sedang berjalan saat ini.') }}
+                            {{ __('Distribusi beban kerja anggota tim yang terintegrasi langsung dengan perencanaan SDM.') }}
                         </p>
                     </div>
-                    <!-- Overlapping avatars -->
-                    <div class="flex items-center -space-x-2 mt-4">
-                        <div
-                            class="w-7 h-7 rounded-full bg-slate-200 border-2 border-blue-600 flex items-center justify-center font-bold text-[9px] text-slate-700 shadow-sm shrink-0">
-                            LM</div>
-                        <div
-                            class="w-7 h-7 rounded-full bg-slate-300 border-2 border-blue-600 flex items-center justify-center font-bold text-[9px] text-slate-700 shadow-sm shrink-0">
-                            AD</div>
-                        <div
-                            class="w-7 h-7 rounded-full bg-slate-400 border-2 border-blue-600 flex items-center justify-center font-bold text-[9px] text-slate-700 shadow-sm shrink-0">
-                            BP</div>
-                        <div
-                            class="w-7 h-7 rounded-full bg-slate-800 border-2 border-blue-600 flex items-center justify-center font-bold text-[8px] text-white shadow-sm shrink-0 font-mono">
-                            +21</div>
+                    <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-white/90">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Workload otomatis terupdate dari HR Planning</span>
                     </div>
                 </div>
             </div>
@@ -132,7 +134,7 @@
         </div>
     </div>
 
-    <!-- MOCK MODAL: ADD MEMBER -->
+    <!-- MODAL: ADD MEMBER -->
     <div id="add-member-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <!-- Background Overlay -->
@@ -141,9 +143,9 @@
             <!-- Center Align -->
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div
-                class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl border border-slate-100 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form onsubmit="saveMockMember(event)">
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl border border-slate-100 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form action="{{ route('teamManagement.store') }}" method="POST">
+                    @csrf
                     <div class="bg-white px-6 pt-6 pb-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                             <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
@@ -161,40 +163,23 @@
                             <div>
                                 <label for="member_name"
                                     class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Nama Lengkap') }}</label>
-                                <input type="text" id="member_name" required placeholder="Contoh: John Doe"
+                                <input type="text" name="name" id="member_name" required placeholder="Contoh: John Doe"
                                     class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
                             </div>
 
-                            <!-- Email -->
-                            <div>
-                                <label for="member_email"
-                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Alamat Email') }}</label>
-                                <input type="email" id="member_email" required placeholder="Contoh: john@kelolain.com"
-                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
-                            </div>
-
-                            <!-- Peran & Status (Grid) -->
+                            <!-- Peran & Default Capacity -->
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label for="member_role"
-                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Peran') }}</label>
-                                    <select id="member_role" required
-                                        class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
-                                        <option value="Project Lead">Project Lead</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Project Manager Officer">Project Manager Officer</option>
-                                        <option value="TeamIT">Team IT</option>
-                                    </select>
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Peran (Role)') }}</label>
+                                    <input type="text" name="role_name" id="member_role" required placeholder="Contoh: Fullstack Developer"
+                                        class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
                                 </div>
                                 <div>
-                                    <label for="member_status"
-                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Beban Kerja (Status)') }}</label>
-                                    <select id="member_status" required
+                                    <label for="member_capacity"
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Kapasitas Default (%)') }}</label>
+                                    <input type="number" name="default_capacity_percentage" id="member_capacity" required value="100" min="0" max="100"
                                         class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
-                                        <option value="Optimal">Optimal (50-70%)</option>
-                                        <option value="High">High (>80%)</option>
-                                        <option value="Available">Available (<40%)< /option>
-                                    </select>
                                 </div>
                             </div>
 
@@ -202,8 +187,16 @@
                             <div>
                                 <label for="member_skills"
                                     class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Keahlian (Pisahkan dengan koma)') }}</label>
-                                <input type="text" id="member_skills" placeholder="Contoh: PHP, Laravel, MySQL"
+                                <input type="text" name="skills" id="member_skills" required placeholder="Contoh: PHP, Laravel, MySQL"
                                     class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
+                            </div>
+
+                            <!-- Catatan -->
+                            <div>
+                                <label for="member_notes"
+                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Catatan / Notes') }}</label>
+                                <textarea name="notes" id="member_notes" rows="2" placeholder="Informasi tambahan anggota..."
+                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50"></textarea>
                             </div>
                         </div>
                     </div>
@@ -223,20 +216,101 @@
         </div>
     </div>
 
-    <!-- JS script for filters and dropdown menus -->
+    <!-- MODAL: EDIT MEMBER -->
+    <div id="edit-member-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background Overlay -->
+            <div class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-sm" aria-hidden="true"
+                onclick="closeEditMemberModal()"></div>
+            <!-- Center Align -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl border border-slate-100 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="edit-member-form" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="edit_member_id">
+                    <div class="bg-white px-6 pt-6 pb-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+                                <i class="fas fa-edit text-blue-600"></i>
+                                {{ __('Ubah Data Anggota') }}
+                            </h3>
+                            <button type="button" onclick="closeEditMemberModal()"
+                                class="text-slate-400 hover:text-slate-600 transition">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Nama Lengkap -->
+                            <div>
+                                <label for="edit_member_name"
+                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Nama Lengkap') }}</label>
+                                <input type="text" name="name" id="edit_member_name" required
+                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
+                            </div>
+
+                            <!-- Peran & Default Capacity -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="edit_member_role_name"
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Peran (Role)') }}</label>
+                                    <input type="text" name="role_name" id="edit_member_role_name" required
+                                        class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
+                                </div>
+                                <div>
+                                    <label for="edit_member_capacity"
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Kapasitas Default (%)') }}</label>
+                                    <input type="number" name="default_capacity_percentage" id="edit_member_capacity" required min="0" max="100"
+                                        class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
+                                </div>
+                            </div>
+
+                            <!-- Keahlian -->
+                            <div>
+                                <label for="edit_member_skills"
+                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Keahlian (Pisahkan dengan koma)') }}</label>
+                                <input type="text" name="skills" id="edit_member_skills" required
+                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
+                            </div>
+
+                            <!-- Catatan -->
+                            <div>
+                                <label for="edit_member_notes"
+                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Catatan / Notes') }}</label>
+                                <textarea name="notes" id="edit_member_notes" rows="2"
+                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 px-6 py-4 flex items-center justify-end gap-2.5 border-t border-slate-100">
+                        <button type="button" onclick="closeEditMemberModal()"
+                            class="px-4 py-2 border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl text-xs font-bold transition">
+                            {{ __('Batal') }}
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                            {{ __('Simpan Perubahan') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS script for filters and modals -->
     <script>
         function toggleDropdown(button) {
-            // Close all other open dropdowns first
             document.querySelectorAll('.dropdown-menu').forEach(menu => {
                 if (menu !== button.nextElementSibling) {
                     menu.classList.add('hidden');
                 }
             });
-            // Toggle clicked dropdown
             button.nextElementSibling.classList.toggle('hidden');
         }
 
-        // Close dropdown when clicking outside
         window.addEventListener('click', function(e) {
             if (!e.target.closest('.relative') || !e.target.closest('.fas.fa-ellipsis-v')) {
                 document.querySelectorAll('.dropdown-menu').forEach(menu => {
@@ -247,19 +321,19 @@
 
         function filterMembers() {
             const search = document.getElementById('member-search').value.toLowerCase();
-            const role = document.getElementById('role-filter').value;
-            const status = document.getElementById('status-filter').value;
+            const role = document.getElementById('role-filter').value.toLowerCase();
+            const status = document.getElementById('status-filter').value.toLowerCase();
 
             const rows = document.querySelectorAll('.member-row');
             let visibleCount = 0;
 
             rows.forEach(row => {
                 const name = row.getAttribute('data-name').toLowerCase();
-                const email = row.getAttribute('data-email').toLowerCase();
-                const rowRole = row.getAttribute('data-role');
-                const rowStatus = row.getAttribute('data-status');
+                const skills = row.getAttribute('data-skills').toLowerCase();
+                const rowRole = row.getAttribute('data-role').toLowerCase();
+                const rowStatus = row.getAttribute('data-status').toLowerCase();
 
-                const matchesSearch = name.includes(search) || email.includes(search);
+                const matchesSearch = name.includes(search) || skills.includes(search) || rowRole.includes(search);
                 const matchesRole = !role || rowRole === role;
                 const matchesStatus = !status || rowStatus === status;
 
@@ -284,126 +358,25 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        function saveMockMember(e) {
-            e.preventDefault();
-            const name = document.getElementById('member_name').value;
-            const email = document.getElementById('member_email').value;
-            const role = document.getElementById('member_role').value;
-            const status = document.getElementById('member_status').value;
-            const skillsInput = document.getElementById('member_skills').value;
-
-            // Map status properties
-            let workload = '60%';
-            let loadBar = 'bg-emerald-500 animate-all';
-            let loadLabelColor = 'text-emerald-600';
-            if (status === 'High') {
-                workload = '85%';
-                loadBar = 'bg-rose-500';
-                loadLabelColor = 'text-rose-600';
-            } else if (status === 'Available') {
-                workload = '35%';
-                loadBar = 'bg-blue-500';
-                loadLabelColor = 'text-blue-600';
-            }
-
-            // Map role badges
-            let roleBadge = 'bg-slate-100 text-slate-700 border border-slate-200';
-            if (role === 'Project Lead') {
-                roleBadge = 'bg-[#E0F2FE] text-[#0284C7] border border-[#BAE6FD]';
-            } else if (role === 'Backend Eng') {
-                roleBadge = 'bg-[#F3E8FF] text-[#7E22CE] border border-[#E9D5FF]';
-            } else if (role === 'UI/UX Designer') {
-                roleBadge = 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]';
-            }
-
-            // Generate initials
-            const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'TM';
-
-            // Split skills
-            const skills = skillsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
-            let skillsHTML = '';
-            skills.forEach(s => {
-                skillsHTML +=
-                    `<span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold border bg-slate-50 text-slate-600 border-slate-200">${s}</span>`;
-            });
-
-            // Append row to table
-            const tbody = document.getElementById('member-table-body');
-            const newRow = document.createElement('tr');
-            newRow.className = 'member-row hover:bg-slate-50/30 transition duration-150';
-            newRow.setAttribute('data-name', name);
-            newRow.setAttribute('data-email', email);
-            newRow.setAttribute('data-role', role);
-            newRow.setAttribute('data-status', status);
-
-            newRow.innerHTML = `
-                <td class="py-4 pr-3">
-                    <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 font-extrabold flex items-center justify-center text-xs shadow-sm border border-blue-100">
-                                ${initials}
-                            </div>
-                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
-                        </div>
-                        <div>
-                            <div class="font-extrabold text-slate-800 text-sm">${name}</div>
-                            <div class="text-[10px] text-slate-400 font-semibold">${email}</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="py-4 px-3">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold ${roleBadge}">
-                        ${role}
-                    </span>
-                </td>
-                <td class="py-4 px-3 max-w-[200px]">
-                    <div class="flex flex-wrap gap-1">
-                        ${skillsHTML || '<span class="text-slate-400 italic text-[10px]">-</span>'}
-                    </div>
-                </td>
-                <td class="py-4 px-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-24 bg-slate-100 rounded-full h-2 overflow-hidden shrink-0">
-                            <div class="h-full rounded-full ${loadBar}" style="width: ${workload}"></div>
-                        </div>
-                        <span class="font-bold text-slate-500 font-mono text-[10px]">${workload}</span>
-                        <span class="font-bold ${loadLabelColor} text-[10px]">${status}</span>
-                    </div>
-                </td>
-                <td class="py-4 text-right pr-4 relative">
-                    <div class="inline-block text-left">
-                        <button type="button" onclick="toggleDropdown(this)" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
-                            <i class="fas fa-ellipsis-v text-xs"></i>
-                        </button>
-                        <div class="dropdown-menu hidden absolute right-4 mt-1 w-36 bg-white border border-slate-100 rounded-xl shadow-lg z-20 py-1 font-bold text-slate-600 text-[10px] text-left">
-                            <a href="#" onclick="mockAction('Ubah Beban Kerja ${name}')" class="block px-4 py-2 hover:bg-slate-50 hover:text-slate-800 transition">Ubah Beban Kerja</a>
-                            <a href="#" onclick="mockAction('Alokasikan Proyek ${name}')" class="block px-4 py-2 hover:bg-slate-50 hover:text-slate-800 transition">Alokasikan Proyek</a>
-                            <a href="#" onclick="mockAction('Hapus Anggota ${name}')" class="block px-4 py-2 hover:bg-slate-50 hover:text-rose-600 transition border-t border-slate-50">Hapus Anggota</a>
-                        </div>
-                    </div>
-                </td>
-            `;
-
-            tbody.appendChild(newRow);
-
-            // Close modal
-            closeAddMemberModal();
-
-            // Clear inputs
-            document.getElementById('member_name').value = '';
-            document.getElementById('member_email').value = '';
-            document.getElementById('member_skills').value = '';
-
-            // Show success alert
-            document.getElementById('mock-alert-text').innerText = `Anggota tim "${name}" berhasil ditambahkan ke daftar.`;
-            document.getElementById('mock-alert').classList.remove('hidden');
-
-            // Trigger filter update
-            filterMembers();
+        function openEditMemberModal(member) {
+            document.getElementById('edit_member_id').value = member.id;
+            document.getElementById('edit_member_name').value = member.name;
+            document.getElementById('edit_member_role_name').value = member.role_name;
+            document.getElementById('edit_member_skills').value = member.skills;
+            document.getElementById('edit_member_capacity').value = member.default_capacity_percentage;
+            document.getElementById('edit_member_notes').value = member.notes || '';
+            
+            // Set form action dynamically
+            const form = document.getElementById('edit-member-form');
+            form.action = `/team-management/${member.id}`;
+            
+            document.getElementById('edit-member-modal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
         }
 
-        function mockAction(message) {
-            alert(`Aksi simulasi: ${message}`);
+        function closeEditMemberModal() {
+            document.getElementById('edit-member-modal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
         }
     </script>
 </x-app-layout>

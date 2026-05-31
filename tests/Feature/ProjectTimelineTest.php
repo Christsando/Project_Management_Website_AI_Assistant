@@ -296,4 +296,92 @@ class ProjectTimelineTest extends TestCase
         $response->assertRedirect(route('projects.timeline.show', $project->id));
         $response->assertSessionHas('error');
     }
+
+    /**
+     * Test advanced predecessor validation rules (parent task, descendants, circular).
+     */
+    public function test_dependency_advanced_validation_rules(): void
+    {
+        $pmo = User::factory()->create(['role' => 'Project Management Officer']);
+        $pm = User::factory()->create(['role' => 'Project Manager']);
+
+        $project = Project::factory()->create(['owner_id' => $pm->id, 'status' => 'planning']);
+        $scope = ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        
+        // Setup hierarchical WBS items
+        // parent -> child1
+        // sibling
+        $parentWbs = WbsItem::factory()->create(['project_id' => $project->id, 'project_scope_id' => $scope->id, 'status' => 'finalized']);
+        $childWbs = WbsItem::factory()->create(['project_id' => $project->id, 'project_scope_id' => $scope->id, 'parent_id' => $parentWbs->id, 'status' => 'finalized']);
+        $siblingWbs = WbsItem::factory()->create(['project_id' => $project->id, 'project_scope_id' => $scope->id, 'status' => 'finalized']);
+
+        // Schedule them in timeline first so they can be predecessors
+        TimelineItem::factory()->create([
+            'project_id' => $project->id,
+            'wbs_item_id' => $parentWbs->id,
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-06-05',
+        ]);
+        
+        TimelineItem::factory()->create([
+            'project_id' => $project->id,
+            'wbs_item_id' => $siblingWbs->id,
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-06-05',
+        ]);
+
+        // 1. A child task cannot choose parent task as predecessor because parent task is a summary task (has children)
+        $response = $this->actingAs($pmo)->post(route('projects.timeline.store', $project->id), [
+            'wbs_item_id' => $childWbs->id,
+            'start_date' => '2026-06-06',
+            'end_date' => '2026-06-10',
+            'is_milestone' => 0,
+            'dependency_wbs_item_id' => $parentWbs->id, // parent task
+        ]);
+        $response->assertSessionHasErrors(['dependency_wbs_item_id']);
+
+        // 2. A task cannot choose its descendant as predecessor
+        // Attempting to edit parent task timeline to depend on child task
+        $parentTimeline = TimelineItem::where('wbs_item_id', $parentWbs->id)->first();
+        // Schedule child task first so it can be a predecessor option
+        TimelineItem::factory()->create([
+            'project_id' => $project->id,
+            'wbs_item_id' => $childWbs->id,
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-06-05',
+        ]);
+
+        $response = $this->actingAs($pmo)->put(route('projects.timeline.update', [$project->id, $parentTimeline->id]), [
+            'wbs_item_id' => $parentWbs->id,
+            'start_date' => '2026-06-06',
+            'end_date' => '2026-06-10',
+            'is_milestone' => 0,
+            'dependency_wbs_item_id' => $childWbs->id, // child task (descendant)
+        ]);
+        $response->assertSessionHasErrors(['dependency_wbs_item_id']);
+
+        // 3. Circular dependency check
+        // Setup two sibling leaf tasks: siblingWbs and anotherLeafWbs
+        $anotherLeafWbs = WbsItem::factory()->create(['project_id' => $project->id, 'project_scope_id' => $scope->id, 'status' => 'finalized']);
+        
+        // Schedule anotherLeafWbs to depend on siblingWbs: anotherLeafWbs -> siblingWbs
+        $anotherTimeline = TimelineItem::factory()->create([
+            'project_id' => $project->id,
+            'wbs_item_id' => $anotherLeafWbs->id,
+            'start_date' => '2026-06-06',
+            'end_date' => '2026-06-10',
+            'dependency_wbs_item_id' => $siblingWbs->id,
+        ]);
+
+        // Attempting to set siblingWbs predecessor to anotherLeafWbs: siblingWbs -> anotherLeafWbs -> siblingWbs (circular!)
+        $siblingTimeline = TimelineItem::where('wbs_item_id', $siblingWbs->id)->first();
+        $response = $this->actingAs($pmo)->put(route('projects.timeline.update', [$project->id, $siblingTimeline->id]), [
+            'wbs_item_id' => $siblingWbs->id,
+            'start_date' => '2026-06-11',
+            'end_date' => '2026-06-15',
+            'is_milestone' => 0,
+            'dependency_wbs_item_id' => $anotherLeafWbs->id, // circular dependency
+        ]);
+        $response->assertSessionHasErrors(['dependency_wbs_item_id']);
+    }
 }

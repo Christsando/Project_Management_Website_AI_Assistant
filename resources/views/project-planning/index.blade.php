@@ -70,9 +70,9 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                             {{ __('Aktif') }}
                         </span>
-                        <a href="{{ route('project-planning.timeline.index') }}" class="group inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm hover:shadow-md hover:shadow-purple-500/10 transition-all duration-200 gap-1.5">
+                        <a href="{{ route('project-planning.timeline.index') }}" class="group inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm hover:shadow-md hover:shadow-blue-500/10 transition-all duration-200 gap-1.5">
                             <i class="fas fa-calendar-alt text-[10px]"></i>
-                            {{ __('Buka') }}
+                            {{ __('Timeline') }}
                             <i class="fas fa-chevron-right text-[9px] ml-0.5 transform group-hover:translate-x-0.5 transition-transform"></i>
                         </a>
                     </div>

@@ -37,6 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/team-management', [TeamManagementController::class, 'index'])->name('teamManagement');
+    Route::post('/team-management', [TeamManagementController::class, 'store'])->name('teamManagement.store');
+    Route::put('/team-management/{teamMember}', [TeamManagementController::class, 'update'])->name('teamManagement.update');
+    Route::patch('/team-management/{teamMember}/toggle-status', [TeamManagementController::class, 'toggleStatus'])->name('teamManagement.toggleStatus');
+    Route::delete('/team-management/{teamMember}', [TeamManagementController::class, 'destroy'])->name('teamManagement.destroy');
 
     Route::middleware('role:project_manager,pmo,it')->group(function () {
         Route::get('/task-management', [TaskManagementController::class, 'index'])->name('taskManagement');
@@ -47,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Project Proposal nested routes
         Route::get('/projects/{project}/proposal', [ProjectProposalController::class, 'show'])->name('projects.proposal.show');
+        Route::get('/projects/{project}/proposal/download', [ProjectProposalController::class, 'downloadPdf'])->name('projects.proposal.download');
         Route::get('/projects/{project}/proposal/create', [ProjectProposalController::class, 'create'])->name('projects.proposal.create');
         Route::post('/projects/{project}/proposal', [ProjectProposalController::class, 'store'])->name('projects.proposal.store');
         Route::get('/projects/{project}/proposal/edit', [ProjectProposalController::class, 'edit'])->name('projects.proposal.edit');
@@ -55,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Project Charter nested routes
         Route::get('/projects/{project}/charter', [ProjectCharterController::class, 'show'])->name('projects.charter.show');
+        Route::get('/projects/{project}/charter/download', [ProjectCharterController::class, 'downloadPdf'])->name('projects.charter.download');
         Route::get('/projects/{project}/charter/create', [ProjectCharterController::class, 'create'])->name('projects.charter.create');
         Route::post('/projects/{project}/charter', [ProjectCharterController::class, 'store'])->name('projects.charter.store');
         Route::get('/projects/{project}/charter/edit', [ProjectCharterController::class, 'edit'])->name('projects.charter.edit');

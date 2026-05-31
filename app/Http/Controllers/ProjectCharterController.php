@@ -51,7 +51,50 @@ class ProjectCharterController extends Controller
 
         $charter = $project->charter;
 
-        return view('projects.charter.show', compact('project', 'charter'));
+        $actualMilestones = $project->timelineItems()
+            ->where('is_milestone', true)
+            ->with(['wbsItem', 'dependencyWbsItem'])
+            ->get();
+
+        return view('projects.charter.show', compact('project', 'charter', 'actualMilestones'));
+    }
+
+    /**
+     * Download the Project Charter as PDF.
+     */
+    public function downloadPdf(Project $project)
+    {
+        $role = $this->checkBaseAccess();
+        $userId = Auth::id();
+
+        // PM authorization: must be the project owner
+        if ($role === 'project manager') {
+            if ($project->owner_id !== $userId) {
+                abort(403, 'Anda hanya dapat melihat Project Charter untuk proyek Anda sendiri.');
+            }
+        } 
+        // PMO authorization: only allowed if project status is planning
+        elseif (in_array($role, ['pmo', 'project management officer'])) {
+            if ($project->status !== 'planning') {
+                abort(403, 'PMO hanya dapat melihat Project Charter jika status proyek sudah planning.');
+            }
+        }
+        // Manager: has access to view all.
+
+        $charter = $project->charter;
+        if (!$charter) {
+            return redirect()->route('projects.show', $project->id)->with('error', 'Project Charter belum dibuat.');
+        }
+
+        $actualMilestones = $project->timelineItems()
+            ->where('is_milestone', true)
+            ->with(['wbsItem', 'dependencyWbsItem'])
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('projects.charter.pdf', compact('project', 'charter', 'actualMilestones'));
+        $filename = 'project-charter-' . \Illuminate\Support\Str::slug($project->title) . '.pdf';
+        
+        return $pdf->download($filename);
     }
 
     /**

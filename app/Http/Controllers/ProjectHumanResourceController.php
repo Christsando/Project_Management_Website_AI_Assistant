@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\HumanResourcePlan;
 use App\Models\HumanResourceItem;
 use App\Models\WbsItem;
+use App\Services\HrSummaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -84,7 +85,7 @@ class ProjectHumanResourceController extends Controller
     /**
      * Display the specified project's HR plan and items.
      */
-    public function show(Project $project)
+    public function show(Project $project, HrSummaryService $summaryService)
     {
         $role = $this->checkBaseAccess();
         $this->checkPlanningAccess($project);
@@ -105,8 +106,26 @@ class ProjectHumanResourceController extends Controller
         $totalResources = $hrItems->sum('quantity');
         $roleCount = $hrItems->pluck('role_name')->unique()->count();
         $picCount = $hrItems->pluck('person_in_charge')->filter()->unique()->count();
+        $summary = $summaryService->calculate($hrPlan, $hrItems);
 
-        return view('project-planning.human-resource.show', compact('project', 'hrPlan', 'hrItems', 'isHrFinalized', 'totalResources', 'roleCount', 'picCount'));
+        $userRole = strtolower(Auth::user()->role);
+        $isPmo = in_array($userRole, ['pmo', 'project management officer']);
+        $isDraft = $hrPlan && $hrPlan->status === 'draft';
+        $isEditable = $isPmo && $isDraft;
+
+        return view('project-planning.human-resource.show', compact(
+            'project', 
+            'hrPlan', 
+            'hrItems', 
+            'isHrFinalized', 
+            'totalResources', 
+            'roleCount', 
+            'picCount',
+            'summary',
+            'isPmo',
+            'isDraft',
+            'isEditable',
+            ));
     }
 
     /**
@@ -165,7 +184,7 @@ class ProjectHumanResourceController extends Controller
     /**
      * Show the dashboard to manage HR plan items.
      */
-    public function edit(Project $project)
+    public function edit(Project $project, HrSummaryService $summaryService)
     {
         $role = $this->checkBaseAccess();
         if ($role !== 'project management officer' && $role !== 'pmo') {
@@ -195,8 +214,27 @@ class ProjectHumanResourceController extends Controller
         $totalResources = $hrItems->sum('quantity');
         $roleCount = $hrItems->pluck('role_name')->unique()->count();
         $picCount = $hrItems->pluck('person_in_charge')->filter()->unique()->count();
+        $summary = $summaryService->calculate($hrPlan, $hrItems);
 
-        return view('project-planning.human-resource.edit', compact('project', 'hrPlan', 'hrItems', 'wbsItems', 'teamMembers', 'totalResources', 'roleCount', 'picCount'));
+        $userRole = strtolower(Auth::user()->role);
+        $isPmo = in_array($userRole, ['pmo', 'project management officer']);
+        $isDraft = $hrPlan && $hrPlan->status === 'draft';
+        $isEditable = $isPmo && $isDraft;
+
+        return view('project-planning.human-resource.edit', compact(
+            'project', 
+            'hrPlan', 
+            'hrItems', 
+            'wbsItems', 
+            'teamMembers', 
+            'totalResources', 
+            'roleCount', 
+            'picCount',
+            'summary',
+            'isPmo',
+            'isDraft',
+            'isEditable',
+            ));
     }
 
     /**

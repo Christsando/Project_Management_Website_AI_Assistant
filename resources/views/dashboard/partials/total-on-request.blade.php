@@ -1,7 +1,7 @@
-<div class="border border-slate-200 bg-white rounded-2xl p-5 shadow-sm hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between">
+<div class="card-background">
     <!-- Card title -->
     <div class="flex items-center justify-between">
-        <span class="text-xl font-semibold text-black tracking-wider block">{{ __('On Request') }}</span>
+        <span class="card-title text-black">{{ __('On Request') }}</span>
         <button class="flex items-center justify-center rounded-full border border-black w-8 h-8">
             <i class="text-xs text-slate-500 fa-solid fa-arrow-up-right-from-square"></i>
         </button>

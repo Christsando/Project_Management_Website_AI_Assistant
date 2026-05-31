@@ -1,6 +1,6 @@
 <div class="border border-slate-200 bg-white rounded-2xl p-6 shadow-sm flex flex-col">
     <!-- title section -->
-    <h2 class="text-xl font-semibold text-black tracking-wider block">
+    <h2 class="card-title text-black">
         {{ __('Reminders') }}
     </h2>
 

@@ -27,12 +27,16 @@
 
 
             <!-- layout -->
-            @if (strtolower(auth()->user()->role) === 'Project Management Officer')
+            @if (Auth::check() && strtolower(Auth::user()->role) === 'project management officer')
                 @include('dashboard.components.dashboard-pmo')
-            @elseif (strtolower(auth()->user()->role) === 'IT')
+            @elseif (Auth::check() && strtolower(Auth::user()->role) === 'it')
+                @include('dashboard.components.dashboard-it')
+            @elseif (Auth::check() && strtolower(Auth::user()->role) === 'project manager')
+                @include('dashboard.components.dashboard-pmo')
+            @elseif (Auth::check() && strtolower(Auth::user()->role) === 'manager')
                 @include('dashboard.components.dashboard-pmo')
             @else
-                @include('dashboard.components.dashboard-pmo')
+                <h1> Not Allowed
             @endif
         </div>
     </div>

@@ -1,6 +1,6 @@
 <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
     <div>
-        <h2 class="text-xl font-semibold text-black tracking-wider block mb-6">{{ __('Next Action') }}</h2>
+        <h2 class="card-title text-black mb-6">{{ __('Next Action') }}</h2>
         <div class="flex flex-col gap-5">
             @if (empty($nexActions))
                 <div class="mt-6">

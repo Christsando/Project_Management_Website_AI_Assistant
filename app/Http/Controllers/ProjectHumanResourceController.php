@@ -98,13 +98,13 @@ class ProjectHumanResourceController extends Controller
             }
         }
 
-        $hrItems = $hrPlan ? $hrPlan->humanResourceItems()->with('wbsItem')->orderBy('created_at', 'desc')->get() : collect();
+        $hrItems = $hrPlan ? $hrPlan->humanResourceItems()->with(['wbsItem', 'teamMember'])->orderBy('created_at', 'desc')->get() : collect();
         $isHrFinalized = $hrPlan && $hrPlan->status === 'finalized';
 
         // Calculate summary aggregates
         $totalResources = $hrItems->sum('quantity');
         $roleCount = $hrItems->pluck('role_name')->unique()->count();
-        $picCount = $hrItems->whereNotNull('person_in_charge')->where('person_in_charge', '!=', '')->pluck('person_in_charge')->unique()->count();
+        $picCount = $hrItems->pluck('person_in_charge')->filter()->unique()->count();
 
         return view('project-planning.human-resource.show', compact('project', 'hrPlan', 'hrItems', 'isHrFinalized', 'totalResources', 'roleCount', 'picCount'));
     }
@@ -183,17 +183,20 @@ class ProjectHumanResourceController extends Controller
             abort(403, 'HR Plan sudah difinalisasi dan tidak dapat diedit lagi.');
         }
 
-        $hrItems = $hrPlan->humanResourceItems()->with('wbsItem')->orderBy('created_at', 'desc')->get();
+        $hrItems = $hrPlan->humanResourceItems()->with(['wbsItem', 'teamMember'])->orderBy('created_at', 'desc')->get();
         
         // Fetch project WBS items for dropdown selection (only finalized WBS tasks)
         $wbsItems = $project->wbsItems()->orderBy('title')->get();
 
+        // Fetch active team members for assignment
+        $teamMembers = \App\Models\TeamMember::where('is_active', true)->orderBy('name')->get();
+
         // Calculate summary aggregates
         $totalResources = $hrItems->sum('quantity');
         $roleCount = $hrItems->pluck('role_name')->unique()->count();
-        $picCount = $hrItems->whereNotNull('person_in_charge')->where('person_in_charge', '!=', '')->pluck('person_in_charge')->unique()->count();
+        $picCount = $hrItems->pluck('person_in_charge')->filter()->unique()->count();
 
-        return view('project-planning.human-resource.edit', compact('project', 'hrPlan', 'hrItems', 'wbsItems', 'totalResources', 'roleCount', 'picCount'));
+        return view('project-planning.human-resource.edit', compact('project', 'hrPlan', 'hrItems', 'wbsItems', 'teamMembers', 'totalResources', 'roleCount', 'picCount'));
     }
 
     /**
@@ -254,10 +257,11 @@ class ProjectHumanResourceController extends Controller
             'role_name' => 'required|string|max:255',
             'required_skill' => 'required|string',
             'job_description' => 'required|string',
+            'team_member_id' => 'nullable|exists:team_members,id',
             'person_in_charge' => 'nullable|string|max:255',
             'workload_percentage' => 'nullable|numeric|min:0|max:100',
             'estimated_work_days' => 'nullable|integer|min:1',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'nullable|integer|min:1',
             'notes' => 'nullable|string',
             'wbs_item_id' => [
                 'nullable',
@@ -275,7 +279,6 @@ class ProjectHumanResourceController extends Controller
             'role_name.required' => 'Nama Peran (Role) wajib diisi.',
             'required_skill.required' => 'Keahlian yang dibutuhkan wajib diisi.',
             'job_description.required' => 'Deskripsi pekerjaan wajib diisi.',
-            'quantity.required' => 'Jumlah tenaga kerja wajib diisi.',
             'quantity.integer' => 'Jumlah harus berupa angka bulat.',
             'quantity.min' => 'Jumlah minimal adalah 1.',
             'workload_percentage.min' => 'Beban kerja minimal 0%.',
@@ -289,10 +292,27 @@ class ProjectHumanResourceController extends Controller
         $item->role_name = $request->role_name;
         $item->required_skill = $request->required_skill;
         $item->job_description = $request->job_description;
-        $item->person_in_charge = $request->person_in_charge;
+
+        $item->team_member_id = $request->team_member_id;
         $item->workload_percentage = $request->workload_percentage;
+
+        if ($request->team_member_id) {
+            $teamMember = \App\Models\TeamMember::findOrFail($request->team_member_id);
+            $newWorkload = $request->workload_percentage ?: 0;
+            $totalWorkload = $teamMember->current_workload_percentage + $newWorkload;
+            
+            if ($totalWorkload > $teamMember->default_capacity_percentage) {
+                return redirect()->back()->withInput()->with('error', "Beban kerja untuk {$teamMember->name} melebihi kapasitas default ({$teamMember->default_capacity_percentage}%). Sisa kapasitas tersedia: {$teamMember->remaining_capacity_percentage}%.");
+            }
+            
+            // Auto fill name
+            $item->person_in_charge = $teamMember->name;
+        } else {
+            $item->person_in_charge = $request->person_in_charge;
+        }
+
         $item->estimated_work_days = $request->estimated_work_days;
-        $item->quantity = $request->quantity;
+        $item->quantity = $request->input('quantity', 1) ?? 1;
         $item->notes = $request->notes;
         $item->created_by = Auth::id();
         $item->updated_by = Auth::id();
@@ -327,10 +347,11 @@ class ProjectHumanResourceController extends Controller
             'role_name' => 'required|string|max:255',
             'required_skill' => 'required|string',
             'job_description' => 'required|string',
+            'team_member_id' => 'nullable|exists:team_members,id',
             'person_in_charge' => 'nullable|string|max:255',
             'workload_percentage' => 'nullable|numeric|min:0|max:100',
             'estimated_work_days' => 'nullable|integer|min:1',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'nullable|integer|min:1',
             'notes' => 'nullable|string',
             'wbs_item_id' => [
                 'nullable',
@@ -348,7 +369,6 @@ class ProjectHumanResourceController extends Controller
             'role_name.required' => 'Nama Peran (Role) wajib diisi.',
             'required_skill.required' => 'Keahlian yang dibutuhkan wajib diisi.',
             'job_description.required' => 'Deskripsi pekerjaan wajib diisi.',
-            'quantity.required' => 'Jumlah tenaga kerja wajib diisi.',
             'quantity.integer' => 'Jumlah harus berupa angka bulat.',
             'quantity.min' => 'Jumlah minimal adalah 1.',
             'workload_percentage.min' => 'Beban kerja minimal 0%.',
@@ -360,10 +380,29 @@ class ProjectHumanResourceController extends Controller
         $humanResourceItem->role_name = $request->role_name;
         $humanResourceItem->required_skill = $request->required_skill;
         $humanResourceItem->job_description = $request->job_description;
-        $humanResourceItem->person_in_charge = $request->person_in_charge;
+        
+        $humanResourceItem->team_member_id = $request->team_member_id;
         $humanResourceItem->workload_percentage = $request->workload_percentage;
+
+        if ($request->team_member_id) {
+            $teamMember = \App\Models\TeamMember::findOrFail($request->team_member_id);
+            $newWorkload = $request->workload_percentage ?: 0;
+            // Exclude current item workload to avoid double count
+            $currentWorkloadExcludingThis = $teamMember->humanResourceItems()->where('id', '!=', $humanResourceItem->id)->sum('workload_percentage');
+            $totalWorkload = $currentWorkloadExcludingThis + $newWorkload;
+            
+            if ($totalWorkload > $teamMember->default_capacity_percentage) {
+                return redirect()->back()->withInput()->with('error', "Beban kerja untuk {$teamMember->name} melebihi kapasitas default ({$teamMember->default_capacity_percentage}%). Sisa kapasitas tersedia: " . ($teamMember->default_capacity_percentage - $currentWorkloadExcludingThis) . "%.");
+            }
+            
+            // Auto fill name
+            $humanResourceItem->person_in_charge = $teamMember->name;
+        } else {
+            $humanResourceItem->person_in_charge = $request->person_in_charge;
+        }
+
         $humanResourceItem->estimated_work_days = $request->estimated_work_days;
-        $humanResourceItem->quantity = $request->quantity;
+        $humanResourceItem->quantity = $request->input('quantity', 1) ?? 1;
         $humanResourceItem->notes = $request->notes;
         $humanResourceItem->updated_by = Auth::id();
         $humanResourceItem->save();

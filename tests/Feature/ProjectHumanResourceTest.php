@@ -10,6 +10,7 @@ use App\Models\TimelineItem;
 use App\Models\BudgetPlan;
 use App\Models\HumanResourcePlan;
 use App\Models\HumanResourceItem;
+use App\Models\TeamMember;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -284,5 +285,138 @@ class ProjectHumanResourceTest extends TestCase
             'quantity' => 1,
         ]);
         $response->assertSessionHasErrors(['wbs_item_id']);
+    }
+
+    /**
+     * Test PMO can assign team member if workload is sufficient.
+     */
+    public function test_pmo_can_assign_team_member_if_workload_sufficient(): void
+    {
+        $pmo = User::factory()->create(['role' => 'Project Management Officer']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+        BudgetPlan::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $hrPlan = HumanResourcePlan::factory()->create(['project_id' => $project->id, 'status' => 'draft']);
+
+        $member = TeamMember::create([
+            'name' => 'Kresna',
+            'role_name' => 'Fullstack Developer',
+            'skills' => 'Laravel, React',
+            'default_capacity_percentage' => 100,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($pmo)->post(route('projects.human-resource.items.add', $project->id), [
+            'role_name' => 'Developer',
+            'required_skill' => 'Laravel',
+            'job_description' => 'Coding',
+            'team_member_id' => $member->id,
+            'workload_percentage' => 40,
+            'quantity' => 1,
+        ]);
+
+        $response->assertRedirect(route('projects.human-resource.edit', $project->id));
+        $this->assertDatabaseHas('human_resource_items', [
+            'team_member_id' => $member->id,
+            'workload_percentage' => 40,
+            'person_in_charge' => 'Kresna',
+        ]);
+
+        $this->assertEquals(40, $member->fresh()->current_workload_percentage);
+    }
+
+    /**
+     * Test PMO cannot assign team member if workload exceeds capacity.
+     */
+    public function test_pmo_cannot_assign_team_member_if_workload_exceeds_capacity(): void
+    {
+        $pmo = User::factory()->create(['role' => 'Project Management Officer']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+        BudgetPlan::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $hrPlan = HumanResourcePlan::factory()->create(['project_id' => $project->id, 'status' => 'draft']);
+
+        $member = TeamMember::create([
+            'name' => 'Kayla',
+            'role_name' => 'Fullstack Developer',
+            'skills' => 'Laravel, React',
+            'default_capacity_percentage' => 100,
+            'is_active' => true,
+        ]);
+
+        // First assignment
+        HumanResourceItem::create([
+            'human_resource_plan_id' => $hrPlan->id,
+            'role_name' => 'Dev',
+            'required_skill' => 'PHP',
+            'job_description' => 'Coding',
+            'team_member_id' => $member->id,
+            'workload_percentage' => 60,
+            'quantity' => 1,
+            'person_in_charge' => 'Kayla',
+        ]);
+
+        // Second assignment that exceeds 100% capacity (60 + 50 = 110)
+        $response = $this->actingAs($pmo)->post(route('projects.human-resource.items.add', $project->id), [
+            'role_name' => 'Dev 2',
+            'required_skill' => 'JS',
+            'job_description' => 'React coding',
+            'team_member_id' => $member->id,
+            'workload_percentage' => 50,
+            'quantity' => 1,
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->assertEquals(60, $member->fresh()->current_workload_percentage);
+    }
+
+    /**
+     * Test edit HR item does not double count workload.
+     */
+    public function test_edit_hr_item_does_not_double_count_workload(): void
+    {
+        $pmo = User::factory()->create(['role' => 'Project Management Officer']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+        BudgetPlan::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $hrPlan = HumanResourcePlan::factory()->create(['project_id' => $project->id, 'status' => 'draft']);
+
+        $member = TeamMember::create([
+            'name' => 'Fahmi',
+            'role_name' => 'Fullstack Developer',
+            'skills' => 'Laravel, React',
+            'default_capacity_percentage' => 100,
+            'is_active' => true,
+        ]);
+
+        $item = HumanResourceItem::create([
+            'human_resource_plan_id' => $hrPlan->id,
+            'role_name' => 'Dev',
+            'required_skill' => 'PHP',
+            'job_description' => 'Coding',
+            'team_member_id' => $member->id,
+            'workload_percentage' => 80,
+            'quantity' => 1,
+            'person_in_charge' => 'Fahmi',
+        ]);
+
+        // Edit the same item to increase to 90%. Excluding itself, 0 + 90 = 90 <= 100, so it should be allowed!
+        $response = $this->actingAs($pmo)->put(route('projects.human-resource.items.update', [$project->id, $item->id]), [
+            'role_name' => 'Dev',
+            'required_skill' => 'PHP',
+            'job_description' => 'Coding',
+            'team_member_id' => $member->id,
+            'workload_percentage' => 90,
+            'quantity' => 1,
+        ]);
+
+        $response->assertRedirect(route('projects.human-resource.edit', $project->id));
+        $this->assertEquals(90, $member->fresh()->current_workload_percentage);
     }
 }

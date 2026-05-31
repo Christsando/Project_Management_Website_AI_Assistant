@@ -55,6 +55,39 @@ class ProjectProposalController extends Controller
     }
 
     /**
+     * Download the proposal as PDF.
+     */
+    public function downloadPdf(Project $project)
+    {
+        $role = $this->checkBaseAccess();
+        $userId = Auth::id();
+
+        // PM authorization: must be the project owner
+        if ($role === 'project manager') {
+            if ($project->owner_id !== $userId) {
+                abort(403, 'Anda hanya dapat melihat proposal untuk proyek Anda sendiri.');
+            }
+        } 
+        // PMO authorization: only allowed if project status is planning
+        elseif (in_array($role, ['pmo', 'project management officer'])) {
+            if ($project->status !== 'planning') {
+                abort(403, 'PMO hanya dapat melihat proposal jika status proyek sudah planning.');
+            }
+        }
+        // Manager: has access to view all.
+
+        $proposal = $project->proposal;
+        if (!$proposal) {
+            return redirect()->route('projects.show', $project->id)->with('error', 'Project Proposal belum dibuat.');
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('projects.proposal.pdf', compact('project', 'proposal'));
+        $filename = 'project-proposal-' . \Illuminate\Support\Str::slug($project->title) . '.pdf';
+        
+        return $pdf->download($filename);
+    }
+
+    /**
      * Show the form for creating a new proposal.
      */
     public function create(Project $project)

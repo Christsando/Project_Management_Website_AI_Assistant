@@ -15,6 +15,7 @@ class HumanResourceItem extends Model
     protected $fillable = [
         'human_resource_plan_id',
         'wbs_item_id',
+        'team_member_id',
         'role_name',
         'required_skill',
         'job_description',
@@ -31,7 +32,16 @@ class HumanResourceItem extends Model
         'workload_percentage' => 'integer',
         'estimated_work_days' => 'integer',
         'quantity' => 'integer',
+        'team_member_id' => 'integer',
     ];
+
+    /**
+     * Get the team member associated with this resource item.
+     */
+    public function teamMember(): BelongsTo
+    {
+        return $this->belongsTo(TeamMember::class, 'team_member_id');
+    }
 
     /**
      * Get the plan that this item belongs to.

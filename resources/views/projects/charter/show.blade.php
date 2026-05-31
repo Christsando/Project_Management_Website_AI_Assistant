@@ -1,15 +1,69 @@
 <x-app-layout>
-    <x-slot name="header">
-        <x-header-component :title="'Project Charter: ' . $project->title" icon="fa-solid fa-file-signature text-blue-600 text-lg" />
-    </x-slot>
-
     <div class="px-4 py-2">
-        <!-- Back Link -->
-        <div class="mb-4">
-            <a href="{{ route('projects.show', $project->id) }}" class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition gap-1.5">
-                <i class="fas fa-arrow-left"></i>
-                {{ __('Kembali ke Detail Proyek') }}
-            </a>
+        <!-- Top Bar / Header Redesign -->
+        <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <!-- Left: Breadcrumbs -->
+            <div class="flex items-center gap-2 text-xs">
+                <a href="{{ route('projects.show', $project->id) }}" class="text-slate-400 hover:text-slate-600 transition font-medium">Inisiasi Proyek</a>
+                <span class="text-slate-300">/</span>
+                <a href="{{ route('projects.show', $project->id) }}" class="text-slate-400 hover:text-slate-600 transition font-semibold">Proyek #{{ $project->id }}</a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-800 font-bold">Detail Piagam Proyek</span>
+            </div>
+
+            <!-- Right: Actions & User Info -->
+            <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
+                @if($charter)
+                    <!-- Status Badge -->
+                    @php
+                        $statusClasses = [
+                            'draft' => 'bg-gray-100 text-gray-700 border-gray-200',
+                            'submitted' => 'bg-amber-50 text-amber-700 border-amber-200',
+                            'reviewed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            'revision_needed' => 'bg-rose-50 text-rose-700 border-rose-200',
+                        ][$charter->status] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+                    @endphp
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border {{ $statusClasses }}">
+                        Status: {{ $charter->status }}
+                    </span>
+
+                    <a href="{{ route('projects.charter.download', $project->id) }}" 
+                       class="px-4 py-2 bg-rose-600 hover:bg-rose-750 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                        <i class="fas fa-file-pdf"></i> {{ __('Download PDF') }}
+                    </a>
+
+                    @if(strtolower(Auth::user()->role) === 'manager' && $project->status === 'approved' && $charter->status === 'draft')
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('projects.charter.edit', $project->id) }}" 
+                               class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                                <i class="fas fa-edit text-slate-500"></i> {{ __('Ubah') }}
+                            </a>
+                            <form action="{{ route('projects.charter.update', $project->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin memfinalisasi piagam proyek ini? Setelah difinalisasi, Anda tidak dapat mengedit lagi.');">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="action" value="submit">
+                                <button type="submit" class="px-4 py-2 bg-[#0B1329] hover:bg-[#1E293B] text-white rounded-xl text-xs font-bold transition shadow-md">
+                                    {{ __('Finalisasi') }}
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+                @endif
+
+                <!-- Divider -->
+                <div class="hidden sm:block border-l border-slate-200 h-8"></div>
+
+                <!-- Profile Info -->
+                <div class="flex items-center gap-2.5">
+                    <div class="text-right hidden md:block">
+                        <p class="text-[10px] font-semibold text-slate-400 leading-none">Pengguna Aktif</p>
+                        <p class="text-xs font-bold text-slate-800 mt-1 leading-none">{{ Auth::user()->name }}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-blue-50 text-blue-600 font-bold text-[11px] shadow-sm">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Alert Messages -->
@@ -35,24 +89,24 @@
         @endif
 
         @if(!$charter)
-            <!-- Empty State -->
-            <div class="bg-white p-12 rounded-2xl border border-slate-100 shadow-sm text-center max-w-2xl mx-auto my-12">
-                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
+            <!-- Empty State Redesign -->
+            <div class="bg-white p-12 rounded-2xl border border-slate-100 shadow-sm text-center max-w-xl mx-auto my-12">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-100 shadow-sm">
                     <i class="fa-solid fa-file-signature text-2xl"></i>
                 </div>
-                <h4 class="font-extrabold text-lg text-slate-800 mb-2">{{ __('Project Charter Belum Dibuat') }}</h4>
-                <p class="text-xs text-slate-500 max-w-md mx-auto mb-6 leading-relaxed">
+                <h4 class="font-extrabold text-lg text-slate-800 mb-2">{{ __('Piagam Proyek Belum Dibuat') }}</h4>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto mb-8 leading-relaxed">
                     {{ __('Project Charter mendefinisikan tujuan proyek, kasus bisnis, batasan, milestone, anggaran, dan pemangku kepentingan kunci.') }}
                 </p>
 
                 @if(strtolower(Auth::user()->role) === 'manager' && $project->status === 'approved')
-                    <a href="{{ route('projects.charter.create', $project->id) }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-md hover:shadow-lg shadow-blue-500/10 gap-2">
+                    <a href="{{ route('projects.charter.create', $project->id) }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-[#0B1329] hover:bg-[#1E293B] text-white font-bold rounded-xl text-xs transition shadow-md gap-2">
                         <i class="fas fa-plus text-[10px]"></i>
-                        {{ __('Buat Project Charter Sekarang') }}
+                        {{ __('Buat Piagam Proyek Sekarang') }}
                     </a>
                 @else
-                    <span class="inline-block text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2">
-                        <i class="fas fa-exclamation-triangle mr-1"></i> {{ __('Project Charter belum dibuat oleh Manager.') }}
+                    <span class="inline-block text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5">
+                        <i class="fas fa-exclamation-triangle mr-1.5"></i> {{ __('Project Charter belum dibuat oleh Manager.') }}
                     </span>
                 @endif
             </div>
@@ -72,55 +126,29 @@
             @endphp
 
             <!-- Two Column Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start mb-24">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
                 <!-- Left Column: Details (2/3 Width) -->
                 <div class="lg:col-span-2 space-y-6">
                     
-                    <!-- Card 1: Header / Ringkasan Status -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-2">
-                                @php
-                                    $statusClasses = [
-                                        'draft' => 'bg-slate-100 text-slate-700 border-slate-200',
-                                        'submitted' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                        'reviewed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                        'revision_needed' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                    ][$charter->status] ?? 'bg-slate-100 text-slate-700 border-slate-200';
-                                @endphp
-                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border {{ $statusClasses }}">
-                                    {{ __('Status: ') . $charter->status }}
-                                </span>
-                            </div>
-                            <h2 class="text-xl font-extrabold text-slate-800 tracking-tight mb-1">
-                                {{ __('Piagam Proyek (Project Charter)') }}
-                            </h2>
-                            <p class="text-xs text-slate-500">
-                                {{ __('Dokumen otorisasi resmi untuk pelaksanaan proyek.') }}
-                            </p>
-                        </div>
-                    </div>
-
                     <!-- Card 2: Ringkasan Eksekutif -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                            <i class="fa-regular fa-file-lines text-sm"></i> {{ __('Ringkasan Eksekutif') }}
-                        </h3>
-                        
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-slate-800">{{ __('Ringkasan Eksekutif') }}</h3>
+                            <div class="text-slate-400">
+                                <i class="fa-regular fa-file-lines text-lg"></i>
+                            </div>
+                        </div>
                         <div class="space-y-4">
-                            <!-- Tujuan Proyek -->
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Tujuan Proyek') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                                     {{ $charter->project_purpose ?: __('Tidak ada detail tujuan proyek.') }}
                                 </div>
                             </div>
-
-                            <!-- Business Case -->
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Business Case') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                                     {{ $charter->business_case ?: __('Tidak ada detail kasus bisnis.') }}
                                 </div>
                             </div>
@@ -128,24 +156,23 @@
                     </div>
 
                     <!-- Card 3: Objektif & Kriteria Sukses -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                            <i class="fa-solid fa-bullseye text-sm"></i> {{ __('Objektif & Kriteria Sukses') }}
-                        </h3>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Objektif Utama -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-slate-800">{{ __('Sasaran & Kriteria Sukses') }}</h3>
+                            <div class="text-slate-400">
+                                <i class="fa-solid fa-bullseye text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Objektif Utama') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap min-h-[100px]">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100 min-h-[100px]">
                                     {{ $charter->project_objectives ?: __('Tidak ada detail sasaran proyek.') }}
                                 </div>
                             </div>
-
-                            <!-- Kriteria Sukses -->
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Kriteria Sukses') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap min-h-[100px]">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100 min-h-[100px]">
                                     {{ $charter->success_criteria ?: __('Tidak ada kriteria keberhasilan.') }}
                                 </div>
                             </div>
@@ -153,71 +180,137 @@
                     </div>
 
                     <!-- Card 4: Ruang Lingkup & Milestone -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                            <i class="fa-solid fa-compress-arrows-alt text-sm"></i> {{ __('Ruang Lingkup & Milestone') }}
-                        </h3>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Scope Summary -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-slate-800">{{ __('Ruang Lingkup & Milestone Utama') }}</h3>
+                            <div class="text-slate-400">
+                                <i class="fa-solid fa-crop-simple text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Ringkasan Ruang Lingkup') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap min-h-[100px]">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100 min-h-[100px]">
                                     {{ $charter->scope_summary ?: __('Tidak ada ringkasan ruang lingkup.') }}
                                 </div>
                             </div>
-
-                            <!-- Milestone Summary -->
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Ringkasan Milestone') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap min-h-[100px]">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100 min-h-[100px]">
                                     {{ $charter->milestone_summary ?: __('Tidak ada ringkasan milestone.') }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 5: Asumsi, Batasan & Stakeholders -->
+                    <!-- Card 5: Milestone Aktual dari WBS/Timeline -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-slate-800">{{ __('Milestone Aktual dari WBS/Timeline') }}</h3>
+                            <div class="text-slate-400">
+                                <i class="fa-solid fa-flag text-lg"></i>
+                            </div>
+                        </div>
+
+                        @if(isset($actualMilestones) && $actualMilestones->isNotEmpty())
+                            <div class="overflow-x-auto rounded-xl border border-slate-100 shadow-sm">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            <th class="px-4 py-3">{{ __('Nama Milestone') }}</th>
+                                            <th class="px-4 py-3">{{ __('Task WBS') }}</th>
+                                            <th class="px-4 py-3">{{ __('Jadwal') }}</th>
+                                            <th class="px-4 py-3 text-center">{{ __('Durasi') }}</th>
+                                            <th class="px-4 py-3">{{ __('Predecessor') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                                        @foreach($actualMilestones as $milestone)
+                                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                                <td class="px-4 py-3.5">
+                                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                        <i class="fas fa-flag text-[9px]"></i>
+                                                        {{ $milestone->milestone_name ?: '-' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3.5 text-slate-800">
+                                                    {{ $milestone->wbsItem ? $milestone->wbsItem->title : '-' }}
+                                                </td>
+                                                <td class="px-4 py-3.5 font-bold text-slate-600">
+                                                    {{ $milestone->start_date ? $milestone->start_date->format('d M Y') : '-' }} 
+                                                    s/d 
+                                                    {{ $milestone->end_date ? $milestone->end_date->format('d M Y') : '-' }}
+                                                </td>
+                                                <td class="px-4 py-3.5 text-center font-bold text-slate-500">
+                                                    {{ $milestone->duration_days }} {{ __('Hari') }}
+                                                </td>
+                                                <td class="px-4 py-3.5">
+                                                    @if($milestone->dependencyWbsItem)
+                                                        <span class="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/60 inline-flex items-center font-bold">
+                                                            <i class="fas fa-link mr-1"></i>
+                                                            {{ Str::limit($milestone->dependencyWbsItem->title, 20) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-slate-400 italic text-[11px] font-medium">-</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="p-4 bg-slate-50/50 rounded-xl border border-slate-100 text-xs text-slate-500 flex items-center gap-2">
+                                <i class="fas fa-info-circle text-slate-400 text-sm"></i>
+                                <span>{{ __('Milestone aktual belum tersedia karena WBS/Timeline belum dibuat atau belum memiliki milestone.') }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Card 6: Asumsi & Batasan + Stakeholders -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Asumsi & Batasan -->
-                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                            <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <i class="fas fa-exclamation-circle text-sm"></i> {{ __('Asumsi & Batasan') }}
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4 relative">
+                            <h3 class="text-sm font-bold text-slate-800 flex items-center justify-between mb-2">
+                                <span>{{ __('Asumsi & Batasan') }}</span>
+                                <i class="fa-solid fa-circle-exclamation text-slate-400 text-lg"></i>
                             </h3>
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Asumsi') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                                     {{ $charter->assumptions ?: __('Tidak ada detail asumsi.') }}
                                 </div>
                             </div>
                             <div>
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Batasan') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                                     {{ $charter->constraints ?: __('Tidak ada detail batasan.') }}
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Stakeholder Utama -->
-                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
-                            <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                                <i class="fas fa-users text-sm"></i> {{ __('Stakeholder Utama') }}
-                            </h3>
+                        <!-- Stakeholders -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col relative">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-slate-800">{{ __('Pemangku Kepentingan Utama') }}</h3>
+                                <i class="fa-solid fa-users text-slate-400 text-lg"></i>
+                            </div>
                             <div class="flex-grow">
                                 <h4 class="text-xs font-semibold text-slate-400 mb-1.5">{{ __('Ringkasan Pemangku Kepentingan') }}</h4>
-                                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-sm text-slate-755 leading-relaxed whitespace-pre-wrap min-h-[175px] h-full">
+                                <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-100 min-h-[175px] h-full">
                                     {{ $charter->stakeholder_summary ?: __('Tidak ada ringkasan pemangku kepentingan.') }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 6: Catatan & Umpan Balik Manager -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                            <i class="fas fa-comment-dots text-sm"></i> {{ __('Catatan & Umpan Balik Manager') }}
-                        </h3>
-                        <div class="p-4 rounded-xl text-sm leading-relaxed border {{ $charter->feedback_notes ? 'bg-amber-50/40 border-amber-100 text-amber-900' : 'bg-slate-50/30 border-slate-100 text-slate-400 italic' }}">
+                    <!-- Card 7: Catatan & Umpan Balik Manager -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-slate-800">{{ __('Catatan & Umpan Balik Manager') }}</h3>
+                            <i class="fa-solid fa-comments text-slate-400 text-lg"></i>
+                        </div>
+                        <div class="p-4 rounded-xl text-sm leading-relaxed border {{ $charter->feedback_notes ? 'bg-amber-50/40 border-amber-100 text-amber-900 animate-pulse-once' : 'bg-slate-50/30 border-slate-100 text-slate-400 italic' }}">
                             @if($charter->feedback_notes)
                                 <p class="whitespace-pre-wrap">{{ $charter->feedback_notes }}</p>
                             @else
@@ -226,297 +319,194 @@
                         </div>
                     </div>
 
-                    <!-- Card 7: Rekomendasi AI Assistant (AI Suggestions) -->
-                    @if($showAiSection)
-                        <div class="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 right-0 p-3 bg-indigo-50 text-indigo-500 rounded-bl-2xl">
-                                <i class="fas fa-robot text-sm"></i>
-                            </div>
-                            
-                            <h3 class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                                <i class="fas fa-magic"></i> {{ __('Rekomendasi AI Assistant (AI Suggestions)') }}
-                            </h3>
-
-                            @if($charter->ai_suggestions)
-                                <div class="space-y-4">
-                                    @if($isJsonSuggestions)
-                                        <!-- Purpose Suggestion -->
-                                        @if(isset($suggestions['project_purpose']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-blue-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-regular fa-lightbulb text-blue-600"></i> Saran Tujuan Proyek
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap animate-pulse-once" id="ai-suggest-project_purpose">{{ $suggestions['project_purpose'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-project_purpose').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Business Case Suggestion -->
-                                        @if(isset($suggestions['business_case']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-indigo-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-chart-line text-indigo-600"></i> Saran Business Case
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-business_case">{{ $suggestions['business_case'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-business_case').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Objectives Suggestion -->
-                                        @if(isset($suggestions['project_objectives']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-purple-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-bullseye text-purple-600"></i> Saran Sasaran Proyek
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-project_objectives">{{ $suggestions['project_objectives'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-project_objectives').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Scope Summary Suggestion -->
-                                        @if(isset($suggestions['scope_summary']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-sky-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-compress-arrows-alt text-sky-600"></i> Saran Ruang Lingkup
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-scope_summary">{{ $suggestions['scope_summary'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-scope_summary').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Success Criteria Suggestion -->
-                                        @if(isset($suggestions['success_criteria']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-emerald-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-check-double text-emerald-600"></i> Saran Kriteria Sukses
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-success_criteria">{{ $suggestions['success_criteria'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-success_criteria').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Assumptions Suggestion -->
-                                        @if(isset($suggestions['assumptions']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-teal-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-circle-question text-teal-600"></i> Saran Asumsi
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-assumptions">{{ $suggestions['assumptions'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-assumptions').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Constraints Suggestion -->
-                                        @if(isset($suggestions['constraints']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-rose-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-circle-exclamation text-rose-600"></i> Saran Batasan
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-constraints">{{ $suggestions['constraints'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-constraints').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Stakeholder Suggestion -->
-                                        @if(isset($suggestions['stakeholder_summary']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-violet-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-users text-violet-600"></i> Saran Pemangku Kepentingan
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-stakeholder_summary">{{ $suggestions['stakeholder_summary'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-stakeholder_summary').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Milestone Suggestion -->
-                                        @if(isset($suggestions['milestone_summary']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-pink-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-flag text-pink-600"></i> Saran Milestone
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-milestone_summary">{{ $suggestions['milestone_summary'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-milestone_summary').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <!-- Budget Suggestion -->
-                                        @if(isset($suggestions['budget_summary']))
-                                            <div class="bg-white p-4 rounded-xl border-l-4 border-amber-500 border border-slate-100 shadow-sm space-y-2">
-                                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                    <i class="fa-regular fa-money-bill-1 text-amber-600"></i> Analisis Anggaran
-                                                </span>
-                                                <p class="text-xs text-slate-600 italic leading-relaxed whitespace-pre-wrap" id="ai-suggest-budget_summary">{{ $suggestions['budget_summary'] }}</p>
-                                                <div class="flex gap-2 pt-1">
-                                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-budget_summary').innerText); alert('Salin berhasil!');" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 rounded-lg text-[10px] font-semibold transition">
-                                                        <i class="fa-regular fa-copy"></i> Salin
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @else
-                                        <!-- Plain markdown display -->
-                                        <div class="bg-indigo-50/20 p-6 rounded-xl border border-indigo-50/50 text-sm text-indigo-950 font-sans leading-relaxed">
-                                            <div class="markdown-content" id="aiSuggestionsTextRaw">
-                                                {!! str($charter->ai_suggestions)->markdown() !!}
-                                            </div>
-                                            <button onclick="navigator.clipboard.writeText(document.getElementById('aiSuggestionsTextRaw').innerText); alert('Salin berhasil!');" 
-                                                    class="w-full mt-3 inline-flex items-center justify-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
-                                                <i class="fas fa-copy mr-1"></i> {{ __('Salin Semua Rekomendasi') }}
-                                            </button>
-                                        </div>
-                                    @endif
-
-                                    <!-- Regenerate button -->
-                                    @if(strtolower(Auth::user()->role) === 'manager' && $project->status === 'approved' && $charter->status === 'draft')
-                                        <div class="mt-4 flex justify-end">
-                                            <form action="{{ route('projects.charter.generate_ai', $project->id) }}" method="POST" class="ai-generate-form">
-                                                @csrf
-                                                <button type="submit" class="btn-ai-generate inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md transition duration-200 gap-1.5">
-                                                    <i class="fas fa-sync-alt animate-icon"></i> {{ __('Regenerate Rekomendasi AI') }}
-                                                </button>
-                                            </form>
-                                        </div>
-                                    @endif
-                                </div>
-                            @else
-                                <!-- Empty state generate button -->
-                                <div class="border border-dashed border-indigo-100 bg-indigo-50/20 p-6 rounded-xl text-center">
-                                    <p class="text-sm font-semibold text-indigo-950 mb-1">{{ __('Rekomendasi AI Belum Digenerate') }}</p>
-                                    <p class="text-xs text-indigo-600/70 max-w-md mx-auto leading-relaxed mb-4">
-                                        {{ __('AI Assistant dapat menganalisis deskripsi proyek dan proposal Anda untuk menghasilkan draf saran Project Charter yang relevan.') }}
-                                    </p>
-                                    
-                                    @if(strtolower(Auth::user()->role) === 'manager' && $project->status === 'approved' && $charter->status === 'draft')
-                                        <form action="{{ route('projects.charter.generate_ai', $project->id) }}" method="POST" class="ai-generate-form">
-                                            @csrf
-                                            <button type="submit" class="btn-ai-generate inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md transition duration-200 gap-1.5">
-                                                <i class="fas fa-magic animate-icon"></i> {{ __('Generate Rekomendasi AI Sekarang') }}
-                                            </button>
-                                        </form>
-                                    @else
-                                        <span class="inline-block text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
-                                            {{ __('Regenerasi AI hanya aktif saat status draf.') }}
-                                        </span>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    @endif
-
                 </div>
 
-                <!-- Right Column: Sidebar Metadata & Status Actions (1/3 Width) -->
+                <!-- Right Column: Sidebar (1/3 Width) -->
                 <div class="space-y-6">
                     <!-- Financial Box -->
-                    <div class="bg-gradient-to-br from-indigo-600 to-blue-700 p-6 rounded-2xl text-white shadow-md relative overflow-hidden">
-                        <!-- Decorative background circles -->
-                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-                        <div class="absolute -left-6 -top-6 w-20 h-20 bg-white/15 rounded-full blur-lg"></div>
-
-                        <span class="text-[9px] font-bold text-indigo-200 uppercase tracking-wider block mb-1">
-                            <i class="fa-regular fa-money-bill-1 mr-1"></i>{{ __('Ringkasan Anggaran') }}
-                        </span>
-                        <div class="text-2xl font-black tracking-tight">
+                    <div class="bg-[#0B1329] p-6 rounded-2xl text-white shadow-md relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
+                            <i class="fas fa-wallet text-8xl"></i>
+                        </div>
+                        
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ __('Ringkasan Anggaran') }}</h3>
+                        <div class="text-xl font-black tracking-tight text-white">
                             @if($charter->budget_summary !== null)
                                 Rp {{ number_format($charter->budget_summary, 2, ',', '.') }}
                             @else
                                 Rp -
                             @endif
                         </div>
-                        <p class="text-[10px] text-indigo-100/80 mt-3 leading-relaxed">
+                        <p class="text-[10px] text-slate-400 mt-3 leading-relaxed">
                             {{ __('Anggaran definitif awal yang diusulkan dan disetujui dalam dokumen charter ini.') }}
                         </p>
                     </div>
 
                     <!-- Audit Metadata Box -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider pb-3 border-b border-slate-100 flex items-center gap-1.5">
-                            <i class="fa-regular fa-folder-open text-slate-400"></i> {{ __('Metadata Dokumen') }}
-                        </h3>
-                        <div class="space-y-4 text-xs">
-                            <div>
-                                <span class="text-slate-400 font-semibold block mb-1">{{ __('Dibuat Oleh') }}</span>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[10px]">
-                                        {{ $charter->creator ? strtoupper(substr($charter->creator->name, 0, 2)) : '-' }}
-                                    </div>
-                                    <div>
-                                        <span class="font-bold text-slate-800 block">{{ $charter->creator ? $charter->creator->name : '-' }}</span>
-                                        <span class="text-[10px] text-slate-400 block">{{ $charter->created_at->format('d M Y H:i') }}</span>
-                                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4 text-xs">
+                        <h3 class="font-bold text-slate-800 pb-2 border-b border-slate-100">{{ __('Metadata Dokumen') }}</h3>
+                        <div class="space-y-3.5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 text-xs shadow-sm">
+                                    <i class="fas fa-user-edit"></i>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[9px] font-semibold uppercase tracking-wider">{{ __('Dibuat Oleh:') }}</span>
+                                    <span class="font-bold text-slate-800 block mt-0.5">{{ $charter->creator ? $charter->creator->name : '-' }}</span>
+                                    <span class="text-slate-400 block text-[9px] mt-0.5"><i class="fa-regular fa-clock mr-1"></i>{{ $charter->created_at->format('d M Y H:i') }}</span>
                                 </div>
                             </div>
-                            
-                            <div>
-                                <span class="text-slate-400 font-semibold block mb-1">{{ __('Pembaruan Terakhir') }}</span>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[10px]">
-                                        {{ $charter->updater ? strtoupper(substr($charter->updater->name, 0, 2)) : '-' }}
-                                    </div>
-                                    <div>
-                                        <span class="font-bold text-slate-800 block">{{ $charter->updater ? $charter->updater->name : '-' }}</span>
-                                        <span class="text-[10px] text-slate-400 block">{{ $charter->updated_at->format('d M Y H:i') }}</span>
-                                    </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 text-xs shadow-sm">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[9px] font-semibold uppercase tracking-wider">{{ __('Pembaruan Terakhir:') }}</span>
+                                    <span class="font-bold text-slate-800 block mt-0.5">{{ $charter->updater ? $charter->updater->name : '-' }}</span>
+                                    <span class="text-slate-400 block text-[9px] mt-0.5"><i class="fa-regular fa-clock mr-1"></i>{{ $charter->updated_at->format('d M Y H:i') }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Actions / Finalize Form Contextual -->
-                    @if(strtolower(Auth::user()->role) === 'manager' && $project->status === 'approved' && $charter->status === 'draft')
-                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider pb-3 border-b border-slate-100 flex items-center gap-1.5">
-                                <i class="fa-solid fa-gears text-slate-400"></i> {{ __('Aksi Manager') }}
-                            </h3>
+                    <!-- AI Suggestions Panel (Read-only view) -->
+                    @if($showAiSection)
+                        <div class="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm relative overflow-hidden space-y-6">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
                             
-                            <a href="{{ route('projects.charter.edit', $project->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition gap-1.5">
-                                <i class="fas fa-edit"></i> {{ __('Ubah Project Charter') }}
-                            </a>
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs shadow-sm">
+                                        <i class="fa-solid fa-robot"></i>
+                                    </span>
+                                    {{ __('Rekomendasi AI') }}
+                                </h3>
+                                <span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold rounded uppercase tracking-wider">Beta</span>
+                            </div>
 
-                            <form action="{{ route('projects.charter.update', $project->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin memfinalisasi Project Charter ini? Setelah difinalisasi, Anda tidak dapat mengedit lagi.');">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="action" value="submit">
-                                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition gap-1.5">
-                                    <i class="fas fa-check-circle"></i> {{ __('Finalisasi Project Charter') }}
-                                </button>
-                            </form>
+                            @if($charter->ai_suggestions)
+                                @if($isJsonSuggestions)
+                                    <div class="space-y-4">
+                                        @php
+                                            $suggestionSpecs = [
+                                                'project_purpose' => [
+                                                    'label' => 'TUJUAN',
+                                                    'relevance' => '85% relevan',
+                                                    'bg' => 'bg-blue-50 text-blue-700 border-blue-100',
+                                                ],
+                                                'business_case' => [
+                                                    'label' => 'BISNIS CASE',
+                                                    'relevance' => '80% relevan',
+                                                    'bg' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                                ],
+                                                'project_objectives' => [
+                                                    'label' => 'SASARAN',
+                                                    'relevance' => '90% relevan',
+                                                    'bg' => 'bg-purple-50 text-purple-700 border-purple-100',
+                                                ],
+                                                'scope_summary' => [
+                                                    'label' => 'RUANG LINGKUP',
+                                                    'relevance' => '75% relevan',
+                                                    'bg' => 'bg-sky-50 text-sky-700 border-sky-100',
+                                                ],
+                                                'success_criteria' => [
+                                                    'label' => 'KRITERIA SUKSES',
+                                                    'relevance' => '85% relevan',
+                                                    'bg' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                                ],
+                                                'assumptions' => [
+                                                    'label' => 'ASUMSI',
+                                                    'relevance' => '70% relevan',
+                                                    'bg' => 'bg-teal-50 text-teal-700 border-teal-100',
+                                                ],
+                                                'constraints' => [
+                                                    'label' => 'BATASAN',
+                                                    'relevance' => '75% relevan',
+                                                    'bg' => 'bg-rose-50 text-rose-700 border-rose-100',
+                                                ],
+                                                'stakeholder_summary' => [
+                                                    'label' => 'STAKEHOLDER',
+                                                    'relevance' => '80% relevan',
+                                                    'bg' => 'bg-violet-50 text-violet-700 border-violet-100',
+                                                ],
+                                                'milestone_summary' => [
+                                                    'label' => 'MILESTONE',
+                                                    'relevance' => '85% relevan',
+                                                    'bg' => 'bg-pink-50 text-pink-700 border-pink-100',
+                                                ],
+                                                'budget_summary' => [
+                                                    'label' => 'ANGGARAN',
+                                                    'relevance' => '90% relevan',
+                                                    'bg' => 'bg-amber-50 text-amber-700 border-amber-100',
+                                                ]
+                                            ];
+                                        @endphp
+
+                                        @foreach($suggestionSpecs as $field => $spec)
+                                            @if(isset($suggestions[$field]))
+                                                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold border {{ $spec['bg'] }}">
+                                                                {{ $spec['label'] }}
+                                                            </span>
+                                                            <span class="text-[10px] text-slate-400 font-semibold">{{ $spec['relevance'] }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs text-slate-600 leading-relaxed" id="ai-suggest-{{ $field }}">{{ $suggestions[$field] }}</p>
+                                                    <div class="flex justify-end">
+                                                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-{{ $field }}').innerText); alert('Salin berhasil!');" 
+                                                                class="px-2.5 py-1 bg-white border border-slate-200 text-slate-500 hover:text-slate-700 rounded-lg transition text-[9px] font-bold flex items-center gap-1">
+                                                            <i class="fa-regular fa-copy"></i> Salin
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="bg-indigo-50/20 p-4 rounded-xl border border-indigo-100 text-xs text-primaryText leading-relaxed">
+                                        <div class="max-h-[300px] overflow-y-auto font-sans text-indigo-950 markdown-content markdown-content-sm shadow-inner" id="aiSuggestionsTextRaw">
+                                            {!! str($charter->ai_suggestions)->markdown() !!}
+                                        </div>
+                                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('aiSuggestionsTextRaw').innerText); alert('Salin berhasil!');" 
+                                                class="w-full mt-3 inline-flex items-center justify-center px-3 py-1.5 bg-[#0B1329] hover:bg-[#1E293B] text-white rounded-lg text-xs font-bold shadow-sm transition">
+                                            <i class="fas fa-copy mr-1"></i> {{ __('Salin Semua Rekomendasi') }}
+                                        </button>
+                                    </div>
+                                @endif
+                                
+                                @if($project->status === 'approved' && $charter->status === 'draft')
+                                    <div class="mt-4 flex justify-end">
+                                        <form action="{{ route('projects.charter.generate_ai', $project->id) }}" method="POST" class="ai-generate-form w-full">
+                                            @csrf
+                                            <button type="submit" class="btn-ai-generate w-full inline-flex items-center justify-center px-4 py-2.5 bg-white border border-dashed border-slate-300 hover:border-slate-400 text-slate-700 rounded-xl text-xs font-bold transition gap-1.5">
+                                                <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> {{ __('Regenerate Rekomendasi AI') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+                            @else
+                                <div class="border border-dashed border-indigo-100 bg-indigo-50/20 p-6 rounded-xl text-center">
+                                    <p class="text-xs font-bold text-indigo-950 mb-1">{{ __('Rekomendasi AI Belum Digenerate') }}</p>
+                                    <p class="text-[10px] text-indigo-600/70 max-w-xs mx-auto leading-relaxed mb-4">
+                                        {{ __('AI Assistant dapat menganalisis deskripsi proyek dan proposal Anda untuk menghasilkan draf saran Project Charter yang relevan.') }}
+                                    </p>
+                                    
+                                    @if($project->status === 'approved' && $charter->status === 'draft')
+                                        <form action="{{ route('projects.charter.generate_ai', $project->id) }}" method="POST" class="ai-generate-form">
+                                            @csrf
+                                            <button type="submit" class="btn-ai-generate w-full inline-flex items-center justify-center px-4 py-2.5 bg-[#0B1329] hover:bg-[#1E293B] text-white rounded-xl text-xs font-bold shadow-sm transition gap-1.5">
+                                                <i class="fas fa-magic"></i> {{ __('Generate Rekomendasi AI') }}
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="inline-block text-[10px] font-medium text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+                                            {{ __('Regenerasi AI hanya aktif saat status draf.') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -525,6 +515,7 @@
         @endif
     </div>
 
+    <!-- JS Loader Helper -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const forms = document.querySelectorAll('.ai-generate-form');
@@ -534,10 +525,6 @@
                     if (btn) {
                         btn.disabled = true;
                         btn.classList.add('opacity-75', 'cursor-not-allowed');
-                        const icon = btn.querySelector('.animate-icon');
-                        if (icon) {
-                            icon.className = 'fas fa-spinner fa-spin';
-                        }
                         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> {{ __("Sedang Memproses AI...") }}';
                     }
                     

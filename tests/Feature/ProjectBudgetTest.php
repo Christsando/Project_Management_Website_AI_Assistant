@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Project;
 use App\Models\ProjectScope;
+use App\Models\ProjectProposal;
+use App\Models\ProjectCharter;
 use App\Models\User;
 use App\Models\WbsItem;
 use App\Models\TimelineItem;
@@ -97,6 +99,11 @@ class ProjectBudgetTest extends TestCase
         $manager = User::factory()->create(['role' => 'Manager']);
         $project = Project::factory()->create(['status' => 'planning']);
         
+        ProjectProposal::factory()->create([
+            'project_id' => $project->id,
+            'estimated_budget' => 50000000,
+        ]);
+
         $scope = ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
         $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
         TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
@@ -244,5 +251,198 @@ class ProjectBudgetTest extends TestCase
         // Accessing budget routes should abort with 403
         $this->actingAs($manager)->get(route('projects.budget.create', $project->id))->assertStatus(403);
         $this->actingAs($manager)->post(route('projects.budget.store', $project->id), [])->assertStatus(403);
+    }
+
+    /**
+     * Test baseline is proposal budget when charter is missing or invalid text.
+     */
+    public function test_budget_planning_uses_proposal_baseline_when_charter_missing_or_invalid(): void
+    {
+        $manager = User::factory()->create(['role' => 'Manager']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+
+        // Create BudgetPlan so it doesn't redirect
+        BudgetPlan::factory()->create(['project_id' => $project->id, 'total_budget' => 0]);
+
+        // Create Proposal with valid estimated_budget
+        ProjectProposal::factory()->create([
+            'project_id' => $project->id,
+            'estimated_budget' => 100000000,
+        ]);
+
+        // Access edit or show, it should load baseline budget from proposal
+        $response = $this->actingAs($manager)->get(route('projects.budget.show', $project->id));
+        $response->assertStatus(200);
+        $response->assertSee('Rp 100.000.000');
+        $response->assertSee('Sumber: Project Proposal');
+
+        // Now test with invalid text charter budget summary
+        ProjectCharter::factory()->create([
+            'project_id' => $project->id,
+            'budget_summary' => 'This is a long text containing numbers like 50.000.000 and 10.000.000 but not a clean number',
+        ]);
+
+        $response = $this->actingAs($manager)->get(route('projects.budget.show', $project->id));
+        $response->assertStatus(200);
+        // Should fallback to proposal
+        $response->assertSee('Rp 100.000.000');
+        $response->assertSee('Sumber: Project Proposal');
+    }
+
+    /**
+     * Test baseline is charter budget when charter has numeric summary.
+     */
+    public function test_budget_planning_uses_charter_baseline_when_charter_has_numeric_summary(): void
+    {
+        $manager = User::factory()->create(['role' => 'Manager']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+
+        // Create BudgetPlan so it doesn't redirect
+        BudgetPlan::factory()->create(['project_id' => $project->id, 'total_budget' => 0]);
+
+        // Create Proposal with estimated_budget
+        ProjectProposal::factory()->create([
+            'project_id' => $project->id,
+            'estimated_budget' => 100000000,
+        ]);
+
+        // Create Charter with clean numeric/currency summary
+        ProjectCharter::factory()->create([
+            'project_id' => $project->id,
+            'budget_summary' => 'Rp 150.000.000',
+        ]);
+
+        $response = $this->actingAs($manager)->get(route('projects.budget.show', $project->id));
+        $response->assertStatus(200);
+        // Should use charter instead of proposal
+        $response->assertSee('Rp 150.000.000');
+        $response->assertSee('Sumber: Project Charter');
+    }
+
+    /**
+     * Test finalization blocks when baseline is missing.
+     */
+    public function test_finalize_blocks_when_baseline_missing(): void
+    {
+        $manager = User::factory()->create(['role' => 'Manager']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+
+        $budgetPlan = BudgetPlan::factory()->create(['project_id' => $project->id, 'status' => 'draft']);
+        BudgetItem::factory()->create([
+            'budget_plan_id' => $budgetPlan->id,
+            'quantity' => 1,
+            'unit_cost' => 50000000,
+            'total_cost' => 50000000,
+        ]);
+
+        // Recalculate total_budget
+        $budgetPlan->total_budget = 50000000;
+        $budgetPlan->save();
+
+        // Finalize budget, should redirect to edit with error session message
+        $response = $this->actingAs($manager)->post(route('projects.budget.finalize', $project->id));
+        $response->assertRedirect(route('projects.budget.edit', $project->id));
+        $response->assertSessionHas('error', 'Budget Planning belum dapat difinalisasi karena baseline anggaran dari Proposal/Charter belum tersedia.');
+        $this->assertEquals('draft', $budgetPlan->fresh()->status);
+    }
+
+    /**
+     * Test finalization blocks when total RAB exceeds baseline.
+     */
+    public function test_finalize_blocks_when_total_rab_exceeds_baseline(): void
+    {
+        $manager = User::factory()->create(['role' => 'Manager']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+
+        // Create Proposal with estimated_budget
+        ProjectProposal::factory()->create([
+            'project_id' => $project->id,
+            'estimated_budget' => 40000000, // 40 Million baseline
+        ]);
+
+        $budgetPlan = BudgetPlan::factory()->create(['project_id' => $project->id, 'status' => 'draft']);
+        
+        // Add item that exceeds the baseline: 50 Million
+        BudgetItem::factory()->create([
+            'budget_plan_id' => $budgetPlan->id,
+            'quantity' => 1,
+            'unit_cost' => 50000000,
+            'total_cost' => 50000000,
+        ]);
+        $budgetPlan->total_budget = 50000000;
+        $budgetPlan->save();
+
+        // Finalize budget, should redirect to edit with error session message
+        $response = $this->actingAs($manager)->post(route('projects.budget.finalize', $project->id));
+        $response->assertRedirect(route('projects.budget.edit', $project->id));
+        $response->assertSessionHas('error', 'Budget Planning tidak dapat difinalisasi karena total RAB melebihi baseline anggaran awal.');
+        $this->assertEquals('draft', $budgetPlan->fresh()->status);
+    }
+
+    /**
+     * Test finalization allows when total RAB within baseline.
+     */
+    public function test_finalize_allows_when_total_rab_within_baseline(): void
+    {
+        $manager = User::factory()->create(['role' => 'Manager']);
+        $project = Project::factory()->create(['status' => 'planning']);
+        
+        ProjectScope::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        $wbs = WbsItem::factory()->create(['project_id' => $project->id, 'status' => 'finalized']);
+        TimelineItem::factory()->create(['project_id' => $project->id, 'wbs_item_id' => $wbs->id, 'status' => 'finalized']);
+
+        // Create Proposal with estimated_budget
+        ProjectProposal::factory()->create([
+            'project_id' => $project->id,
+            'estimated_budget' => 60000000, // 60 Million baseline
+        ]);
+
+        $budgetPlan = BudgetPlan::factory()->create(['project_id' => $project->id, 'status' => 'draft']);
+        
+        // Add item that is within baseline: 50 Million
+        BudgetItem::factory()->create([
+            'budget_plan_id' => $budgetPlan->id,
+            'quantity' => 1,
+            'unit_cost' => 50000000,
+            'total_cost' => 50000000,
+        ]);
+        $budgetPlan->total_budget = 50000000;
+        $budgetPlan->save();
+
+        // Finalize budget, should succeed
+        $response = $this->actingAs($manager)->post(route('projects.budget.finalize', $project->id));
+        $response->assertRedirect(route('projects.budget.show', $project->id));
+        $this->assertEquals('finalized', $budgetPlan->fresh()->status);
+    }
+
+    /**
+     * Test helper parseBudgetNumeric works under various formats.
+     */
+    public function test_parse_budget_numeric_helper_handles_various_formats(): void
+    {
+        $this->assertEquals(1450000000, \App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric('1450000000'));
+        $this->assertEquals(1450000000, \App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric('1.450.000.000'));
+        $this->assertEquals(1450000000, \App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric('Rp 1.450.000.000'));
+        $this->assertEquals(1450000000, \App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric('Rp 1.450.000.000,00'));
+        $this->assertEquals(1450000000, \App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric('1,450,000,000.00'));
+        $this->assertNull(\App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric('Anggaran sekitar 100 juta rupiah'));
+        $this->assertNull(\App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric(''));
+        $this->assertNull(\App\Http\Controllers\ProjectBudgetController::parseBudgetNumeric(null));
     }
 }

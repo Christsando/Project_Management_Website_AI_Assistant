@@ -1,11 +1,31 @@
 <x-app-layout>
-    <x-slot name="header">
-        <x-header-component :title="'Tambah Item WBS'" icon="fa-solid fa-plus text-blue-600 text-lg" />
-    </x-slot>
-
     <div class="px-4 py-2">
+        <!-- Top Bar / Header Redesign -->
+        <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <!-- Left: Breadcrumbs -->
+            <div class="flex items-center gap-2 text-xs">
+                <a href="{{ route('projects.wbs.show', $project->id) }}" class="text-slate-400 hover:text-slate-600 transition font-medium">WBS Proyek</a>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-800 font-bold">Tambah Item WBS</span>
+            </div>
+
+            <!-- Right: Actions & User Info -->
+            <div class="flex items-center gap-4 justify-end shrink-0 w-full sm:w-auto">
+                <div class="hidden sm:block border-l border-slate-200 h-8"></div>
+                <div class="flex items-center gap-2.5">
+                    <div class="text-right hidden md:block">
+                        <p class="text-[10px] font-semibold text-slate-400 leading-none">Pengguna Aktif</p>
+                        <p class="text-xs font-bold text-slate-800 mt-1 leading-none">{{ Auth::user()->name }}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-blue-50 text-blue-600 font-bold text-[11px] shadow-sm">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="max-w-3xl mx-auto">
-            <!-- Breadcrumb Navigation -->
+            <!-- Back Navigation button -->
             <div class="mb-6">
                 <a href="{{ route('projects.wbs.show', $project->id) }}" class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition gap-1.5">
                     <i class="fas fa-arrow-left text-[10px]"></i>
@@ -15,14 +35,15 @@
 
             <!-- Page Header -->
             <div class="mb-6">
-                <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ __('Tambah Item WBS Baru') }}</h2>
-                <p class="text-xs text-slate-500 mt-1">
-                    {{ __('Proyek:') }} <span class="font-extrabold text-blue-600">{{ $project->title }}</span>
+                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">
+                    PROYEK: {{ strtoupper($project->title) }}
                 </p>
+                <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ __('Tambah Item WBS Baru') }}</h2>
+                <p class="text-xs text-slate-500 mt-1">Pecah ruang lingkup pekerjaan menjadi tugas-tugas detail di bawah ini.</p>
             </div>
 
             <!-- Form Card -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-12">
                 <form action="{{ route('projects.wbs.store', $project->id) }}" method="POST" id="wbsForm" class="space-y-6">
                     @csrf
 
@@ -108,7 +129,7 @@
                         <a href="{{ route('projects.wbs.show', $project->id) }}" class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold shadow-sm transition duration-150">
                             {{ __('Batal') }}
                         </a>
-                        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg shadow-blue-500/10 transition duration-150">
+                        <button type="submit" class="px-5 py-2.5 bg-[#0B1329] hover:bg-[#1E293B] text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition duration-150">
                             {{ __('Tambah Item') }}
                         </button>
                     </div>

@@ -16,7 +16,7 @@
                 @if($hasTimeline && $wbs->timelineItem->is_milestone)
                     <i class="fa-solid fa-star text-amber-500 mr-2 shrink-0 text-xs"></i>
                 @else
-                    <i class="fa-regular fa-check-circle text-slate-400 mr-2 shrink-0 text-sm"></i>
+                    <i class="fa-regular fa-circle-check text-slate-400 mr-2 shrink-0 text-sm"></i>
                 @endif
             @endif
             
@@ -46,7 +46,7 @@
                 <div class="absolute flex flex-col items-center justify-center z-10" 
                      style="left: {{ ($leftOffset * 48) + 18 }}px; width: 12px;"
                      title="Milestone: {{ $wbs->timelineItem->milestone_name }} ({{ $startDate->format('d M Y') }})">
-                    <div class="w-3 h-3 bg-amber-500 rotate-45 border border-amber-300 shadow-sm"></div>
+                    <div class="w-3.5 h-3.5 bg-amber-500 rotate-45 border border-amber-300 shadow-sm"></div>
                 </div>
             @else
                 <!-- Regular Gantt Bar -->
@@ -54,12 +54,12 @@
                      style="left: {{ $leftOffset * 48 }}px; width: {{ $duration * 48 }}px;"
                      title="{{ $wbs->title }} ({{ $startDate->format('d M') }} - {{ $endDate->format('d M') }}, {{ $duration }} Hari)">
                     <span class="truncate max-w-full">
-                        {{ $duration }}D @if(($duration * 48) > 100) - {{ Str::upper($wbs->title) }} @endif
+                        {{ $duration }} Hari @if($wbs->timelineItem->status === 'finalized') | Selesai @else | On Progress @endif
                     </span>
                 </div>
             @endif
         @else
-            <span class="text-[10px] text-slate-400 italic pl-5 font-semibold select-none">{{ __('Belum dijadwalkan') }}</span>
+            <span class="text-[10px] text-slate-400 italic pl-5 font-bold select-none">{{ __('Belum dijadwalkan') }}</span>
         @endif
     </div>
 </div>

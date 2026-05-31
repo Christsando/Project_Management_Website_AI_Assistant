@@ -1,35 +1,63 @@
 <x-app-layout>
-    <x-slot name="header">
-        <x-header-component :title="'Project Planning: Timeline'" icon="fa-solid fa-calendar-alt text-blue-600 text-lg" />
-    </x-slot>
-
     <div class="px-4 py-2">
         @php
             $userRole = strtolower(Auth::user()->role);
             $isPmo = ($userRole === 'pmo' || $userRole === 'project management officer');
             $isDraft = !$isTimelineFinalized;
+
+            // Predecessor conflict checking logic
+            $conflictCount = 0;
+            foreach ($timelineItems as $item) {
+                if ($item->dependency_wbs_item_id) {
+                    $depTimeline = $timelineItems->where('wbs_item_id', $item->dependency_wbs_item_id)->first();
+                    if ($depTimeline) {
+                        $depEndDate = \Carbon\Carbon::parse($depTimeline->end_date);
+                        $itemStartDate = \Carbon\Carbon::parse($item->start_date);
+                        if ($itemStartDate->lt($depEndDate)) {
+                            $conflictCount++;
+                        }
+                    }
+                }
+            }
+
+            // Team allocation info
+            $allocatedTeamMembers = collect();
+            if ($project->humanResourcePlan) {
+                $memberIds = $project->humanResourcePlan->humanResourceItems()->pluck('team_member_id')->filter()->unique();
+                $allocatedTeamMembers = \App\Models\TeamMember::whereIn('id', $memberIds)->get();
+            }
         @endphp
 
-        <!-- Top Navigation Tab Bar -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-3 mb-6 gap-4">
-            <div class="flex items-center gap-6">
-                <span class="text-lg font-extrabold text-blue-600 tracking-tight">KelolaIN</span>
-                <span class="text-slate-300">|</span>
-                <a href="{{ route('projects.show', $project->id) }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition">
-                    {{ __('Ringkasan') }}
-                </a>
-                <a href="{{ route('projects.wbs.show', $project->id) }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition">
-                    {{ __('Work Breakdown Structure') }}
-                </a>
-                <a href="{{ route('projects.timeline.show', $project->id) }}" class="text-xs font-bold text-blue-600 border-b-2 border-blue-600 pb-3.5 -mb-4 transition">
-                    {{ __('Timeline') }}
-                </a>
+        <!-- Top Bar / Header Redesign -->
+        <div class="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <!-- Left: Search input -->
+            <div class="relative w-full sm:w-80">
+                <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-slate-400 text-xs"></i>
+                </span>
+                <input type="text" id="timelineSearch" placeholder="Cari jadwal atau tugas..." 
+                       class="w-full pl-9 pr-4 py-1.5 bg-slate-100/60 border border-slate-200/50 rounded-full text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400">
             </div>
-            <div>
-                <a href="{{ route('project-planning.timeline.index') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 font-bold rounded-xl text-xs transition shadow-sm gap-2">
-                    <i class="fas fa-arrow-left text-[10px]"></i>
-                    {{ __('Kembali ke Daftar Timeline') }}
+
+            <!-- Right: Actions & User Info -->
+            <div class="flex items-center gap-5 justify-end shrink-0 w-full sm:w-auto">
+                <!-- Notification Bell -->
+                <a href="#" class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
                 </a>
+
+                <!-- Profile Info -->
+                <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+                    <div class="text-right hidden md:block">
+                        <p class="text-xs font-bold text-slate-800 leading-tight">{{ Auth::user()->name }}</p>
+                        <p class="text-[10px] font-semibold text-slate-400 mt-0.5">{{ Auth::user()->role }}</p>
+                    </div>
+                    <!-- Avatar circle -->
+                    <div class="w-9 h-9 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-blue-50 text-blue-600 font-bold text-xs shadow-sm">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -47,98 +75,124 @@
             </div>
         @endif
 
-        <!-- Blue Status Banner -->
-        <div class="mb-6 p-6 rounded-3xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <!-- Decorative Vector Design -->
-            <div class="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none hidden md:block">
-                <svg class="w-full h-full text-white" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="0.5">
-                    <path d="M 0 10 L 100 90 M 0 90 L 100 10 M 10 0 L 10 100" />
-                    <circle cx="50" cy="50" r="30" />
-                </svg>
-            </div>
-
-            <div class="space-y-4 max-w-2xl relative z-10">
-                <h3 class="text-xl font-extrabold tracking-tight">
-                    {{ __('Timeline Planning & Gantt Chart') }}
-                </h3>
-                <p class="text-xs text-blue-50/90 leading-relaxed font-medium">
-                    {{ __('Proyek:') }} <span class="font-extrabold text-white">{{ $project->title }}</span>
-                </p>
-                <div class="inline-flex items-center gap-2 py-1.5 px-3 bg-white/10 border border-white/10 rounded-full text-[10px] font-bold tracking-wide">
-                    @if($isTimelineFinalized)
-                        <i class="fas fa-check-circle text-emerald-300"></i>
-                        <span>{{ __('Timeline Finalized - Siap untuk Tahap Planning Selanjutnya') }}</span>
-                    @else
-                        <i class="fas fa-info-circle text-blue-200"></i>
-                        <span>{{ __('Siap digunakan untuk Budget Planning dan Human Resource Planning') }}</span>
-                    @endif
-                </div>
-            </div>
-
-            <div class="shrink-0 relative z-10">
-                @if($isTimelineFinalized)
-                    <div class="bg-white/10 border border-white/15 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white text-blue-600 rounded-xl flex items-center justify-center text-lg shadow-sm">
-                            <i class="fas fa-lock"></i>
+        <!-- Banner Alur Kerja Proyek (Status Bar) -->
+        <div class="mb-6">
+            @if($isTimelineFinalized)
+                <div class="p-4.5 bg-blue-50 border border-blue-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                            <i class="fas fa-check-circle text-sm"></i>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-blue-100 uppercase tracking-wider block">{{ __('Status Timeline') }}</span>
-                            <span class="text-xs font-extrabold text-white block mt-0.5">{{ __('TELAH DIFINALISASI') }}</span>
+                            <span class="text-xs font-bold text-blue-900 block leading-snug">Siap untuk Perencanaan Anggaran</span>
+                            <span class="text-[11px] text-blue-600 block mt-0.5">Jadwal pelaksanaan proyek telah dikunci dan siap untuk proses input Anggaran Belanja (RAB).</span>
                         </div>
                     </div>
-                @else
-                    <div class="flex items-center gap-3">
-                        @if($isPmo && $wbsItemsCount > $timelineItemsCount)
-                            <a href="{{ route('projects.timeline.create', $project->id) }}" class="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 text-blue-700 font-extrabold rounded-2xl text-xs shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                                <i class="fas fa-plus text-blue-600"></i>
-                                {{ __('Jadwalkan Tugas') }}
+                    @if(in_array(strtolower(Auth::user()->role), ['manager', 'pmo', 'project management officer']))
+                        <a href="{{ route('projects.budget.show', $project->id) }}" class="px-4 py-2 bg-[#0B1329] hover:bg-[#1A2649] text-white text-xs font-bold rounded-xl shadow-md transition whitespace-nowrap">
+                            Lanjut ke Anggaran
+                        </a>
+                    @endif
+                </div>
+            @else
+                @if($wbsItemsCount > $timelineItemsCount)
+                    <div class="p-4.5 bg-amber-50 border border-amber-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                                <i class="fas fa-exclamation-triangle text-sm"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-amber-900 block leading-snug">Jadwal Belum Lengkap</span>
+                                <span class="text-[11px] text-amber-600 block mt-0.5">Ada {{ $wbsItemsCount - $timelineItemsCount }} tugas WBS yang belum dijadwalkan. Selesaikan penjadwalan sebelum melakukan finalisasi.</span>
+                            </div>
+                        </div>
+                        @if($isPmo)
+                            <a href="{{ route('projects.timeline.create', $project->id) }}" class="px-4 py-2 bg-[#0B1329] hover:bg-[#1A2649] text-white text-xs font-bold rounded-xl shadow-md transition whitespace-nowrap">
+                                Jadwalkan Tugas
                             </a>
                         @endif
-
-                        @if($isPmo && $timelineItemsCount > 0 && $wbsItemsCount === $timelineItemsCount)
+                    </div>
+                @else
+                    <div class="p-4.5 bg-blue-50 border border-blue-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                                <i class="fas fa-info-circle text-sm"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-blue-900 block leading-snug">Seluruh Tugas Telah Dijadwalkan</span>
+                                <span class="text-[11px] text-blue-600 block mt-0.5">Silakan lakukan finalisasi agar modul budget planning dapat terbuka secara otomatis.</span>
+                            </div>
+                        </div>
+                        @if($isPmo)
                             <form action="{{ route('projects.timeline.finalize', $project->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin memfinalisasi timeline ini? Setelah finalized, seluruh jadwal timeline akan dikunci dan tidak dapat diubah atau dihapus.');">
                                 @csrf
-                                <button type="submit" class="inline-flex items-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl text-xs shadow-md transition duration-200 transform hover:-translate-y-0.5 border border-emerald-400">
-                                    <i class="fas fa-check-double"></i>
-                                    {{ __('Finalisasi Timeline') }}
+                                <button type="submit" class="px-5 py-2 bg-[#0B1329] hover:bg-[#1A2649] text-white text-xs font-bold rounded-xl shadow-md transition whitespace-nowrap">
+                                    Finalisasi Timeline
                                 </button>
                             </form>
                         @endif
                     </div>
                 @endif
+            @endif
+        </div>
+
+        <!-- Breadcrumbs & Action Toolbar -->
+        <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">
+                    PROYEK: {{ strtoupper($project->title) }} / TIMELINE
+                </p>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">Timeline & Gantt Chart</h2>
+                <p class="text-xs text-slate-500 mt-1">
+                    Kelola jadwal pengerjaan proyek dan kelola ketergantungan antar tugas.
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3.5 self-end md:self-center shrink-0">
+                <!-- Segmented Controls / View Mode -->
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center shadow-sm border border-slate-200/40">
+                    <button type="button" id="tab-table-btn" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 bg-white text-slate-800 shadow-sm flex items-center gap-1.5">
+                        <i class="fas fa-table text-[11px]"></i>
+                        Mingguan
+                    </button>
+                    <button type="button" id="tab-gantt-btn" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fas fa-chart-gantt text-[11px]"></i>
+                        Bulanan
+                    </button>
+                </div>
+
+                <a href="{{ route('project-planning.timeline.index') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-800 font-bold rounded-xl text-xs transition shadow-sm gap-2">
+                    <i class="fas fa-filter text-[10px] text-slate-400"></i>
+                    {{ __('Filter') }}
+                </a>
+
+                @if($isPmo && $isDraft && $wbsItemsCount > $timelineItemsCount)
+                    <a href="{{ route('projects.timeline.create', $project->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-[#0B1329] hover:bg-[#1E293B] text-white font-bold rounded-xl text-xs transition shadow-md gap-2">
+                        <i class="fas fa-plus text-[10px]"></i>
+                        {{ __('Tugas Baru') }}
+                    </a>
+                @endif
             </div>
         </div>
 
-        <!-- Task Completion Warnings -->
-        @if(!$isTimelineFinalized && $wbsItemsCount > $timelineItemsCount)
-            <div class="mb-6 p-4.5 bg-amber-50/50 border border-amber-200/60 text-amber-800 rounded-2xl text-xs flex items-center gap-3 shadow-sm">
-                <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div>
-                    <h5 class="font-bold">{{ __('Jadwal Belum Lengkap') }}</h5>
-                    <p class="text-[11px] text-amber-700/90 font-medium mt-0.5">
-                        {{ __('Ada ' . ($wbsItemsCount - $timelineItemsCount) . ' tugas WBS yang belum dijadwalkan. Jadwalkan seluruh tugas WBS untuk mengaktifkan tombol Finalisasi.') }}
-                    </p>
-                </div>
-            </div>
-        @endif
-
-        <!-- Visual View Selector Tabs -->
-        <div class="flex items-center border-b border-slate-200 mb-6 relative">
-            <button type="button" id="tab-table-btn" class="px-6 py-3 font-extrabold text-xs border-b-2 border-blue-600 text-blue-600 focus:outline-none transition flex items-center gap-2 tracking-wider uppercase">
-                <i class="fas fa-table text-sm"></i>{{ __('Tabel Rincian Jadwal') }}
-            </button>
-            <button type="button" id="tab-gantt-btn" class="px-6 py-3 font-extrabold text-xs border-b-2 border-transparent text-slate-400 hover:text-slate-600 focus:outline-none transition flex items-center gap-2 tracking-wider uppercase">
-                <i class="fas fa-chart-gantt text-sm"></i>{{ __('Visualisasi Gantt Chart') }}
-            </button>
+        <!-- Navigation Tab Bar -->
+        <div class="flex items-center gap-6 border-b border-slate-200 pb-3 mb-6">
+            <a href="{{ route('projects.show', $project->id) }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition">
+                {{ __('Ringkasan') }}
+            </a>
+            <a href="{{ route('projects.wbs.show', $project->id) }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition">
+                {{ __('Work Breakdown Structure') }}
+            </a>
+            <a href="{{ route('projects.timeline.show', $project->id) }}" class="text-xs font-bold text-blue-600 border-b-2 border-blue-600 pb-3.5 -mb-4 transition">
+                {{ __('Timeline') }}
+            </a>
         </div>
 
-        <!-- Tab 1: Table View -->
-        <div id="tab-table-content" class="block">
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <!-- Tab 1: Table List View (styled as weekly details table) -->
+        <div id="tab-table-content" class="block mb-8">
+            <div class="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
                 @if($timelineItems->isEmpty())
-                    <div class="p-12 text-center">
+                    <div class="p-12 text-center text-slate-400">
                         <div class="w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                             <i class="fas fa-calendar-alt text-2xl"></i>
                         </div>
@@ -153,14 +207,14 @@
                     </div>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left border-collapse" id="timelineTable">
                             <thead>
-                                <tr class="bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                <tr class="bg-slate-50/80 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
                                     <th class="px-6 py-4">{{ __('Item WBS') }}</th>
                                     <th class="px-6 py-4">{{ __('Jadwal Pelaksanaan') }}</th>
-                                    <th class="px-6 py-4">{{ __('Durasi') }}</th>
-                                    <th class="px-6 py-4">{{ __('Milestone') }}</th>
-                                    <th class="px-6 py-4 text-right">{{ __('Aksi') }}</th>
+                                    <th class="px-6 py-4 w-40">{{ __('Durasi') }}</th>
+                                    <th class="px-6 py-4 w-44">{{ __('Milestone') }}</th>
+                                    <th class="px-6 py-4 w-36 text-right">{{ __('Aksi') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
@@ -175,9 +229,9 @@
         </div>
 
         <!-- Tab 2: Gantt Chart View -->
-        <div id="tab-gantt-content" class="hidden">
+        <div id="tab-gantt-content" class="hidden mb-8">
             @if($timelineItems->isEmpty())
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
+                <div class="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-12 text-center text-slate-400">
                     <div class="w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                         <i class="fas fa-chart-gantt text-2xl"></i>
                     </div>
@@ -192,7 +246,7 @@
                         $tempDate = $minDate->copy();
                         while ($tempDate->lte($maxDate)) {
                             $dates[] = $tempDate->copy();
-                            $monthKey = $tempDate->format('F Y');
+                            $monthKey = $tempDate->format('M Y');
                             if (!isset($months[$monthKey])) {
                                 $months[$monthKey] = 0;
                             }
@@ -203,14 +257,12 @@
                     $totalColumns = count($dates);
                 @endphp
 
-
-
                 <!-- Gantt Scroll Container -->
-                <div class="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col mb-4">
+                <div class="border border-slate-200/60 rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col mb-4">
                     <div class="overflow-x-auto relative">
                         <div style="min-width: {{ 320 + ($totalColumns * 48) }}px" class="flex flex-col">
                             <!-- Gantt Header -->
-                            <div class="flex bg-slate-50/70 border-b border-slate-100 items-stretch sticky top-0 z-30">
+                            <div class="flex bg-slate-50/80 border-b border-slate-100 items-stretch sticky top-0 z-30">
                                 <!-- Left Header Column -->
                                 <div class="w-80 shrink-0 border-r border-slate-100 flex items-center px-5 font-extrabold text-[9px] text-slate-400 uppercase tracking-wider sticky left-0 bg-slate-50 z-40">
                                     {{ __('Tugas & Struktur WBS') }}
@@ -229,7 +281,7 @@
                                     <!-- Day Number Header Row -->
                                     <div class="flex bg-white items-center">
                                         @foreach($dates as $date)
-                                            <div class="text-[10px] font-extrabold text-slate-500 border-r border-slate-100/30 text-center w-12 shrink-0 py-2.5">
+                                            <div class="text-[10px] font-extrabold text-slate-500 border-r border-slate-100/30 text-center w-12 shrink-0 py-2.5 bg-white">
                                                 {{ $date->format('d') }}
                                             </div>
                                         @endforeach
@@ -269,9 +321,77 @@
                 </div>
             @endif
         </div>
+
+        <!-- Panel Bawah Kumpulan Kartu Metrik -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch mb-8">
+            <!-- Card 1: Total Durasi -->
+            <div class="bg-white border border-slate-200/60 p-5 rounded-2xl shadow-sm flex flex-col justify-between min-h-[110px]">
+                <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('TOTAL DURASI') }}</h3>
+                <div class="text-2xl font-black text-slate-800 mt-2">
+                    {{ $timelineItems->sum('duration_days') }} Hari Kerja
+                </div>
+                <div class="text-[10px] text-slate-400 font-semibold mt-1">Total durasi seluruh jadwal kerja.</div>
+            </div>
+
+            <!-- Card 2: Tugas Selesai / Terjadwal -->
+            <div class="bg-white border border-slate-200/60 p-5 rounded-2xl shadow-sm flex flex-col justify-between min-h-[110px]">
+                <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('TUGAS TERJADWAL') }}</h3>
+                <div class="text-2xl font-black text-slate-800 mt-2">
+                    {{ $timelineItemsCount }} / {{ $wbsItemsCount }} Total
+                </div>
+                <div class="text-[10px] text-slate-400 font-semibold mt-1">Jumlah tugas WBS yang terjadwal.</div>
+            </div>
+
+            <!-- Card 3: Critical Path / Konflik -->
+            <div class="bg-white border border-slate-200/60 p-5 rounded-2xl shadow-sm flex flex-col justify-between min-h-[110px]">
+                <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('CRITICAL PATH') }}</h3>
+                <div class="flex items-center gap-2 mt-2">
+                    @if($conflictCount > 0)
+                        <span class="text-rose-600 font-black text-xl flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                            {{ $conflictCount }} Konflik
+                        </span>
+                    @else
+                        <span class="text-emerald-600 font-black text-xl flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                            Jadwal Valid
+                        </span>
+                    @endif
+                </div>
+                <div class="text-[10px] text-slate-400 font-semibold mt-1">Ketergantungan jadwal predecessor.</div>
+            </div>
+
+            <!-- Card 4: Alokasi Tim -->
+            <div class="bg-white border border-slate-200/60 p-5 rounded-2xl shadow-sm flex flex-col justify-between min-h-[110px]">
+                <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('ALOKASI TIM') }}</h3>
+                <div class="flex items-center -space-x-2 overflow-hidden mt-2 shrink-0">
+                    @forelse($allocatedTeamMembers->take(4) as $member)
+                        <div class="inline-block h-7 w-7 rounded-full ring-2 ring-white bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center text-[10px] font-extrabold shadow-sm" title="{{ $member->name }} ({{ $member->role_name }})">
+                            {{ strtoupper(substr($member->name, 0, 2)) }}
+                        </div>
+                    @empty
+                        <!-- Mockup avatars if empty to keep it beautiful -->
+                        <div class="inline-block h-7 w-7 rounded-full ring-2 ring-white bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold shadow-sm" title="Project Owner">
+                            {{ strtoupper(substr($project->owner->name ?? 'PM', 0, 2)) }}
+                        </div>
+                        <div class="inline-block h-7 w-7 rounded-full ring-2 ring-white bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-bold shadow-sm" title="JD (Developer)">
+                            JD
+                        </div>
+                        <div class="inline-block h-7 w-7 rounded-full ring-2 ring-white bg-purple-50 text-purple-600 flex items-center justify-center text-[10px] font-bold shadow-sm" title="AN (Designer)">
+                            AN
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 pl-3">+2</span>
+                    @endforelse
+                    @if($allocatedTeamMembers->count() > 4)
+                        <span class="text-[10px] font-bold text-slate-400 pl-3">+{{ $allocatedTeamMembers->count() - 4 }}</span>
+                    @endif
+                </div>
+                <div class="text-[10px] text-slate-400 font-semibold mt-1">Sumber daya manusia terlibat.</div>
+            </div>
+        </div>
     </div>
 
-    <!-- Active Tab switching Vanilla Script -->
+    <!-- Active Tab switching Vanilla Script & Realtime Search -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const tabTableBtn = document.getElementById('tab-table-btn');
@@ -282,10 +402,8 @@
             if (tabTableBtn && tabGanttBtn && tabTableContent && tabGanttContent) {
                 tabTableBtn.addEventListener('click', function () {
                     // Update buttons styling
-                    tabTableBtn.classList.add('border-blue-600', 'text-blue-600');
-                    tabTableBtn.classList.remove('border-transparent', 'text-slate-400');
-                    tabGanttBtn.classList.add('border-transparent', 'text-slate-400');
-                    tabGanttBtn.classList.remove('border-blue-600', 'text-blue-600');
+                    tabTableBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 bg-white text-slate-800 shadow-sm flex items-center gap-1.5";
+                    tabGanttBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 text-slate-500 hover:text-slate-800 flex items-center gap-1.5";
 
                     // Toggle contents
                     tabTableContent.classList.remove('hidden');
@@ -296,10 +414,8 @@
 
                 tabGanttBtn.addEventListener('click', function () {
                     // Update buttons styling
-                    tabGanttBtn.classList.add('border-blue-600', 'text-blue-600');
-                    tabGanttBtn.classList.remove('border-transparent', 'text-slate-400');
-                    tabTableBtn.classList.add('border-transparent', 'text-slate-400');
-                    tabTableBtn.classList.remove('border-blue-600', 'text-blue-600');
+                    tabGanttBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 bg-white text-slate-800 shadow-sm flex items-center gap-1.5";
+                    tabTableBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 text-slate-500 hover:text-slate-800 flex items-center gap-1.5";
 
                     // Toggle contents
                     tabGanttContent.classList.remove('hidden');
@@ -308,6 +424,26 @@
                     tabTableContent.classList.add('hidden');
                 });
             }
+
+            // Real-time table search filter
+            const searchInput = document.getElementById('timelineSearch');
+            searchInput?.addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('#timelineTable tbody tr');
+                
+                rows.forEach(row => {
+                    if (!query) {
+                        row.style.display = '';
+                        return;
+                    }
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(query)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
 
             // Collapse/Expand Section function for Gantt Chart Tree
             window.wbsToggleSection = function(sectionId, element) {

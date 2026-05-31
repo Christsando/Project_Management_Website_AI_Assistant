@@ -156,9 +156,16 @@ class ProjectTimelineController extends Controller
         $wbsItems = $project->wbsItems()->whereDoesntHave('timelineItem')->orderBy('title')->get();
 
         // Get dependency targets (WBS items that already have a timeline item)
-        $dependencyItems = $project->wbsItems()->whereHas('timelineItem')->orderBy('title')->get();
+        // Exclude parent/summary tasks (WBS items with children)
+        $dependencyItems = $project->wbsItems()
+            ->whereHas('timelineItem')
+            ->whereDoesntHave('children')
+            ->orderBy('title')
+            ->get();
 
-        return view('project-planning.timeline.create', compact('project', 'wbsItems', 'dependencyItems'));
+        $invalidPredecessorsMap = $this->getInvalidPredecessorsMap($project);
+
+        return view('project-planning.timeline.create', compact('project', 'wbsItems', 'dependencyItems', 'invalidPredecessorsMap'));
     }
 
     /**
@@ -213,13 +220,34 @@ class ProjectTimelineController extends Controller
                 'exists:wbs_items,id',
                 function ($attribute, $value, $fail) use ($project, $request) {
                     if ($value) {
-                        if ($value == $request->wbs_item_id) {
-                            $fail('Dependency tidak boleh merujuk ke item WBS yang sama.');
+                        $wbsId = $request->wbs_item_id;
+                        if ($value == $wbsId) {
+                            $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
                             return;
                         }
                         $dep = WbsItem::find($value);
                         if (!$dep || $dep->project_id !== $project->id) {
                             $fail('Dependency WBS harus berasal dari proyek yang sama.');
+                            return;
+                        }
+                        // Check if predecessor has children (is parent summary task)
+                        if ($dep->children()->exists()) {
+                            $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
+                            return;
+                        }
+                        // Check if predecessor is a descendant of the selected WBS item
+                        $targetWbs = WbsItem::find($wbsId);
+                        if ($targetWbs) {
+                            $descendantIds = $this->getDescendantIds($targetWbs);
+                            if (in_array($value, $descendantIds)) {
+                                $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
+                                return;
+                            }
+                        }
+                        // Check for circular dependency
+                        if ($this->causesCircularDependency($wbsId, $value)) {
+                            $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
+                            return;
                         }
                     }
                 },
@@ -304,13 +332,17 @@ class ProjectTimelineController extends Controller
             ->get();
 
         // Dependency: WBS items that have timeline items, excluding the current WBS item
+        // Exclude parent/summary tasks (WBS items with children)
         $dependencyItems = $project->wbsItems()
             ->whereHas('timelineItem')
             ->where('id', '!=', $timelineItem->wbs_item_id)
+            ->whereDoesntHave('children')
             ->orderBy('title')
             ->get();
 
-        return view('project-planning.timeline.edit', compact('project', 'timelineItem', 'wbsItems', 'dependencyItems'));
+        $invalidPredecessorsMap = $this->getInvalidPredecessorsMap($project);
+
+        return view('project-planning.timeline.edit', compact('project', 'timelineItem', 'wbsItems', 'dependencyItems', 'invalidPredecessorsMap'));
     }
 
     /**
@@ -361,13 +393,34 @@ class ProjectTimelineController extends Controller
                 'exists:wbs_items,id',
                 function ($attribute, $value, $fail) use ($project, $request) {
                     if ($value) {
-                        if ($value == $request->wbs_item_id) {
-                            $fail('Dependency tidak boleh merujuk ke item WBS yang sama.');
+                        $wbsId = $request->wbs_item_id;
+                        if ($value == $wbsId) {
+                            $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
                             return;
                         }
                         $dep = WbsItem::find($value);
                         if (!$dep || $dep->project_id !== $project->id) {
                             $fail('Dependency WBS harus berasal dari proyek yang sama.');
+                            return;
+                        }
+                        // Check if predecessor has children (is parent summary task)
+                        if ($dep->children()->exists()) {
+                            $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
+                            return;
+                        }
+                        // Check if predecessor is a descendant of the selected WBS item
+                        $targetWbs = WbsItem::find($wbsId);
+                        if ($targetWbs) {
+                            $descendantIds = $this->getDescendantIds($targetWbs);
+                            if (in_array($value, $descendantIds)) {
+                                $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
+                                return;
+                            }
+                        }
+                        // Check for circular dependency
+                        if ($this->causesCircularDependency($wbsId, $value)) {
+                            $fail('Predecessor tidak valid karena task tidak boleh memilih dirinya sendiri, parent summary yang tidak sesuai, atau menyebabkan dependency berulang.');
+                            return;
                         }
                     }
                 },
@@ -479,5 +532,92 @@ class ProjectTimelineController extends Controller
 
         return redirect()->route('projects.timeline.show', $project->id)
             ->with('success', 'Timeline berhasil difinalisasi.');
+    }
+
+    /**
+     * Check recursively if setting dependency causes circular dependency.
+     */
+    private function causesCircularDependency(int $wbsItemId, int $dependencyWbsItemId): bool
+    {
+        if ($wbsItemId === $dependencyWbsItemId) {
+            return true;
+        }
+
+        $visited = [];
+        $currentId = $dependencyWbsItemId;
+
+        while ($currentId) {
+            if ($currentId === $wbsItemId) {
+                return true;
+            }
+
+            if (in_array($currentId, $visited, true)) {
+                break;
+            }
+            $visited[] = $currentId;
+
+            $timelineItem = TimelineItem::where('wbs_item_id', $currentId)->first();
+            $currentId = $timelineItem ? $timelineItem->dependency_wbs_item_id : null;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get all descendant IDs of a given WBS item recursively.
+     */
+    private function getDescendantIds($wbsItem): array
+    {
+        if (!$wbsItem) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($wbsItem->children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, $this->getDescendantIds($child));
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Build map of invalid predecessor IDs for each WBS item in the project.
+     */
+    private function getInvalidPredecessorsMap(Project $project): array
+    {
+        $wbsItems = $project->wbsItems;
+        $map = [];
+
+        foreach ($wbsItems as $wbs) {
+            $invalidIds = [];
+
+            // 1. Self is invalid
+            $invalidIds[] = $wbs->id;
+
+            // 2. Descendants are invalid
+            $descendants = $this->getDescendantIds($wbs);
+            $invalidIds = array_merge($invalidIds, $descendants);
+
+            // 3. Circular dependency check
+            foreach ($wbsItems as $other) {
+                if ($other->id !== $wbs->id) {
+                    if ($this->causesCircularDependency($wbs->id, $other->id)) {
+                        $invalidIds[] = $other->id;
+                    }
+                }
+            }
+
+            // 4. Any WBS item with children (parent summary task) is also invalid as predecessor
+            foreach ($wbsItems as $other) {
+                if ($other->children()->exists()) {
+                    $invalidIds[] = $other->id;
+                }
+            }
+
+            $map[$wbs->id] = array_values(array_unique($invalidIds));
+        }
+
+        return $map;
     }
 }

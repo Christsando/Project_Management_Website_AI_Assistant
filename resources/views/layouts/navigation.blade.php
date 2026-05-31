@@ -1,4 +1,4 @@
-<nav class="rounded-2xl bg-white border border-slate-100 shadow-sm h-full flex flex-col justify-between p-5">
+<nav class="rounded-2xl bg-[#0B1329] border border-slate-900 shadow-xl h-full flex flex-col justify-between p-5">
     <div>
         <!-- Logo -->
         <div class="flex items-center px-2 py-4 mb-4">
@@ -46,7 +46,7 @@
     </div>
 
     <!-- Bottom Menu -->
-    <div class="px-2 pt-4 border-t border-slate-100 flex flex-col gap-1.5">
+    <div class="px-2 pt-4 border-t border-[#1E293B] flex flex-col gap-1.5">
         <!-- Settings Link -->
         <x-nav-link :active="request()->routeIs('profile.edit')" href="{{ route('profile.edit') }}">
             <i class="fa-solid fa-gear text-base"></i>
@@ -58,7 +58,7 @@
             @csrf
         </form>
         <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-            class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-rose-50 hover:text-rose-600">
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:bg-rose-950/30 hover:text-rose-400">
             <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
             <span>{{ __('Keluar') }}</span>
         </a>

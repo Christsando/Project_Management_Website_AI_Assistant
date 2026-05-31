@@ -4,7 +4,7 @@
     <!-- upper section -->
     <div class="flex items-center justify-between mb-8">
         <!-- title section -->
-        <h2 class="text-xl font-semibold text-black tracking-wider block">
+        <h2 class="card-title text-black">
             {{ __('Projects Analytic') }}
         </h2>
 

@@ -1,33 +1,27 @@
-<div class="grid grid-cols-4 w-full gap-4 h-full">
-    <!-- todo section task -->
-    <div class="bg-cardSection p-4 rounded-md">
-        <div class="flex items-center w-full border-b-2 pt-2 pb-4">
-            <div class="rounded-full w-2 h-2 bg-black mr-2"></div>
-            <p class="text-slate-500 text-base">To-Do</p>
-        </div>
-    </div>
+<div class="grid grid-cols-4 w-full h-[350px] gap-4">
 
-    <!-- onprogress section task -->
-    <div class="bg-cardSection p-4 rounded-md">
-        <div class="flex items-center w-full border-b-2 pt-2 pb-4">
-            <div class="rounded-full w-2 h-2 bg-purple mr-2"></div>
-            <p class="text-slate-500 text-base">On-Going</p>
-        </div>
-    </div>
+    @include('project-executing.task-management.partials.task-column', [
+        'title' => 'To-Do',
+        'color' => 'bg-black',
+        'tasks' => $tasks['todo'] ?? []
+    ])
 
-    <!-- done section task -->
-    <div class="bg-cardSection p-4 rounded-md">
-        <div class="flex items-center w-full border-b-2 pt-2 pb-4">
-            <div class="rounded-full w-2 h-2 bg-important mr-2"></div>
-            <p class="text-slate-500 text-base">Done</p>
-        </div>
-    </div>
+    @include('project-executing.task-management.partials.task-column', [
+        'title' => 'On-Going',
+        'color' => 'bg-purple',
+        'tasks' => $tasks['ongoing'] ?? []
+    ])
 
-    <!-- approved section task -->
-    <div class="bg-cardSection p-4 rounded-md">
-        <div class="flex items-center w-full border-b-2 pt-2 pb-4">
-            <div class="rounded-full w-2 h-2 bg-green mr-2"></div>
-            <p class="text-slate-500 text-base">Approved</p>
-        </div>
-    </div>
+    @include('project-executing.task-management.partials.task-column', [
+        'title' => 'Done',
+        'color' => 'bg-important',
+        'tasks' => $tasks['done'] ?? []
+    ])
+
+    @include('project-executing.task-management.partials.task-column', [
+        'title' => 'Approved',
+        'color' => 'bg-green',
+        'tasks' => $tasks['approved'] ?? []
+    ])
+
 </div>

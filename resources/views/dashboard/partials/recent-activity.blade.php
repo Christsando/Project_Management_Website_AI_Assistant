@@ -1,7 +1,7 @@
 <div class="col-span-3 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
     <!-- Header -->
     <div class="flex items-center justify-between p-5 border-b border-slate-100">
-        <h2 class="text-xl font-semibold text-black tracking-wider block">{{ __('Recent Activitys') }}
+        <h2 class="card-title text-black">{{ __('Recent Activitys') }}
         </h2>
         <a href="{{ route('projects.index') }}"
             class="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-all">

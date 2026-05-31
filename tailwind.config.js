@@ -27,6 +27,10 @@ export default {
                 greenBg: '#22C55E',
                 gradientGreen: '#076328',
 
+                // Status bg
+                blueStatus: '#A9CAFF',
+                orangeStatus: '#FFC089',
+
                 // barChart color
                 blueColor: '#2556A1',
 

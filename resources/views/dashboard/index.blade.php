@@ -9,8 +9,11 @@
             <!-- section menu title -->
             <div class="flex justify-between items-center pb-6">
                 <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {{ __('DASHBOARD') }}</div>
                     <h1 class="font-semibold text-3xl">{{ __('Project Dashboard') }}</h1>
-                    <p class="text-sm text-slate-500">{{ __('Plan, Prioritize, and accomplish your tasks with ease.') }}</p>
+                    <p class="text-sm text-slate-500">{{ __('Plan, Prioritize, and accomplish your tasks with ease.') }}
+                    </p>
                 </div>
 
                 <!-- Create Project Button (PM Only) -->
@@ -27,12 +30,16 @@
 
 
             <!-- layout -->
-            @if (strtolower(auth()->user()->role) === 'Project Management Officer')
+            @if (Auth::check() && strtolower(Auth::user()->role) === 'project management officer')
                 @include('dashboard.components.dashboard-pmo')
-            @elseif (strtolower(auth()->user()->role) === 'IT')
+            @elseif (Auth::check() && strtolower(Auth::user()->role) === 'it')
+                @include('dashboard.components.dashboard-it')
+            @elseif (Auth::check() && strtolower(Auth::user()->role) === 'project manager')
+                @include('dashboard.components.dashboard-pmo')
+            @elseif (Auth::check() && strtolower(Auth::user()->role) === 'manager')
                 @include('dashboard.components.dashboard-pmo')
             @else
-                @include('dashboard.components.dashboard-pmo')
+                <h1> Not Allowed
             @endif
         </div>
     </div>

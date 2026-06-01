@@ -19,12 +19,22 @@ class TeamMember extends Model
         'default_capacity_percentage',
         'notes',
         'is_active',
+        'user_id',
     ];
 
     protected $casts = [
         'default_capacity_percentage' => 'integer',
         'is_active' => 'boolean',
+        'user_id' => 'integer',
     ];
+
+    /**
+     * Get the user account for this team member.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     /**
      * Get the human resource assignments/items for this team member.

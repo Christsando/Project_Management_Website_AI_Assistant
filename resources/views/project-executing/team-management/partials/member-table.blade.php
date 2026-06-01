@@ -47,7 +47,9 @@
                         <th class="py-3 px-3">{{ __('PERAN & STATUS') }}</th>
                         <th class="py-3 px-3">{{ __('KEAHLIAN') }}</th>
                         <th class="py-3 px-3">{{ __('WORKLOAD & KAPASITAS') }}</th>
+                        @if(in_array(strtolower(Auth::user()->role), ['pmo', 'project management officer']))
                         <th class="py-3 text-right pr-4">{{ __('AKSI') }}</th>
+                        @endif
                     </tr>
                 </thead>
 
@@ -139,6 +141,7 @@
                             </td>
 
                             <!-- Aksi Dropdown -->
+                            @if(in_array(strtolower(Auth::user()->role), ['pmo', 'project management officer']))
                             <td class="py-4 text-right pr-4 relative">
                                 <div class="inline-block text-left">
                                     <button type="button" onclick="toggleDropdown(this)"
@@ -169,10 +172,11 @@
                                     </div>
                                 </div>
                             </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-8 text-center text-slate-400 italic font-semibold">
+                            <td colspan="{{ in_array(strtolower(Auth::user()->role), ['pmo', 'project management officer']) ? 5 : 4 }}" class="py-8 text-center text-slate-400 italic font-semibold">
                                 Belum ada data anggota tim. Klik "Tambah Anggota" untuk menambahkan.
                             </td>
                         </tr>

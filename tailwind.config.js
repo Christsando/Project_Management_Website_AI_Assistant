@@ -9,6 +9,13 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
+    safelist: [
+        'bg-gradient-to-br',
+        'text-slate-400',
+        'from-greenBg',
+        'to-gradientGreen',
+    ],
+    
     theme: {
         extend: {
             fontFamily: {
@@ -19,7 +26,7 @@ export default {
             colors: {
                 important: '#F59E0B',
                 importantHover: '#d28a0c',
-                
+
                 // Background color
                 gradientBlue: '#002C71',
                 orangeBg: '#FF7700',

@@ -28,7 +28,6 @@
                 @endif
             </div>
 
-
             <!-- layout -->
             @if (Auth::check() && strtolower(Auth::user()->role) === 'project management officer')
                 @include('dashboard.components.dashboard-pmo')

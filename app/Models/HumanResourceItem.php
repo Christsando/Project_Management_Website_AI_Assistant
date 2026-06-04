@@ -74,4 +74,40 @@ class HumanResourceItem extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    /**
+     * Get required skills as array.
+     */
+    public function getSkillsArrayAttribute(): array
+    {
+        return array_map('trim', explode(',', $this->required_skill));
+    }
+
+    /**
+     * Get workload UI metadata (color, label, etc).
+     */
+    public function getWorkloadMetaAttribute(): array
+    {
+        $loadPercent = $this->workload_percentage ?? 0;
+
+        if ($loadPercent > 85) {
+            return [
+                'barColor' => 'bg-rose-500',
+                'label' => 'OVERLOAD',
+                'labelClass' => 'text-rose-500',
+            ];
+        } elseif ($loadPercent >= 60) {
+            return [
+                'barColor' => 'bg-slate-700',
+                'label' => 'OPTIMAL',
+                'labelClass' => 'text-slate-750',
+            ];
+        }
+
+        return [
+            'barColor' => 'bg-slate-450',
+            'label' => 'UNDERLOAD',
+            'labelClass' => 'text-slate-500',
+        ];
+    }
 }

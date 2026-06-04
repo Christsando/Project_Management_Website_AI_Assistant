@@ -37,10 +37,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/team-management', [TeamManagementController::class, 'index'])->name('teamManagement');
-    Route::post('/team-management', [TeamManagementController::class, 'store'])->name('teamManagement.store');
-    Route::put('/team-management/{teamMember}', [TeamManagementController::class, 'update'])->name('teamManagement.update');
-    Route::patch('/team-management/{teamMember}/toggle-status', [TeamManagementController::class, 'toggleStatus'])->name('teamManagement.toggleStatus');
-    Route::delete('/team-management/{teamMember}', [TeamManagementController::class, 'destroy'])->name('teamManagement.destroy');
+    
+    Route::middleware('role:pmo')->group(function () {
+        Route::post('/team-management', [TeamManagementController::class, 'store'])->name('teamManagement.store');
+        Route::put('/team-management/{teamMember}', [TeamManagementController::class, 'update'])->name('teamManagement.update');
+        Route::patch('/team-management/{teamMember}/toggle-status', [TeamManagementController::class, 'toggleStatus'])->name('teamManagement.toggleStatus');
+        Route::delete('/team-management/{teamMember}', [TeamManagementController::class, 'destroy'])->name('teamManagement.destroy');
+    });
 
     Route::middleware('role:project_manager,pmo,it')->group(function () {
         Route::get('/task-management', [TaskManagementController::class, 'index'])->name('taskManagement');

@@ -34,23 +34,43 @@ class TeamManagementController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
             'role_name' => 'required|string|max:255',
             'skills' => 'required|string',
             'default_capacity_percentage' => 'required|integer|min:0|max:100',
             'notes' => 'nullable|string',
         ]);
 
-        TeamMember::create([
-            'name' => $request->name,
-            'role_name' => $request->role_name,
-            'skills' => $request->skills,
-            'default_capacity_percentage' => $request->default_capacity_percentage,
-            'notes' => $request->notes,
-            'is_active' => true,
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            // Create user login account with role IT
+            $user = \App\Models\User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'role' => 'IT',
+            ]);
+
+            // Prepare team member data
+            $teamMemberData = [
+                'name' => $request->name,
+                'role_name' => $request->role_name,
+                'skills' => $request->skills,
+                'default_capacity_percentage' => $request->default_capacity_percentage,
+                'notes' => $request->notes,
+                'is_active' => true,
+            ];
+
+            // Link user if user_id column exists
+            if (\Illuminate\Support\Facades\Schema::hasColumn('team_members', 'user_id')) {
+                $teamMemberData['user_id'] = $user->id;
+            }
+
+            TeamMember::create($teamMemberData);
+        });
 
         return redirect()->route('teamManagement')
-            ->with('success', 'Anggota tim baru berhasil ditambahkan.');
+            ->with('success', 'Anggota tim baru dan akun login berhasil ditambahkan.');
     }
 
     /**

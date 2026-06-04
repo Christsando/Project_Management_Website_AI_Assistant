@@ -32,6 +32,7 @@
                         {{ __('Kelola kolaborator, peran, dan beban kerja tim Anda secara real-time.') }}
                     </p>
                 </div>
+                @if(in_array(strtolower(Auth::user()->role), ['pmo', 'project management officer']))
                 <div>
                     <button type="button" onclick="openAddMemberModal()"
                         class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition gap-2">
@@ -39,6 +40,7 @@
                         {{ __('Tambah Anggota') }}
                     </button>
                 </div>
+                @endif
             </div>
 
             <!-- Alerts Container -->
@@ -163,8 +165,35 @@
                             <div>
                                 <label for="member_name"
                                     class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Nama Lengkap') }}</label>
-                                <input type="text" name="name" id="member_name" required placeholder="Contoh: John Doe"
+                                <input type="text" name="name" id="member_name" required value="{{ old('name') }}" placeholder="Contoh: John Doe"
                                     class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
+                            </div>
+
+                            <!-- Email Login -->
+                            <div>
+                                <label for="member_email"
+                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Email Login') }}</label>
+                                <input type="email" name="email" id="member_email" required value="{{ old('email') }}" placeholder="Contoh: raka@psm.com"
+                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
+                                <p class="text-[10px] text-slate-400 font-bold mt-1">
+                                    {{ __('Akun login akan dibuat otomatis dengan role IT.') }}
+                                </p>
+                            </div>
+
+                            <!-- Password & Konfirmasi Password -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="member_password"
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Password Login') }}</label>
+                                    <input type="password" name="password" id="member_password" required placeholder="Minimal 8 karakter"
+                                        class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
+                                </div>
+                                <div>
+                                    <label for="member_password_confirmation"
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Konfirmasi Password') }}</label>
+                                    <input type="password" name="password_confirmation" id="member_password_confirmation" required placeholder="Ulangi password"
+                                        class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
+                                </div>
                             </div>
 
                             <!-- Peran & Default Capacity -->
@@ -172,13 +201,13 @@
                                 <div>
                                     <label for="member_role"
                                         class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Peran (Role)') }}</label>
-                                    <input type="text" name="role_name" id="member_role" required placeholder="Contoh: Fullstack Developer"
+                                    <input type="text" name="role_name" id="member_role" required value="{{ old('role_name') }}" placeholder="Contoh: Fullstack Developer"
                                         class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
                                 </div>
                                 <div>
                                     <label for="member_capacity"
                                         class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Kapasitas Default (%)') }}</label>
-                                    <input type="number" name="default_capacity_percentage" id="member_capacity" required value="100" min="0" max="100"
+                                    <input type="number" name="default_capacity_percentage" id="member_capacity" required value="{{ old('default_capacity_percentage', 100) }}" min="0" max="100"
                                         class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
                                 </div>
                             </div>
@@ -187,7 +216,7 @@
                             <div>
                                 <label for="member_skills"
                                     class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Keahlian (Pisahkan dengan koma)') }}</label>
-                                <input type="text" name="skills" id="member_skills" required placeholder="Contoh: PHP, Laravel, MySQL"
+                                <input type="text" name="skills" id="member_skills" required value="{{ old('skills') }}" placeholder="Contoh: PHP, Laravel, MySQL"
                                     class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">
                             </div>
 
@@ -196,7 +225,7 @@
                                 <label for="member_notes"
                                     class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">{{ __('Catatan / Notes') }}</label>
                                 <textarea name="notes" id="member_notes" rows="2" placeholder="Informasi tambahan anggota..."
-                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50"></textarea>
+                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder-slate-400 bg-slate-50/50">{{ old('notes') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -357,6 +386,12 @@
             document.getElementById('add-member-modal').classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
         }
+
+        @if ($errors->any() && old('email') !== null)
+            window.addEventListener('DOMContentLoaded', (event) => {
+                openAddMemberModal();
+            });
+        @endif
 
         function openEditMemberModal(member) {
             document.getElementById('edit_member_id').value = member.id;

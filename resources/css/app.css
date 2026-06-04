@@ -149,7 +149,7 @@
 
 @layer components {
     .card-title{
-        @apply text-xl font-semibold text-white tracking-wide block;
+        @apply text-xl font-semibold tracking-wide block;
     }
 
     .card-background{

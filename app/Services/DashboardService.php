@@ -12,9 +12,35 @@ class DashboardService
     {
         $projectQuery = $this->buildProjectQuery($user);
 
+        // take data
+        $data = [
+            'totalProjects' => $this->countProjects($projectQuery),
+            'draftProjects' => $this->countByStatus($projectQuery, 'draft'),
+            'submittedProjects' => $this->countByStatus($projectQuery, 'submitted'),
+            'planningProjects' => $this->countPlanning($projectQuery),
+            'completedProjects' => $this->countByStatus($projectQuery, 'completed'),
+        ];
+
+        $valueMap = [
+            'total_projects' => $data['totalProjects'],
+            'draft' => $data['draftProjects'],
+            'on_request' => $data['submittedProjects'],
+            'planning' => $data['planningProjects'],
+            'done' => $data['completedProjects'],
+        ];
+
+        // config dan inject value to cards
+        $cards = collect($this->getCards($user))
+            ->map(function ($card) use ($valueMap) {
+                $card['value'] = $valueMap[$card['type']] ?? 0;
+                return $card;
+            });
+
         return [
-            'showCards' => count($this->getCards($user)) > 0,
-            'cards' => $this->getCards($user),
+            // 'showCards' => count($this->getCards($user)) > 0,
+            // 'cards' => $this->getCards($user),
+            'showCards' => count($cards) > 0,
+            'cards' => $cards,
 
             // statistik
             'totalProjects' => $this->countProjects($projectQuery),
@@ -172,40 +198,114 @@ class DashboardService
         return in_array(strtolower($user->role), ['pmo', 'project management officer']);
     }
 
-    // Status card based on user auth
-    public function getCards($user)
+    private function resolveCardValue($type, $data)
+    {
+        return match ($type) {
+            'total_projects' => $data['totalProjects'],
+            'draft' => $data['draftProjects'],
+            'on_request' => $data['submittedProjects'],
+            'planning' => $data['planningProjects'],
+            'done' => $data['completedProjects'],
+            default => 0,
+        };
+    }
+
+    // control user card
+   public function getCards($user)
     {
         $role = $user->role;
 
+        $defaultCards = [
+            [
+                'type' => 'total_projects',
+                'label' => 'Total Proyek',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'infoColor' => 'text-white',
+                'background' => 'bg-gradient-to-br from-blue-500 to-gradientBlue',
+            ],
+            [
+                'type' => 'draft',
+                'label' => 'Draft',
+                'titleColor' => '',
+                'valueColor' => '',
+                'infoColor' => '',
+                'background' => '',
+            ],
+            [
+                'type' => 'on_request',
+                'label' => 'On Request',
+                'titleColor' => '',
+                'valueColor' => '',
+                'infoColor' => '',
+                'background' => '',
+            ],
+            [
+                'type' => 'planning',
+                'label' => 'Planning',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'infoColor' => 'text-white',
+                'background' => 'bg-gradient-to-br from-orangeBg to-gradientOrange',
+            ],
+            [
+                'type' => 'done',
+                'label' => 'Done',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'infoColor' => 'text-white',
+                'background' => 'bg-gradient-to-br from-greenBg to-gradientGreen',
+            ],
+        ];
+
+        $itCards = [
+            [
+                'type' => 'total_projects',
+                'label' => 'Total Proyek',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'infoColor' => 'text-white',
+                'background' => 'bg-gradient-to-br from-blue-500 to-gradientBlue',
+            ],
+            [
+                'type' => 'on_progress_task',
+                'label' => 'On Progress',
+                'titleColor' => '',
+                'valueColor' => '',
+                'infoColor' => '',
+                'background' => 'bg-cyan-400',
+            ],
+            [
+                'type' => 'todo_task',
+                'label' => 'To Do',
+                'titleColor' => '',
+                'valueColor' => '',
+                'infoColor' => '',
+                'background' => 'bg-pink-400',
+            ],
+            [
+                'type' => 'planning',
+                'label' => 'Planning',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'infoColor' => 'text-white',
+                'background' => 'bg-gradient-to-br from-orangeBg to-gradientOrange',
+            ],
+            [
+                'type' => 'done',
+                'label' => 'Done',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'infoColor' => 'text-white',
+                'background' => 'bg-gradient-to-br from-greenBg to-gradientGreen',
+            ],
+        ];
+
         $roleCards = [
-            'Project Management Officer' => [
-                'total-proyek',
-                'total-draft',
-                'total-on-request',
-                'total-on-planning',
-                'total-done'
-            ],
-
-            'Manager' => [
-                'total-proyek',
-                'total-draft',
-                'total-on-request',
-                'total-on-planning',
-                'total-done'
-            ],
-
-            'Project Manager' => [
-                'total-proyek',
-                'total-draft',
-                'total-on-request',
-                'total-on-planning',
-                'total-done'
-            ],
-
-            'IT' => [
-                'total-proyek',
-                'total-done'
-            ],
+            'Project Management Officer' => $defaultCards,
+            'Manager' => $defaultCards,
+            'Project Manager' => $defaultCards,
+            'IT' => $itCards,
         ];
 
         return $roleCards[$role] ?? [];
@@ -250,7 +350,7 @@ class DashboardService
 
         // Activity
         $activityText = __('Mengupdate status proyek');
-        
+
         // Status label + style
         $statusLabel = ucfirst($proj->status);
         $statusClass = 'bg-rose-50 text-rose-700 border-rose-100';

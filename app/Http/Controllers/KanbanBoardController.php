@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 
 class KanbanBoardController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         return view('project-executing.kanban-board.index');
     }
 }

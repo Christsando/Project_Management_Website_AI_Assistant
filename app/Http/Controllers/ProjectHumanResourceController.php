@@ -208,7 +208,7 @@ class ProjectHumanResourceController extends Controller
         $wbsItems = $project->wbsItems()->orderBy('title')->get();
 
         // Fetch active team members for assignment
-        $teamMembers = \App\Models\TeamMember::where('is_active', true)->orderBy('name')->get();
+        $teamMembers = \App\Models\TeamMember::where('is_active', true)->orderBy('role_name')->get();
 
         // Calculate summary aggregates
         $totalResources = $hrItems->sum('quantity');
@@ -292,15 +292,7 @@ class ProjectHumanResourceController extends Controller
         }
 
         $request->validate([
-            'role_name' => 'required|string|max:255',
-            'required_skill' => 'required|string',
-            'job_description' => 'required|string',
             'team_member_id' => 'nullable|exists:team_members,id',
-            'person_in_charge' => 'nullable|string|max:255',
-            'workload_percentage' => 'nullable|numeric|min:0|max:100',
-            'estimated_work_days' => 'nullable|integer|min:1',
-            'quantity' => 'nullable|integer|min:1',
-            'notes' => 'nullable|string',
             'wbs_item_id' => [
                 'nullable',
                 'exists:wbs_items,id',
@@ -313,10 +305,11 @@ class ProjectHumanResourceController extends Controller
                     }
                 }
             ],
+            'workload_percentage' => 'nullable|numeric|min:0|max:100',
+            'estimated_work_days' => 'nullable|integer|min:1',
+            'quantity' => 'nullable|integer|min:1',
+            'notes' => 'nullable|string',
         ], [
-            'role_name.required' => 'Nama Peran (Role) wajib diisi.',
-            'required_skill.required' => 'Keahlian yang dibutuhkan wajib diisi.',
-            'job_description.required' => 'Deskripsi pekerjaan wajib diisi.',
             'quantity.integer' => 'Jumlah harus berupa angka bulat.',
             'quantity.min' => 'Jumlah minimal adalah 1.',
             'workload_percentage.min' => 'Beban kerja minimal 0%.',
@@ -324,31 +317,41 @@ class ProjectHumanResourceController extends Controller
             'estimated_work_days.min' => 'Estimasi hari kerja minimal 1 hari.',
         ]);
 
+        if (!$request->team_member_id && !$request->wbs_item_id) {
+            return back()
+                ->withInput()
+                ->with('error', 'Minimal pilih Team Member atau WBS terlebih dahulu.');
+        }
+
+        $wbs = $request->wbs_item_id 
+            ? WbsItem::find($request->wbs_item_id) 
+            : null;
+        $teamMember = $request->team_member_id 
+            ? \App\Models\TeamMember::with('user')->find($request->team_member_id) 
+            : null;
+
         $item = new HumanResourceItem();
         $item->human_resource_plan_id = $hrPlan->id;
         $item->wbs_item_id = $request->wbs_item_id;
-        $item->role_name = $request->role_name;
-        $item->required_skill = $request->required_skill;
-        $item->job_description = $request->job_description;
-
+        $item->job_description = $wbs->description;
+        $item->required_skill = $teamMember->skills;
+        $item->role_name = $teamMember->user->role ?? $teamMember->role_name;
         $item->team_member_id = $request->team_member_id;
         $item->workload_percentage = $request->workload_percentage;
 
-        if ($request->team_member_id) {
-            $teamMember = \App\Models\TeamMember::findOrFail($request->team_member_id);
+        if ($teamMember) {
             $newWorkload = $request->workload_percentage ?: 0;
             $totalWorkload = $teamMember->current_workload_percentage + $newWorkload;
-            
+
             if ($totalWorkload > $teamMember->default_capacity_percentage) {
-                return redirect()->back()->withInput()->with('error', "Beban kerja untuk {$teamMember->name} melebihi kapasitas default ({$teamMember->default_capacity_percentage}%). Sisa kapasitas tersedia: {$teamMember->remaining_capacity_percentage}%.");
+                return back()->withInput()->with(
+                    'error',
+                    "Beban kerja untuk {$teamMember->name} melebihi kapasitas default ({$teamMember->default_capacity_percentage}%). Sisa kapasitas tersedia: {$teamMember->remaining_capacity_percentage}%."
+                );
             }
-            
-            // Auto fill name
-            $item->person_in_charge = $teamMember->name;
-        } else {
-            $item->person_in_charge = $request->person_in_charge;
         }
 
+        $item->person_in_charge = $teamMember?->name;
         $item->estimated_work_days = $request->estimated_work_days;
         $item->quantity = $request->input('quantity', 1) ?? 1;
         $item->notes = $request->notes;

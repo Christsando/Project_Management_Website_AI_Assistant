@@ -354,7 +354,7 @@
                                             data-workload="{{ $member->current_workload_percentage }}"
                                             data-remaining="{{ $member->remaining_capacity_percentage }}"
                                             data-status="{{ $member->workload_status }}">
-                                            {{ $member->name }}
+                                            {{ $member->name }} - {{ $member->role_name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -501,9 +501,6 @@
             const form = document.getElementById('edit-item-form');
 
             // Set input values
-            document.getElementById('edit_role_name').value = item.role_name;
-            document.getElementById('edit_required_skill').value = item.required_skill;
-            document.getElementById('edit_job_description').value = item.job_description;
             document.getElementById('edit_wbs_item_id').value = item.wbs_item_id || '';
             document.getElementById('edit_workload_percentage').value = item.workload_percentage !== null ? item
                 .workload_percentage : '';

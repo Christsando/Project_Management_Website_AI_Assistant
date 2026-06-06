@@ -333,7 +333,7 @@ class ProjectHumanResourceController extends Controller
         $item = new HumanResourceItem();
         $item->human_resource_plan_id = $hrPlan->id;
         $item->wbs_item_id = $request->wbs_item_id;
-        $item->job_description = $wbs->description;
+        $item->job_description = $wbs?->description;
         $item->required_skill = $teamMember->skills;
         $item->role_name = $teamMember->user->role ?? $teamMember->role_name;
         $item->team_member_id = $request->team_member_id;
@@ -384,12 +384,15 @@ class ProjectHumanResourceController extends Controller
             abort(403, 'HR Plan sudah difinalisasi.');
         }
 
+        $wbs = $request->wbs_item_id 
+            ? WbsItem::find($request->wbs_item_id) 
+            : null;
+        $teamMember = $request->team_member_id 
+            ? \App\Models\TeamMember::with('user')->find($request->team_member_id) 
+            : null;
+
         $request->validate([
-            'role_name' => 'required|string|max:255',
-            'required_skill' => 'required|string',
-            'job_description' => 'required|string',
             'team_member_id' => 'nullable|exists:team_members,id',
-            'person_in_charge' => 'nullable|string|max:255',
             'workload_percentage' => 'nullable|numeric|min:0|max:100',
             'estimated_work_days' => 'nullable|integer|min:1',
             'quantity' => 'nullable|integer|min:1',
@@ -407,9 +410,6 @@ class ProjectHumanResourceController extends Controller
                 }
             ],
         ], [
-            'role_name.required' => 'Nama Peran (Role) wajib diisi.',
-            'required_skill.required' => 'Keahlian yang dibutuhkan wajib diisi.',
-            'job_description.required' => 'Deskripsi pekerjaan wajib diisi.',
             'quantity.integer' => 'Jumlah harus berupa angka bulat.',
             'quantity.min' => 'Jumlah minimal adalah 1.',
             'workload_percentage.min' => 'Beban kerja minimal 0%.',
@@ -418,10 +418,6 @@ class ProjectHumanResourceController extends Controller
         ]);
 
         $humanResourceItem->wbs_item_id = $request->wbs_item_id;
-        $humanResourceItem->role_name = $request->role_name;
-        $humanResourceItem->required_skill = $request->required_skill;
-        $humanResourceItem->job_description = $request->job_description;
-        
         $humanResourceItem->team_member_id = $request->team_member_id;
         $humanResourceItem->workload_percentage = $request->workload_percentage;
 
@@ -441,7 +437,7 @@ class ProjectHumanResourceController extends Controller
         } else {
             $humanResourceItem->person_in_charge = $request->person_in_charge;
         }
-
+        
         $humanResourceItem->estimated_work_days = $request->estimated_work_days;
         $humanResourceItem->quantity = $request->input('quantity', 1) ?? 1;
         $humanResourceItem->notes = $request->notes;

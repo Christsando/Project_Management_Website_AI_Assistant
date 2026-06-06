@@ -42,13 +42,6 @@ class DashboardService
             'showCards' => count($cards) > 0,
             'cards' => $cards,
 
-            // statistik
-            'totalProjects' => $this->countProjects($projectQuery),
-            'draftProjects' => $this->countByStatus($projectQuery, 'draft'),
-            'submittedProjects' => $this->countByStatus($projectQuery, 'submitted'),
-            'planningProjects' => $this->countPlanning($projectQuery),
-            'completedProjects' => $this->countByStatus($projectQuery, 'completed'),
-
             // recent
             'recentProjects' => $this->getRecentProjects($projectQuery),
 
@@ -190,12 +183,12 @@ class DashboardService
 
     private function isManager($user)
     {
-        return strtolower($user->role) === 'manager';
+        return $user->role === 'Manager';
     }
 
     private function isPMO($user)
     {
-        return in_array(strtolower($user->role), ['pmo', 'project management officer']);
+        return in_array($user->role, ['PMO', 'Project Management Officer']);
     }
 
     private function resolveCardValue($type, $data)

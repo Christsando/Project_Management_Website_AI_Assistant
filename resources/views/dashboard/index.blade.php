@@ -4,10 +4,10 @@
     </x-slot>
 
     <div class="flex flex-col">
-        <div class="bg-white rounded-2xl border-slate-100 border shadow-sm p-6 w-full h-full">
+        <div class="bg-white rounded-2xl border-slate-100 border shadow-sm p-6 w-full h-full ">
 
             <!-- section menu title -->
-            <div class="flex justify-between items-center pb-6">
+            <div class="flex justify-between items-center pb-5">
                 <div>
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         {{ __('DASHBOARD') }}</div>

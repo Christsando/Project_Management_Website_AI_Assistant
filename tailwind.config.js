@@ -14,6 +14,9 @@ export default {
         'text-slate-400',
         'from-greenBg',
         'to-gradientGreen',
+        'bg-green-500',
+        'bg-yellow-500',
+        'bg-red-500',
     ],
     
     theme: {

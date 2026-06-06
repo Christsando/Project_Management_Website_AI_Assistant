@@ -38,7 +38,7 @@
                 </td>
                 <td class="py-4 px-4 max-w-[180px]">
                     <div class="flex flex-wrap gap-1">
-                        @foreach ($skills as $idx => $skill)
+                        @foreach ($item->skills as $skill)
                             @if (!empty($skill))
                                 <span
                                     class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-750 border border-purple-100">
@@ -74,15 +74,17 @@
                 <td class="py-4 px-4">
                     <div class="w-24 mx-auto">
                         <div class="flex items-center justify-between text-[10px] font-bold text-slate-700 mb-1">
-                            <div
-                                class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden flex-1 mr-2 border border-slate-200/50">
-                                <div class="h-full rounded-full {{ $loadBarColor }} transition-all duration-300"
-                                    style="width: {{ $loadPercent }}%"></div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden flex-1 mr-2 border border-slate-200/50">
+                                <div class="h-full rounded-full {{ $item->workloadMeta['barColor'] }}"
+                                    style="width: {{ $item->workload_percentage ?? 0 }}%">
+                                </div>
                             </div>
-                            <span class="font-mono">{{ $loadPercent }}%</span>
+                            <span class="font-mono">{{ $item->workload_percentage ?? 0 }}%</span>
                         </div>
-                        <span
-                            class="text-[8px] font-black uppercase tracking-wider block text-left {{ $loadLabelClass }}">{{ $loadLabel }}</span>
+
+                        <span class="text-[8px] font-black uppercase tracking-wider block text-left {{ $item->workloadMeta['labelClass'] }}">
+                            {{ $item->workloadMeta['label'] }}
+                        </span>
                     </div>
                 </td>
                 <td class="py-4 px-6 text-right font-extrabold text-slate-800 font-mono text-sm">

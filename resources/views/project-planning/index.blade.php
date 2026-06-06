@@ -3,16 +3,18 @@
         <x-header-component />
     </x-slot>
 
-    <div class="pl-4 pt-2 pb-12">
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-6xl mx-auto">
+    <div class="pb-12">
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-full mx-auto">
             <!-- Title section -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-50 pb-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-5">
                 <div>
-                    <h2 class="font-extrabold text-2xl text-slate-800 leading-tight">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {{ __('PLANNING') }}</div>
+                    <h2 class="font-semibold text-3xl">
                         {{ __('Project Planning') }}
                     </h2>
-                    <p class="text-sm text-slate-500 mt-1">
-                        {{ __('Rencanakan ruang lingkup, struktur kerja (WBS), jadwal, alokasi sumber daya, anggaran, dan mitigasi risiko proyek.') }}
+                    <p class="text-sm text-slate-500">
+                        {{ __('Plan scope, Work structure (WBS), Plan, Human Resource, Budget, and Project risk mitigation.') }}
                     </p>
                 </div>
                 <div>
@@ -24,7 +26,7 @@
             </div>
 
             <!-- Content Area Placeholder -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Scope & WBS Card -->
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between hover:border-blue-500/50 hover:shadow-md transition duration-200">
                     <div>

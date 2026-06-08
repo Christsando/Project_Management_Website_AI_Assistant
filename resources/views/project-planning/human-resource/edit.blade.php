@@ -51,17 +51,14 @@
     <div class="p-6 bg-white rounded-2xl border-slate-100 border shadow-sm">
         <div class="w-full mx-auto space-y-6">
 
-            <!-- Top Sub-Navigation Tabs (Redesigned as sleek pill tabs) -->
-            @include('project-planning.human-resource.partials.sub-navigation')
-
-
             <!-- Back Navigation & Header Section -->
             <div class="space-y-4">
 
                 @include('project-planning.human-resource.partials.sub-header', [
-                    'breadcrumb' => __('Perencanaan Proyek') . ' > ' . __('Perencanaan SDM'),
+                    'breadcrumb' => __('PLANNING') . ' / ' . __('HUMAN RESOURCE') . ' / ' . __('ALLOCATE TEAM'),
                     'title' => __('Kelola Perencanaan SDM (HR Plan)'),
-                    'description' => __('Kelola beban kerja personil dan alokasikan peran strategis untuk memastikan keberhasilan proyek tepat waktu.'),
+                    'description' => __(
+                        'Kelola beban kerja personil dan alokasikan peran strategis untuk memastikan keberhasilan proyek tepat waktu.'),
                     'project' => $project,
                     'actionButtonEnabled' => false,
                 ])
@@ -99,7 +96,7 @@
             @endif
 
             <!-- Finalized / Draft Banner -->
-            @include('project-planning.human-resource.partials.finalized-draf-banner')
+            {{-- @include('project-planning.human-resource.partials.finalized-draf-banner') --}}
 
             <!-- Plan content -->
             @if (!$hrPlan)
@@ -114,14 +111,20 @@
 
                 <!-- Main Resource List Table Card -->
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                    @include('project-planning.human-resource.partials.title-action',[ 'isEditable' => $isEditable ])
+                    @include('project-planning.human-resource.partials.title-action', [
+                        'isEditable' => $isEditable,
+                    ])
 
                     <!-- Table -->
                     @if ($hrItems->isEmpty())
-                        @include('project-planning.human-resource.partials.empty-message',['isEditable' => $isEditable ])
+                        @include('project-planning.human-resource.partials.empty-message', [
+                            'isEditable' => $isEditable,
+                        ])
                     @else
                         <div class="overflow-x-auto">
-                            @include('project-planning.human-resource.partials.workload-table')
+                            @include('project-planning.human-resource.partials.workload-table', [
+                                'isEditable' => false,
+                            ])
                         </div>
 
                         <!-- Footer Pagination / Stats -->
@@ -143,9 +146,6 @@
                         </div>
                     @endif
                 </div>
-
-                <!-- Bottom Section (Two Columns) -->
-                @include('project-planning.human-resource.partials.bottom-section')
 
                 <!-- Notes Form Card (Updating Notes) -->
                 <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-3">
@@ -181,7 +181,8 @@
             <!-- Center Align -->
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl border border-slate-100 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div
+                class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl border border-slate-100 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form action="{{ route('projects.human-resource.items.add', $project->id) }}" method="POST">
                     @csrf
                     <div class="bg-white px-6 pt-6 pb-4">
@@ -197,20 +198,6 @@
                         </div>
 
                         <div class="space-y-4 max-h-[420px] overflow-y-auto pr-1">
-                            <!-- Relasi Tugas WBS (Optional) -->
-                            <div>
-                                <label for="add_wbs_item_id"
-                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ __('Tautkan Tugas WBS (Optional)') }}</label>
-                                <select name="wbs_item_id" id="add_wbs_item_id"
-                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-slate-800 focus:ring focus:ring-slate-100 bg-slate-50/10 text-slate-700">
-                                    <option value="">-- {{ __('Tidak ditautkan ke WBS') }} --</option>
-                                    @foreach ($wbsItems as $wbs)
-                                        <option value="{{ $wbs->id }}"
-                                            {{ old('wbs_item_id') == $wbs->id ? 'selected' : '' }}>{{ $wbs->title }} - {{ $wbs->estimated_duration_days }} Days
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
 
                             <!-- PIC (Team Member Dropdown & Fallback) -->
                             <div>
@@ -249,27 +236,6 @@
                                     class="flex justify-between text-[10px] text-slate-600 font-extrabold border-t border-blue-100/50 pt-1.5">
                                     <span>Current Workload: <span id="add_info_workload"></span>%</span>
                                     <span>Remaining Capacity: <span id="add_info_remaining"></span>%</span>
-                                </div>
-                            </div>
-
-                            <!-- Workload & Work Days (Grid) -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="add_workload_percentage"
-                                        class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
-                                        title="Beban Kerja (0-100)%">{{ __('Load (%)') }}</label>
-                                    <input type="number" name="workload_percentage" id="add_workload_percentage"
-                                        min="0" max="100" value="{{ old('workload_percentage') }}"
-                                        placeholder="100"
-                                        class="w-full text-xs font-bold rounded-xl border-slate-200 focus:border-slate-800 focus:ring focus:ring-slate-100 placeholder-slate-400 bg-slate-50/10 text-slate-700">
-                                </div>
-                                <div>
-                                    <label for="add_estimated_work_days"
-                                        class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
-                                        title="Estimasi Hari Kerja">{{ __('Hari Kerja') }}</label>
-                                    <input type="number" name="estimated_work_days" id="add_estimated_work_days"
-                                        min="1" value="{{ old('estimated_work_days') }}" placeholder="10"
-                                        class="w-full text-xs font-bold rounded-xl border-slate-200 focus:border-slate-800 focus:ring focus:ring-slate-100 placeholder-slate-400 bg-slate-50/10 text-slate-700">
                                 </div>
                             </div>
 
@@ -327,19 +293,6 @@
 
                         <div class="space-y-4 max-h-[420px] overflow-y-auto pr-1">
 
-                            <!-- Relasi Tugas WBS (Optional) -->
-                            <div>
-                                <label for="edit_wbs_item_id"
-                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{{ __('Tautkan Tugas WBS (Optional)') }}</label>
-                                <select name="wbs_item_id" id="edit_wbs_item_id"
-                                    class="w-full text-xs font-semibold rounded-xl border-slate-200 focus:border-slate-800 focus:ring focus:ring-slate-100 bg-slate-50/10 text-slate-700">
-                                    <option value="">-- {{ __('Tidak ditautkan ke WBS') }} --</option>
-                                    @foreach ($wbsItems as $wbs)
-                                        <option value="{{ $wbs->id }}">{{ $wbs->title }} - {{ $wbs->estimated_duration_days }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
                             <!-- PIC (Team Member Dropdown & Fallback) -->
                             <div>
                                 <label for="edit_team_member_id"
@@ -379,26 +332,6 @@
                                 </div>
                             </div>
 
-                            <!-- Workload & Work Days (Grid) -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="edit_workload_percentage"
-                                        class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
-                                        title="Beban Kerja (0-100)%">{{ __('Load (%)') }}</label>
-                                    <input type="number" name="workload_percentage" id="edit_workload_percentage"
-                                        min="0" max="100"
-                                        class="w-full text-xs font-bold rounded-xl border-slate-200 focus:border-slate-800 focus:ring focus:ring-slate-100 placeholder-slate-400 bg-slate-50/10 text-slate-700">
-                                </div>
-                                <div>
-                                    <label for="edit_estimated_work_days"
-                                        class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
-                                        title="Estimasi Hari Kerja">{{ __('Hari Kerja') }}</label>
-                                    <input type="number" name="estimated_work_days" id="edit_estimated_work_days"
-                                        min="1"
-                                        class="w-full text-xs font-bold rounded-xl border-slate-200 focus:border-slate-800 focus:ring focus:ring-slate-100 placeholder-slate-400 bg-slate-50/10 text-slate-700">
-                                </div>
-                            </div>
-
                             <!-- Catatan -->
                             <div>
                                 <label for="edit_notes"
@@ -430,28 +363,29 @@
         function updateTeamMemberInfo(selectEl, prefix) {
             const selectedOpt = selectEl.options[selectEl.selectedIndex];
             const infoBox = document.getElementById(prefix + '_member_info_box');
-            const manualInput = document.getElementById(prefix + '_person_in_charge');
 
             if (selectedOpt && selectedOpt.value !== '') {
                 const role = selectedOpt.getAttribute('data-role');
                 const skills = selectedOpt.getAttribute('data-skills');
-                const workload = selectedOpt.getAttribute('data-workload');
+                const workload = selectedOpt.getAttribute('data-workload'); // ✅ FIX
                 const remaining = selectedOpt.getAttribute('data-remaining');
                 const status = selectedOpt.getAttribute('data-status');
 
-                document.getElementById(prefix + '_info_role').innerText = role;
-                document.getElementById(prefix + '_info_skills').innerText = skills;
-
-                // For workload and remaining capacity
+                const roleEl = document.getElementById(prefix + '_info_role');
+                const skillsEl = document.getElementById(prefix + '_info_skills');
                 const workloadEl = document.getElementById(prefix + '_info_workload');
-                if (workloadEl) workloadEl.innerText = workload;
                 const remainingEl = document.getElementById(prefix + '_info_remaining');
+                const statusEl = document.getElementById(prefix + '_info_status');
+
+                if (roleEl) roleEl.innerText = role;
+                if (skillsEl) skillsEl.innerText = skills;
+                if (workloadEl) workloadEl.innerText = workload;
                 if (remainingEl) remainingEl.innerText = remaining;
 
-                const statusEl = document.getElementById(prefix + '_info_status');
                 if (statusEl) {
                     statusEl.innerText = status;
                     statusEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold ';
+
                     if (status === 'Full') {
                         statusEl.className += 'bg-rose-100 text-rose-800 border border-rose-200';
                     } else if (status === 'Nearly Full') {
@@ -463,29 +397,29 @@
                     }
                 }
 
-                infoBox.classList.remove('hidden');
-                if (manualInput) {
-                    manualInput.value = '';
-                    manualInput.removeAttribute('required');
-                }
+                if (infoBox) infoBox.classList.remove('hidden');
 
-                // Optionally auto-fill Role and Skills if they are empty
+                // Optional autofill
                 const roleInput = document.getElementById(prefix + '_role_name');
                 const skillsInput = document.getElementById(prefix + '_required_skill');
+
                 if (roleInput && roleInput.value === '') roleInput.value = role;
                 if (skillsInput && skillsInput.value === '') skillsInput.value = skills;
+
             } else {
-                infoBox.classList.add('hidden');
+                if (infoBox) infoBox.classList.add('hidden');
             }
         }
 
         function openAddModal() {
             const modal = document.getElementById('add-modal');
             const selectEl = document.getElementById('add_team_member_id');
+
             if (selectEl) {
                 selectEl.value = '';
                 updateTeamMemberInfo(selectEl, 'add');
             }
+
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
         }
@@ -497,30 +431,25 @@
         }
 
         function openEditModal(item) {
+            console.log('EDIT ITEM:', item); // ✅ debug aman
+
             const modal = document.getElementById('edit-modal');
             const form = document.getElementById('edit-item-form');
 
-            // Set input values
-            document.getElementById('edit_wbs_item_id').value = item.wbs_item_id || '';
-            document.getElementById('edit_workload_percentage').value = item.workload_percentage !== null ? item
-                .workload_percentage : '';
-            document.getElementById('edit_estimated_work_days').value = item.estimated_work_days !== null ? item
-                .estimated_work_days : '';
-            document.getElementById('edit_notes').value = item.notes || '';
+            if (!modal || !form) return;
 
-            // Set team_member_id dropdown selection
+            // Notes
+            const notesEl = document.getElementById('edit_notes');
+            if (notesEl) notesEl.value = item.notes || '';
+
+            // Dropdown
             const selectEl = document.getElementById('edit_team_member_id');
             if (selectEl) {
                 selectEl.value = item.team_member_id || '';
                 updateTeamMemberInfo(selectEl, 'edit');
             }
 
-            // If manual text PIC was used, restore it
-            if (!item.team_member_id) {
-                document.getElementById('edit_person_in_charge').value = item.person_in_charge || '';
-            }
-
-            // Update form action dynamically
+            // Set action
             form.action = `/projects/{{ $project->id }}/human-resource/items/${item.id}`;
 
             modal.classList.remove('hidden');

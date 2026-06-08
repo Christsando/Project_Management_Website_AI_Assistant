@@ -17,6 +17,8 @@ export default {
         'bg-green-500',
         'bg-yellow-500',
         'bg-red-500',
+        'from-orangeBg',
+        'to-gradientOrange',
     ],
     
     theme: {

@@ -6,6 +6,8 @@ use App\Models\Project;
 use App\Models\HumanResourcePlan;
 use App\Models\HumanResourceItem;
 use App\Models\WbsItem;
+use App\Models\TimelineItem;
+use App\Models\TeamMember;
 use App\Services\HrSummaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -99,11 +101,23 @@ class ProjectHumanResourceController extends Controller
             }
         }
 
+        $wbsItems = WbsItem::where('project_id', $project->id)
+            ->whereNull('parent_id')
+            ->with(['children', 'timelineItem'])
+            ->get();
+
+        $timelineItems = TimelineItem::where('project_id', $project->id)->get();
+        $minDate = $timelineItems->min('start_date');
+        $maxDate = $timelineItems->max('end_date');
+        $projectDurationDays = ($minDate && $maxDate)
+            ? \Carbon\Carbon::parse($minDate)->diffInDays($maxDate) + 1
+            : 0;
+
         $hrItems = $hrPlan ? $hrPlan->humanResourceItems()->with(['wbsItem', 'teamMember'])->orderBy('created_at', 'desc')->get() : collect();
         $isHrFinalized = $hrPlan && $hrPlan->status === 'finalized';
 
         // Calculate summary aggregates
-        $totalResources = $hrItems->sum('quantity');
+        $totalResources = $hrItems->pluck('team_member_id')->unique()->count();
         $roleCount = $hrItems->pluck('role_name')->unique()->count();
         $picCount = $hrItems->pluck('person_in_charge')->filter()->unique()->count();
         $summary = $summaryService->calculate($hrPlan, $hrItems);
@@ -112,20 +126,115 @@ class ProjectHumanResourceController extends Controller
         $isPmo = in_array($userRole, ['pmo', 'project management officer']);
         $isDraft = $hrPlan && $hrPlan->status === 'draft';
         $isEditable = $isPmo && $isDraft;
+        $teamMembers = TeamMember::whereIn('id', $hrItems->pluck('team_member_id')->filter())->get();
+        $groupedItems = $hrItems->groupBy('team_member_id');
+        $memberWorkloads = $groupedItems->map(function ($items) {
+            return [
+                'total_workload' => $items->sum('workload_percentage'),
+                'total_days' => $items->sum('estimated_work_days'),
+            ];
+        });
 
         return view('project-planning.human-resource.show', compact(
-            'project', 
-            'hrPlan', 
-            'hrItems', 
-            'isHrFinalized', 
-            'totalResources', 
-            'roleCount', 
+            'project',
+            'hrPlan',
+            'hrItems',
+            'isHrFinalized',
+            'totalResources',
+            'roleCount',
             'picCount',
             'summary',
             'isPmo',
             'isDraft',
             'isEditable',
-            ));
+            'wbsItems',
+            'projectDurationDays',
+            'minDate',
+            'teamMembers',
+            'groupedItems',
+            'memberWorkloads',
+        ));
+    }
+
+    private function getAllChildWbsIds($wbsId)
+    {
+        $ids = [$wbsId];
+
+        $children = WbsItem::where('parent_id', $wbsId)->get();
+
+        foreach ($children as $child) {
+            $ids = array_merge($ids, $this->getAllChildWbsIds($child->id));
+        }
+
+        return $ids;
+    }
+
+
+
+    public function assignMembers(Request $request, Project $project, $wbsId)
+    {
+        // dd($request->all());
+        $this->checkBaseAccess();
+        $this->checkPlanningAccess($project);
+
+        $request->validate([
+            'team_member_ids' => 'required|array',
+            'team_member_ids.*' => 'exists:team_members,id',
+            'workloads' => 'required|array',
+        ]);
+
+        $hrPlan = $project->humanResourcePlan;
+        if (!$hrPlan) {
+            return back()->with('error', 'HR Plan belum ada');
+        }
+
+        $wbsIds = $this->getAllChildWbsIds($wbsId);
+
+        foreach ($wbsIds as $id) {
+            foreach ($request->team_member_ids as $index => $memberId) {
+
+                $member = TeamMember::find($memberId);
+                $workload = $request->workloads[$index] ?? 0;
+
+                // ✅ STEP 1: cari template (belum punya task)
+                $template = HumanResourceItem::where('human_resource_plan_id', $hrPlan->id)
+                    ->where('team_member_id', $memberId)
+                    ->whereNull('wbs_item_id')
+                    ->first();
+
+                if ($template) {
+                    // ✅ UPDATE template pertama kali assign
+                    $template->update([
+                        'wbs_item_id' => $id,
+                        'job_description' => null,
+                        'workload_percentage' => $workload,
+                        'estimated_work_days' => 1,
+                        'person_in_charge' => $member->name,
+                        'role_name' => $member->role_name,
+                        'required_skill' => $member->skills,
+                        'updated_by' => Auth::id(),
+                    ]);
+                } else {
+                    // ✅ STEP 2: kalau udah pernah → bikin row baru
+                    HumanResourceItem::create([
+                        'human_resource_plan_id' => $hrPlan->id,
+                        'wbs_item_id' => $id,
+                        'team_member_id' => $memberId,
+                        'person_in_charge' => $member->name,
+                        'role_name' => $member->role_name,
+                        'required_skill' => $member->skills,
+                        'job_description' => null,
+                        'workload_percentage' => $workload,
+                        'estimated_work_days' => 1,
+                        'quantity' => 1,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            }
+        }
+
+        return back()->with('success', 'Berhasil assign member');
     }
 
     /**
@@ -203,7 +312,7 @@ class ProjectHumanResourceController extends Controller
         }
 
         $hrItems = $hrPlan->humanResourceItems()->with(['wbsItem', 'teamMember'])->orderBy('created_at', 'desc')->get();
-        
+
         // Fetch project WBS items for dropdown selection (only finalized WBS tasks)
         $wbsItems = $project->wbsItems()->orderBy('title')->get();
 
@@ -222,19 +331,19 @@ class ProjectHumanResourceController extends Controller
         $isEditable = $isPmo && $isDraft;
 
         return view('project-planning.human-resource.edit', compact(
-            'project', 
-            'hrPlan', 
-            'hrItems', 
-            'wbsItems', 
-            'teamMembers', 
-            'totalResources', 
-            'roleCount', 
+            'project',
+            'hrPlan',
+            'hrItems',
+            'wbsItems',
+            'teamMembers',
+            'totalResources',
+            'roleCount',
             'picCount',
             'summary',
             'isPmo',
             'isDraft',
             'isEditable',
-            ));
+        ));
     }
 
     /**
@@ -323,11 +432,11 @@ class ProjectHumanResourceController extends Controller
                 ->with('error', 'Minimal pilih Team Member atau WBS terlebih dahulu.');
         }
 
-        $wbs = $request->wbs_item_id 
-            ? WbsItem::find($request->wbs_item_id) 
+        $wbs = $request->wbs_item_id
+            ? WbsItem::find($request->wbs_item_id)
             : null;
-        $teamMember = $request->team_member_id 
-            ? \App\Models\TeamMember::with('user')->find($request->team_member_id) 
+        $teamMember = $request->team_member_id
+            ? \App\Models\TeamMember::with('user')->find($request->team_member_id)
             : null;
 
         $item = new HumanResourceItem();
@@ -384,11 +493,11 @@ class ProjectHumanResourceController extends Controller
             abort(403, 'HR Plan sudah difinalisasi.');
         }
 
-        $wbs = $request->wbs_item_id 
-            ? WbsItem::find($request->wbs_item_id) 
+        $wbs = $request->wbs_item_id
+            ? WbsItem::find($request->wbs_item_id)
             : null;
-        $teamMember = $request->team_member_id 
-            ? \App\Models\TeamMember::with('user')->find($request->team_member_id) 
+        $teamMember = $request->team_member_id
+            ? \App\Models\TeamMember::with('user')->find($request->team_member_id)
             : null;
 
         $request->validate([
@@ -427,17 +536,17 @@ class ProjectHumanResourceController extends Controller
             // Exclude current item workload to avoid double count
             $currentWorkloadExcludingThis = $teamMember->humanResourceItems()->where('id', '!=', $humanResourceItem->id)->sum('workload_percentage');
             $totalWorkload = $currentWorkloadExcludingThis + $newWorkload;
-            
+
             if ($totalWorkload > $teamMember->default_capacity_percentage) {
                 return redirect()->back()->withInput()->with('error', "Beban kerja untuk {$teamMember->name} melebihi kapasitas default ({$teamMember->default_capacity_percentage}%). Sisa kapasitas tersedia: " . ($teamMember->default_capacity_percentage - $currentWorkloadExcludingThis) . "%.");
             }
-            
+
             // Auto fill name
             $humanResourceItem->person_in_charge = $teamMember->name;
         } else {
             $humanResourceItem->person_in_charge = $request->person_in_charge;
         }
-        
+
         $humanResourceItem->estimated_work_days = $request->estimated_work_days;
         $humanResourceItem->quantity = $request->input('quantity', 1) ?? 1;
         $humanResourceItem->notes = $request->notes;

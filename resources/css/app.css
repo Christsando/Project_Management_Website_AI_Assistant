@@ -160,3 +160,12 @@
         @apply border border-slate-200 bg-white rounded-2xl p-6 gap-5 shadow-sm hover:scale-[1.01] flex items-center transition-all duration-300;
     }
 }
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE & Edge */
+    scrollbar-width: none;     /* Firefox */
+}

@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/team-management/{teamMember}', [TeamManagementController::class, 'update'])->name('teamManagement.update');
         Route::patch('/team-management/{teamMember}/toggle-status', [TeamManagementController::class, 'toggleStatus'])->name('teamManagement.toggleStatus');
         Route::delete('/team-management/{teamMember}', [TeamManagementController::class, 'destroy'])->name('teamManagement.destroy');
+        Route::post('/projects/{project}/assign/{wbs}', [ProjectHumanResourceController::class, 'assignMembers']);
     });
 
     Route::middleware('role:project_manager,pmo,it')->group(function () {

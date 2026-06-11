@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component />
+        <x-header-component/>
     </x-slot>
 
     @php
@@ -78,9 +78,11 @@
                             <div
                                 class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-500 font-medium">
                                 <div id="pagination-stats">
-                                    {{ __('Menampilkan ') }}<span class="font-bold text-slate-700"
-                                        id="visible-count">{{ $hrItems->count() }}</span>{{ __(' dari ') }}<span
-                                        class="font-bold text-slate-700">{{ $hrItems->count() }}</span>{{ __(' personil') }}
+                                    {{ __('Menampilkan ') }}
+                                    <span class="font-bold text-slate-700" id="visible-count">{{ $hrItems->unique('team_member_id')->count() }} </span>
+                                    {{ __(' dari ') }}
+                                    <span class="font-bold text-slate-700">{{ $hrItems->unique('team_member_id')->count() }} </span>
+                                    {{ __(' personil') }}
                                 </div>
                                 <div class="inline-flex gap-1">
                                     <button type="button" disabled

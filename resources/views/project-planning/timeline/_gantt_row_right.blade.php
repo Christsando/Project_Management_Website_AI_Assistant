@@ -2,8 +2,7 @@
     $hasTimeline = $wbs->timelineItem !== null;
 @endphp
 
-<div class="h-14 flex items-center border-b border-slate-100 relative bg-slate-50/20"
-     style="background-image: repeating-linear-gradient(to right, transparent, transparent 47px, #e2e8f0 47px, #e2e8f0 48px);">
+<div class="h-14 flex items-center border-b border-slate-100 relative bg-slate-50/20" style="background-image: repeating-linear-gradient(to right, transparent, transparent 47px, #e2e8f0 47px, #e2e8f0 48px);">
 
     @if($hasTimeline && $projectDurationDays > 0)
 

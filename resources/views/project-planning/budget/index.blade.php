@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component />
+        <x-header-component/>
     </x-slot>
 
     <div class="pl-4 pt-4 pb-12">

@@ -6,10 +6,19 @@
                 <span class="text-slate-300 mr-2.5 font-mono shrink-0 select-none">↳</span>
             @endif
             <div class="truncate">
-                <span class="font-extrabold text-slate-800 text-xs md:text-sm block"
-                    title="{{ $wbs->title }}">{{ $wbs->title }}</span>
-                <span class="text-[9.5px] text-slate-400 block font-bold uppercase mt-0.5 tracking-wider">ID TUGAS:
-                    #{{ $wbs->id }}</span>
+                <span class="font-extrabold text-slate-800 text-xs md:text-sm block" title="{{ $wbs->title }}">{{ $wbs->title }}</span>
+                <span class="flex flex-col text-[9.5px] text-slate-400 block font-bold uppercase mt-0.5 tracking-wider">ID TUGAS: #{{ $wbs->id }}</span>
+
+                @php
+                    $assignedMembers = $hrItems->where('wbs_item_id', $wbs->id);
+                    $names = $assignedMembers->map(function ($item) {
+                        return $item->teamMember->name;
+                    })->implode(', ');
+                @endphp
+
+                <span class="text-xs text-slate-400">
+                    PIC: {{ $names ?: '-' }}
+                </span>
             </div>
         </div>
     </td>
@@ -60,7 +69,7 @@
 
     <td class="px-6 py-4 text-right">
         @php
-            $isAssigned = $hrItems->where('wbs_item_id', $wbs->id)->count() > 0;
+            $isAssigned = $wbs->isFullyAssigned($hrItems);
         @endphp
         @if (!$isAssigned)
             <button onclick="openAssignModal({{ $wbs->id }})"
@@ -129,52 +138,21 @@
 
         workloads.forEach(w => total += Number(w.value || 0));
 
-        if (total > 100) {
+        if (total > 90) {
             e.preventDefault();
-            alert('Total workload tidak boleh lebih dari 100%');
+            alert('Total workload tidak boleh lebih dari 90%');
         }
     });
 
     function openAssignModal(wbsId) {
         currentWbsId = wbsId;
-
         const form = document.getElementById('assign-form');
         form.action = `/projects/{{ $project->id }}/assign/${wbsId}`;
-
-        // resetMemberContainer(); // ← TAMBAH INI
-
         document.getElementById('assign-modal').classList.remove('hidden');
     }
 
     function closeAssignModal() {
         document.getElementById('assign-modal').classList.add('hidden');
-    }
-
-    function resetMemberContainer() {
-        const container = document.getElementById('member-container');
-
-        container.innerHTML = `
-        <div class="member-item border p-3 rounded-lg space-y-2">
-
-            <div class="flex gap-2 items-center">
-                <select name="team_member_ids[]" class="w-full border rounded p-2">
-                    @foreach ($teamMembers as $member)
-                        <option value="{{ $member->id }}">
-                            {{ $member->name }} - {{ $member->role_name }}
-                        </option>
-                    @endforeach
-                </select>
-
-                <button type="button" onclick="removeMember(this)" class="text-red-500 text-xs font-bold">
-                    ✕
-                </button>
-            </div>
-
-            <input type="number" name="workloads[]" placeholder="Workload (%)"
-                class="w-full border rounded p-2 text-xs" min="0" max="100">
-
-        </div>
-    `;
     }
 
     function removeMember(btn) {

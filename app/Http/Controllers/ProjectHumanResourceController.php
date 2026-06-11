@@ -196,14 +196,14 @@ class ProjectHumanResourceController extends Controller
                 $member = TeamMember::find($memberId);
                 $workload = $request->workloads[$index] ?? 0;
 
-                // ✅ STEP 1: cari template (belum punya task)
+                //  cari template (belum punya task)
                 $template = HumanResourceItem::where('human_resource_plan_id', $hrPlan->id)
                     ->where('team_member_id', $memberId)
                     ->whereNull('wbs_item_id')
                     ->first();
 
                 if ($template) {
-                    // ✅ UPDATE template pertama kali assign
+                    //  template pertama kali assign
                     $template->update([
                         'wbs_item_id' => $id,
                         'job_description' => null,
@@ -215,7 +215,7 @@ class ProjectHumanResourceController extends Controller
                         'updated_by' => Auth::id(),
                     ]);
                 } else {
-                    // ✅ STEP 2: kalau udah pernah → bikin row baru
+                    // kalau udah pernah → bikin row baru
                     HumanResourceItem::create([
                         'human_resource_plan_id' => $hrPlan->id,
                         'wbs_item_id' => $id,

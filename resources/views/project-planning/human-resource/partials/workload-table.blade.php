@@ -111,9 +111,6 @@
                                         style="width: {{ $total }}%">
                                     </div>
                                 </div>
-                                {{-- <span class="font-mono">
-                                    {{ $item->workload_percentage ?? 0 }}%
-                                </span> --}}
                                 
                                 <span class="font-mono">
                                     {{ $memberData['total_workload'] ?? 0 }}%
@@ -129,9 +126,9 @@
 
                 <!-- duration work kolom table-->
                 @if ($isEditable)
-                    <td class="py-4 px-6 text-right font-extrabold text-slate-800 font-mono text-sm">
+                    <td class="py-4 px-6 ">
                         @if ($item->estimated_work_days)
-                            {{ $memberData['total_days'] ?? 0 }} Hari
+                            <p class="font-extrabold text-right text-xs text-slate-600">{{ $memberData['total_days'] ?? 0 }} Hari</p>
                         @else
                             -
                         @endif

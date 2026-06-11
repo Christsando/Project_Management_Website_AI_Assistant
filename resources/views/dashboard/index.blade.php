@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component />
+        <x-header-component :projects="$projects" :showSearch="true" mode="dashboard"/>
     </x-slot>
 
     <div class="flex flex-col">
@@ -10,10 +10,10 @@
             <div class="flex justify-between items-center pb-5">
                 <div>
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {{ __('DASHBOARD') }}</div>
+                        {{ __('DASHBOARD') }}
+                    </div>
                     <h1 class="font-semibold text-3xl">{{ __('Project Dashboard') }}</h1>
-                    <p class="text-sm text-slate-500">{{ __('Plan, Prioritize, and accomplish your tasks with ease.') }}
-                    </p>
+                    <p class="text-sm text-slate-500">{{ __('Plan, Prioritize, and accomplish your tasks with ease.') }}</p>
                 </div>
 
                 <!-- Create Project Button (PM Only) -->

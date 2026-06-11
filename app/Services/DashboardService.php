@@ -37,15 +37,9 @@ class DashboardService
             });
 
         return [
-            // 'showCards' => count($this->getCards($user)) > 0,
-            // 'cards' => $this->getCards($user),
             'showCards' => count($cards) > 0,
             'cards' => $cards,
-
-            // recent
             'recentProjects' => $this->getRecentProjects($projectQuery),
-
-            // next actions
             'nextActions' => $this->getNextActions($user),
         ];
     }
@@ -132,11 +126,9 @@ class DashboardService
     private function getPlanningActions($user)
     {
         $nextActions = [];
-
         $planningProjectsList = Project::where('status', 'planning')->get();
 
         foreach ($planningProjectsList as $proj) {
-
             if (!$proj->scope || strtolower($proj->scope->status) !== 'finalized') {
                 if ($this->isManager($user)) {
                     $nextActions[] = [
@@ -207,7 +199,6 @@ class DashboardService
    public function getCards($user)
     {
         $role = $user->role;
-
         $defaultCards = [
             [
                 'type' => 'total_projects',
@@ -353,18 +344,15 @@ class DashboardService
                 $statusLabel = __('Draf');
                 $statusClass = 'bg-slate-100 text-slate-700 border-slate-200';
                 break;
-
             case 'submitted':
                 $statusLabel = __('Dalam Review');
                 $statusClass = 'bg-blue-50 text-blue-700 border-blue-100';
                 break;
-
             case 'approved':
             case 'planning':
                 $statusLabel = __('Planning');
                 $statusClass = 'bg-indigo-50 text-indigo-700 border-indigo-100';
                 break;
-
             case 'completed':
                 $statusLabel = __('Selesai');
                 $statusClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
@@ -372,15 +360,12 @@ class DashboardService
         }
 
         return [
-            // sebelumnya
             'title' => $proj->title,
             'category' => $category,
             'name' => $name,
             'initials' => $initials,
             'activity' => $activityText,
             'time' => $proj->updated_at->diffForHumans(),
-
-            // tambahan
             'status_label' => $statusLabel,
             'status_class' => $statusClass,
         ];

@@ -23,13 +23,13 @@
                 {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
             </div>
             <p class="text-sm text-slate-500">
-                @foreach ($task->users as $user)
+                @foreach ($task->humanResourceItems as $hr)
                     <div class="flex items-center gap-2">
                         <div
                             class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold">
-                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                            {{ strtoupper(substr($hr->teamMember->name, 0, 2)) }}
                         </div>
-                        <span class="text-xs">{{ $user->name }}</span>
+                        <span class="text-xs">{{ $hr->teamMember->name }}</span>
                     </div>
                 @endforeach
             </p>

@@ -27,15 +27,17 @@
     <div id="gantt-view">
         @if ($projectDurationDays > 0)
             <div class="border border-slate-100 rounded-xl overflow-hidden">
-                {{-- HEADER --}}
+
+                <!-- header / task title section -->
                 <div class="flex border-b border-slate-100 bg-white">
-                    {{-- LEFT --}}
+                    <!-- header table -->
                     <div class="w-80 shrink-0 border-r px-5 py-3">
                         <span class="text-xs font-extrabold text-slate-600 uppercase">
                             Task / WBS
                         </span>
                     </div>
-                    {{-- RIGHT (SCROLLABLE) --}}
+
+                    <!-- ganttchart content -->
                     <div class="flex-1 overflow-x-auto no-scrollbar" id="gantt-header">
                         <div class="flex" style="min-width: {{ $projectDurationDays * 48 }}px">
                             @for ($i = 0; $i < $projectDurationDays; $i++)
@@ -99,7 +101,7 @@
                         <th class="px-6 py-3 text-left">Tanggal</th>
                         <th class="px-6 py-3 text-left">Durasi</th>
                         <th class="px-6 py-3 text-left">Milestone</th>
-                        <th class="px-6 py-3 text-right">Assign</th>
+                        <th class="px-9 py-3 text-right">Assign</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -133,19 +135,46 @@
             gantt.classList.remove('hidden');
             timeline.classList.add('hidden');
 
-            tabGanttBtn.className =
-                "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-800 shadow-sm flex items-center gap-1.5";
-            tabTableBtn.className =
-                "px-4 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5";
+            tabGanttBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-800 shadow-sm flex items-center gap-1.5";
+            tabTableBtn.className = "px-4 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5";
 
         } else {
             gantt.classList.add('hidden');
             timeline.classList.remove('hidden');
 
-            tabTableBtn.className =
-                "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-800 shadow-sm flex items-center gap-1.5";
-            tabGanttBtn.className =
-                "px-4 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5";
+            tabTableBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-800 shadow-sm flex items-center gap-1.5";
+            tabGanttBtn.className = "px-4 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5";
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const header = document.getElementById('gantt-header');
+        const body = document.getElementById('gantt-body');
+
+        body.addEventListener('scroll', function () {
+            header.scrollLeft = body.scrollLeft;
+        });
+
+        header.addEventListener('scroll', function () {
+            body.scrollLeft = header.scrollLeft;
+        });
+    });
+
+    let isSyncing = false;
+
+    body.addEventListener('scroll', function () {
+        if (!isSyncing) {
+            isSyncing = true;
+            header.scrollLeft = body.scrollLeft;
+            isSyncing = false;
+        }
+    });
+
+    header.addEventListener('scroll', function () {
+        if (!isSyncing) {
+            isSyncing = true;
+            body.scrollLeft = header.scrollLeft;
+            isSyncing = false;
+        }
+    });
 </script>

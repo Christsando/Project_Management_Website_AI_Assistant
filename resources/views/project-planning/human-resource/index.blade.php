@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component />
+        <x-header-component/>
     </x-slot>
 
     <div class="pb-12 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-full mx-auto">

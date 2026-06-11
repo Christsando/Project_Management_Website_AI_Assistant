@@ -105,4 +105,32 @@ class WbsItem extends Model
     {
         return $this->hasMany(RiskItem::class, 'related_wbs_item_id');
     }
+    
+    public function isFullyAssigned($hrItems)
+    {
+        // 1. cek diri sendiri
+        $selfAssigned = $hrItems->where('wbs_item_id', $this->id)->count() > 0;
+
+        if ($selfAssigned) {
+            return true;
+        }
+
+        // 2. cek parent (naik ke atas)
+        if ($this->parent) {
+            $parentAssigned = $hrItems->where('wbs_item_id', $this->parent->id)->count() > 0;
+
+            if ($parentAssigned) {
+                return true;
+            }
+        }
+
+        // 3. cek child (turun ke bawah)
+        if ($this->children->isEmpty()) {
+            return false;
+        }
+
+        return $this->children->every(function ($child) use ($hrItems) {
+            return $child->isFullyAssigned($hrItems);
+        });
+    }
 }

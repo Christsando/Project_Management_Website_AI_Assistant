@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\DashboardService;
+use App\Models\Project;
+use App\Http\Controllers\ProjectController;
 use App\Models\TeamMember;
 
 
@@ -11,6 +13,7 @@ class DashboardController extends Controller
 {
     public function index(DashboardService $dashboardService)
     {
+        $projects = Project::select('id', 'title')->get();
         $members = TeamMember::where('is_active', true)
             ->withSum('humanResourceItems', 'workload_percentage')
             ->get()
@@ -21,7 +24,8 @@ class DashboardController extends Controller
 
         // return view('dashboard.index', $data, compact('members'));
         return view('dashboard.index', array_merge($data, [
-            'members' => $members
+            'members' => $members,
+            'projects' => $projects
         ]));
     }
 }

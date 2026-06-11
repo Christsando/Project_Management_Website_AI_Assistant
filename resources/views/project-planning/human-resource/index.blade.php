@@ -1,32 +1,33 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component />
+        <x-header-component/>
     </x-slot>
 
-    <div class="pl-4 pt-4 pb-12">
+    <div class="pb-12 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-full mx-auto">
         <div class="w-full mx-auto space-y-6">
             
             <!-- Header Section -->
             <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-5 gap-4">
                 <div>
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ __('PERENCANAAN PROYEK') }} / {{ __('PERENCANAAN SDM') }}</div>
-                    <h2 class="font-extrabold text-2xl text-slate-800 leading-tight mt-1 flex items-center gap-2">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <a href="{{ route('project-planning') }}"
+                            class="text-[10px] hover:text-slate-500 font-bold text-slate-400 uppercase tracking-widest">
+                            <i class="fas fa-arrow-left text-[8px]"></i>
+                            {{ __('Kembali | ') }}
+                        </a>
+                        {{ __('PLANNING') }} / {{ __('HUMAN RESOURCE') }}
+                    </div>
+                    <h2 class="font-semibold text-3xl flex items-center gap-2">
                         <i class="fa-solid fa-users text-slate-700 text-xl"></i>
                         {{ __('Human Resource Planning') }}
                     </h2>
-                    <p class="text-xs text-slate-500 mt-1">
+                    <p class="text-sm text-slate-500">
                         @if(strtolower(Auth::user()->role) === 'pmo' || strtolower(Auth::user()->role) === 'project management officer')
-                            {{ __('Kelola perencanaan sumber daya manusia (SDM) dan alokasi tugas pekerjaan (WBS) berdasarkan anggaran yang sudah difinalisasi.') }}
+                            {{ __('Manage human resources (HR) planning and job task allocation (WBS) based on the finalized budget.') }}
                         @else
-                            {{ __('Tinjau perencanaan sumber daya manusia (SDM) dan rincian alokasi tugas pekerjaan.') }}
+                            {{ __('Review human resource (HR) planning and the details of job task allocation.') }}
                         @endif
                     </p>
-                </div>
-                <div>
-                    <a href="{{ route('project-planning') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-bold rounded-xl text-xs transition shadow-sm gap-2">
-                        <i class="fas fa-arrow-left text-[9px]"></i>
-                        {{ __('Kembali ke Planning') }}
-                    </a>
                 </div>
             </div>
 

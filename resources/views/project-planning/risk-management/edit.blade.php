@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component />
+        <x-header-component/>
     </x-slot>
 
     @php

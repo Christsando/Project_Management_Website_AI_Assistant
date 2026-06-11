@@ -12,19 +12,21 @@ class HrSummaryService
         $underloadCount = 0;
 
         if ($hrPlan && $hrItems->count() > 0) {
-            $avgWorkload = round($hrItems->avg('workload_percentage') ?: 0);
+            $grouped = $hrItems->groupBy('team_member_id');
+            $totalWorkloads = [];
 
-            $pics = $hrItems
-                ->whereNotNull('person_in_charge')
-                ->where('person_in_charge', '!=', '')
-                ->groupBy('person_in_charge');
-
-            foreach ($pics as $items) {
+            foreach ($grouped as $items) {
                 $wl = $items->sum('workload_percentage');
+                $totalWorkloads[] = $wl;
 
+                // kategori
                 if ($wl > 85) $overloadCount++;
                 elseif ($wl >= 60) $optimalCount++;
                 else $underloadCount++;
+            }
+
+            if (count($totalWorkloads) > 0) {
+                $avgWorkload = round(array_sum($totalWorkloads) / count($totalWorkloads));
             }
         }
 

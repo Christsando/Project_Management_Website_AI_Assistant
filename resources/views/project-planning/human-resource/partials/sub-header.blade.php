@@ -1,21 +1,21 @@
 <div class="space-y-4">
     <div class="flex flex-col md:flex-row md:items-center justify-between">
         <div>
-            <div class="flex items-center text-xs gap-1 font-bold text-slate-400 uppercase tracking-wider">
+            <div class="flex items-center text-[10px] gap-1 font-bold text-slate-400 uppercase tracking-widest uppercase">
                 <a href="{{ route('project-planning.human-resource.index') }}"
-                    class="inline-flex items-center font-bold hover:text-slate-600 transition gap-1.5">
+                    class="text-[10px] hover:text-slate-500 font-bold text-slate-400 uppercase tracking-widest">
                     <i class="fas fa-arrow-left text-[8px]"></i>
                     {{ __('Kembali | ') }}
                 </a>
                 {{ $breadcrumb ?? '' }}
             </div>
 
-            <h2 class="font-extrabold text-2xl text-slate-800 leading-tight mt-1">
-                {{ $title }}
+            <h2 class="font-semibold text-3xl flex items-center gap-2">
+                <i class="fa-solid fa-users text-slate-700 text-xl"></i>{{ $title }}
             </h2>
 
             @if (!empty($description))
-                <p class="text-xs text-slate-500 mt-1">
+                <p class="text-sm text-slate-500">
                     {{ $description }}
                 </p>
             @endif

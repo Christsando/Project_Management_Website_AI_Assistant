@@ -14,7 +14,7 @@
     <!-- title section -->
     <div class="flex items-center justify-between">
         <span class="card-title text-{{ $titleColor }}">{{ $label }}</span>
-        <button class="flex items-center justify-center rounded-full bg-white w-8 h-8">
+        <button class="flex border border-slate-400 items-center justify-center rounded-full bg-white w-8 h-8">
             <i class="text-xs text-slate-500 fa-solid fa-arrow-up-right-from-square"></i>
         </button>
     </div>

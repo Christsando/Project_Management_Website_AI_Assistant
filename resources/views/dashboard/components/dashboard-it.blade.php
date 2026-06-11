@@ -2,7 +2,7 @@
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
     @if ($showCards)
         @foreach ($cards as $card)
-            <x-dashboard-status-card 
+            <x-status-card 
             :label="$card['label']" 
             :titleColor="$card['titleColor']" 
             :infoColor="$card['infoColor']" 

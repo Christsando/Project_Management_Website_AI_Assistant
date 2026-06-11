@@ -43,6 +43,11 @@ class HumanResourceItem extends Model
         return $this->belongsTo(TeamMember::class, 'team_member_id');
     }
 
+    public function getSkillsAttribute()
+    {
+        return array_filter(array_map('trim', explode(',', $this->required_skill ?? '')));
+    }
+
     /**
      * Get the plan that this item belongs to.
      */
@@ -100,12 +105,12 @@ class HumanResourceItem extends Model
             return [
                 'barColor' => 'bg-slate-700',
                 'label' => 'OPTIMAL',
-                'labelClass' => 'text-slate-750',
+                'labelClass' => 'text-slate-700',
             ];
         }
 
         return [
-            'barColor' => 'bg-slate-450',
+            'barColor' => 'bg-slate-400',
             'label' => 'UNDERLOAD',
             'labelClass' => 'text-slate-500',
         ];

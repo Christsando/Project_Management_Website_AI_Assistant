@@ -23,7 +23,7 @@
     <script href=""></script>
 </head>
 
-<body class="font-sans antialiased bg-[#F8FAFC]">
+<body class="font-sans antialiased bg-[#F8FAFC] overflow-x-hidden">
     <div class="flex h-screen p-4 gap-4">
         
         <div class="w-60 shrink-0">
@@ -32,7 +32,7 @@
 
 
         <!-- Page Content -->
-        <main class="flex-1 flex flex-col">
+        <main class="flex-1 flex flex-col overflow-hidden">
 
             <!-- Page Heading -->
             @isset($header)
@@ -41,7 +41,7 @@
                 </header>
             @endisset
             
-            <div class="flex-1 overflow-y-auto">
+            <div class="flex-1 overflow-y-auto overflow-x-hidden">
                 {{ $slot }}
             </div>
         </main>

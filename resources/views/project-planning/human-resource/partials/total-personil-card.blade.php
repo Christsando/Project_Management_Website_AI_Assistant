@@ -10,8 +10,5 @@
         <h3 class="text-3xl font-black text-slate-800 mt-1 tracking-tight">
             {{ $totalResources }}
         </h3>
-        <span class="text-[10px] font-bold text-slate-400 mt-1 block">
-            {{ __('+2 dibanding bulan lalu') }}
-        </span>
     </div>
 </div>

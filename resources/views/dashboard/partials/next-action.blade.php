@@ -2,7 +2,7 @@
     <div>
         <h2 class="card-title text-black mb-6">{{ __('Next Action') }}</h2>
         <div class="flex flex-col gap-5">
-            @if (empty($nexActions))
+            @if (empty($nextActions))
                 <div class="mt-6">
                     <h1 class="mb-2 text-slate-500 font-semibold flex flex-col items-center justify-center gap-2"><i class="fas fa-file-alt text-slate-400 text-4xl"></i>No Action for Now!</h1>
                     <p class="text-sm text-slate-500 text-justify">You're all caught up! When there's something important, it'll appear here.</p>

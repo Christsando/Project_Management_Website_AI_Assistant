@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component />
+        <x-header-component/>
     </x-slot>
 
     @php
@@ -23,12 +23,14 @@
     <div>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-full mx-auto">
             <!-- Header Section -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-50 pb-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 Pb-5">
                 <div>
-                    <h2 class="font-extrabold text-2xl text-slate-800 leading-tight flex items-center gap-2">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {{ __('MANAGEMENT') }}</div>
+                    <h2 class="font-semibold text-3xl">
                         {{ __('Manajemen Tim') }}
                     </h2>
-                    <p class="text-sm text-slate-500 mt-1">
+                    <p class="text-sm text-slate-500"">
                         {{ __('Kelola kolaborator, peran, dan beban kerja tim Anda secara real-time.') }}
                     </p>
                 </div>

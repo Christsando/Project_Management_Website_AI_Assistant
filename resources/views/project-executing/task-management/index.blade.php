@@ -13,18 +13,21 @@
         </div>
 
         @if (empty($project))
-            <div class="text-center py-10 text-slate-400">
-                <p class="text-sm font-semibold">Belum ada project dipilih</p>
-                <p class="text-xs mt-1">Silakan pilih project melalui search di atas</p>
+            <div class="text-center py-32 text-slate-400">
+                <i class="fas fa-folder text-5xl"></i>
+                <p class="text-xl font-semibold">Belum ada project dipilih</p>
+                <p class="text-sm">Silakan pilih project melalui search di atas</p>
             </div>
         @else
-            @include('project-executing.task-management.partials.kanban-board', [
-                'tasks' => $allTasks->groupBy('status'),
-            ])
+            <div class="flex flex-col gap-1">
+                <div>
+                    @include('project-executing.task-management.partials.kanban-board', ['tasks' => $allTasks->groupBy('status'),])
+                </div>
 
-            @include('project-executing.task-management.partials.task-list', [
-                'tasks' => $myTasks,
-            ])
+                <div>
+                    @include('project-executing.task-management.partials.task-list', ['tasks' => $allTasksRaw,])
+                </div>
+            </div>
         @endif
     </div>
 </x-app-layout>

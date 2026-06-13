@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class TaskManagementController extends Controller
 {
-    public function index($projectId = null)
+    public function index(Request $request, $projectId = null)
     {
         $projects = Project::select('id', 'title')->get();
 
@@ -19,30 +19,46 @@ class TaskManagementController extends Controller
             return view('project-executing.task-management.index', [
                 'projects' => $projects,
                 'allTasks' => collect(),
-                'myTasks' => collect(),
                 'project' => null
             ]);
         }
 
         $project = Project::findOrFail($projectId);
-        $user = auth()->user();
-        $allTasksRaw = $project->wbsItems()
-            ->with('humanResourceItems.teamMember')
-            ->get();
 
+        $query = $project->wbsItems()
+            ->with(['humanResourceItems.teamMember', 'timelineItem']);
 
-        if (strtolower($user->role) === 'project management officer') {
-            $myTasks = $allTasksRaw;
-        } else {
-            $myTasks = $allTasksRaw->filter(function ($task) use ($user) {
-                return $task->humanResourceItems->contains(function ($hr) use ($user) {
-                    return $hr->teamMember->user_id === $user->id;
-                });
+        // FILTER ASSIGNED
+        if ($request->assigned === 'me') {
+            $user = auth()->user();
+
+            $query->whereHas('humanResourceItems.teamMember', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
             });
         }
 
+        // FILTER PRIORITY
+        if ($request->priority && $request->priority !== 'all') {
+            $query->where('priority', $request->priority);
+        }
+
+        // FILTER DUE DATE
+        if ($request->due === 'today') {
+            $query->whereHas('timelineItem', function ($q) {
+                $q->whereDate('end_date', now());
+            });
+        }
+
+        if ($request->due === 'overdue') {
+            $query->whereHas('timelineItem', function ($q) {
+                $q->whereDate('end_date', '<', now());
+            });
+        }
+
+        $allTasksRaw = $query->get();
+
         $allTasks = $allTasksRaw->groupBy(function ($task) {
-            return match (strtolower($task->status)) {
+            return match (strtolower($task->kanban_status ?? 'todo')) {
                 'todo', 'to-do' => 'todo',
                 'ongoing', 'on-going', 'in_progress' => 'ongoing',
                 'done' => 'done',
@@ -54,8 +70,29 @@ class TaskManagementController extends Controller
         return view('project-executing.task-management.index', compact(
             'project',
             'projects',
-            'allTasks', 
-            'myTasks'
+            'allTasks',
+            'allTasksRaw'
         ));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        \Log::info("ID MASUK: " . $id);
+
+        $task = WbsItem::find($id);
+
+        if (!$task) {
+            return response()->json([
+                'error' => 'Task tidak ditemukan',
+                'id' => $id
+            ], 404);
+        }
+
+        $task->kanban_status = $request->status;
+        $task->save();
+
+        return response()->json([
+            'success' => true
+        ]);
     }
 }

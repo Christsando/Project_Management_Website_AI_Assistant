@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware('role:project_manager,pmo,it')->group(function () {
         Route::get('/task-management/{projectId?}', [TaskManagementController::class, 'index'])->name('task.management');
+        Route::post('/tasks/{id}/update-status', [TaskManagementController::class, 'updateStatus']);
     });
 
     Route::middleware('role:project_manager,manager,pmo')->group(function () {

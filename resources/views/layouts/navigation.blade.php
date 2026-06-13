@@ -7,13 +7,11 @@
 
         <!-- Menu Links -->
         <div class="flex flex-col gap-1.5 px-2">
-            <!-- Dashboard Link -->
             <x-nav-link :active="request()->routeIs('dashboard')" href="{{ route('dashboard') }}">
                 <i class="fa-solid fa-table-columns text-base"></i>
                 <span>{{ __('Dashboard') }}</span>
             </x-nav-link>
 
-            <!-- Inisiasi Proyek Link (PM & Manager) -->
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project manager', 'manager']))
                 <x-nav-link :active="request()->routeIs('projects.index')" href="{{ route('projects.index') }}">
                     <i class="fas fa-rocket text-base"></i>
@@ -21,7 +19,6 @@
                 </x-nav-link>
             @endif
 
-            <!-- Perencanaan Proyek Link (Manager & PMO) -->
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['manager', 'project management officer']))
                 <x-nav-link :active="request()->routeIs('project-planning')" href="{{ route('project-planning') }}">
                     <i class="fa-regular fa-calendar text-base"></i>
@@ -29,17 +26,29 @@
                 </x-nav-link>
             @endif
 
-            <!-- Manajemen Tim Link -->
             <x-nav-link :active="request()->routeIs('teamManagement')" href="{{ route('teamManagement') }}">
                 <i class="fas fa-users text-base"></i>
                 <span>{{ __('Manajemen Tim') }}</span>
             </x-nav-link>
 
-            <!-- Manajemen Task Link -->
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['it','project management officer']))
             <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
                 <i class="fas fa-tasks text-base"></i>
                 <span>{{ __('Manajemen Task') }}</span>
+            </x-nav-link>
+            @endif
+
+            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer']))
+            <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
+                <i class="fas fa-money-bill-wave text-base"></i>
+                <span>{{ __('Control Cost') }}</span>
+            </x-nav-link>
+            @endif
+
+            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer']))
+            <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
+                <i class="fas fa-bug text-base"></i>
+                <span>{{ __('Issue and Risk') }}</span>
             </x-nav-link>
             @endif
         </div>

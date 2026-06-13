@@ -24,6 +24,7 @@ class WbsItem extends Model
         'priority',
         'estimated_duration_days',
         'status',
+        'kanban_status',
         'order_number',
         'created_by',
         'updated_by',

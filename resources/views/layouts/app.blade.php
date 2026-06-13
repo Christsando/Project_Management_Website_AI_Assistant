@@ -20,12 +20,12 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script href=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
 </head>
 
 <body class="font-sans antialiased bg-[#F8FAFC] overflow-x-hidden">
     <div class="flex h-screen p-4 gap-4">
-        
+
         <div class="w-60 shrink-0">
             @include('layouts.navigation')
         </div>
@@ -40,12 +40,11 @@
                     {{ $header }}
                 </header>
             @endisset
-            
+
             <div class="flex-1 overflow-y-auto overflow-x-hidden">
                 {{ $slot }}
             </div>
         </main>
     </div>
+    @stack('scripts')
 </body>
-
-</html>

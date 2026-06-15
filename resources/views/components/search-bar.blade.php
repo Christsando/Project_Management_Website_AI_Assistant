@@ -64,7 +64,7 @@
         dropdown.classList.add('hidden');
 
         if (mode === 'dashboard') {
-            window.location.href = `/projects/${project.id}/human-resource`;
+            window.location.href = `/dashboard/${project.id}`;
 
         } else if (mode === 'task') {
             window.location.href = `/task-management/${project.id}`;

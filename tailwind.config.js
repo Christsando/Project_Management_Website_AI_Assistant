@@ -48,7 +48,6 @@ export default {
 
                 primary: '#3B82F6',
                 purple: '#8B5CF6',
-                green: '#22C55E',
 
                 primaryText: '#1E293B',
                 secondaryText: '#64748B',

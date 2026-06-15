@@ -1,27 +1,31 @@
-<div class="grid grid-cols-4 w-full h-[350px] gap-4">
+<div class="grid grid-cols-4 w-full h-[500px] gap-4">
 
     @include('project-executing.task-management.partials.task-column', [
         'title' => 'To-Do',
+        'status' => 'todo',
         'color' => 'bg-black',
-        'tasks' => $tasks['todo'] ?? []
+        'tasks' => $allTasks['todo'] ?? collect()
     ])
 
     @include('project-executing.task-management.partials.task-column', [
         'title' => 'On-Going',
+        'status' => 'ongoing',
         'color' => 'bg-purple',
-        'tasks' => $tasks['ongoing'] ?? []
+        'tasks' => $allTasks['ongoing'] ?? collect()
     ])
 
     @include('project-executing.task-management.partials.task-column', [
         'title' => 'Done',
+        'status' => 'done',
         'color' => 'bg-important',
-        'tasks' => $tasks['done'] ?? []
+        'tasks' => $allTasks['done'] ?? collect()
     ])
 
     @include('project-executing.task-management.partials.task-column', [
         'title' => 'Approved',
-        'color' => 'bg-green',
-        'tasks' => $tasks['approved'] ?? []
+        'status' => 'approved',
+        'color' => 'bg-blueStatus',
+        'tasks' => $allTasks['approved'] ?? collect()
     ])
 
 </div>

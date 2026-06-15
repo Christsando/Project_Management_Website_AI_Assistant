@@ -15,17 +15,6 @@
                     <h1 class="font-semibold text-3xl">{{ $title ?? '-' }}</h1>
                     <p class="text-sm text-slate-500 mt-2">{{ $project->proposal->background ?? '-' }}</p>
                 </div>
-
-                <!-- Create Project Button (PM Only) -->
-                @if (Auth::check() && strtolower(Auth::user()->role) === 'project manager')
-                    <div>
-                        <a href="{{ route('projects.create') }}"
-                            class="w-full flex items-center justify-center gap-2 px-8 py-2.5 bg-gradient-to-br from-blue-600 to-gradientBlue hover:bg-blue-700 text-white rounded-full text-lg transition shadow-blue-500/10 hover:shadow-lg">
-                            <i class="fas fa-plus text-[10px]"></i>
-                            <span>{{ __('Add Project') }}</span>
-                        </a>
-                    </div>
-                @endif
             </div>
 
             @include('dashboard.partials.project-date')

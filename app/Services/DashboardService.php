@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Project;
 use App\Models\WbsItem;
 use App\Models\TimelineItem;
+use Carbon\Carbon;
 
 class DashboardService
 {
@@ -41,6 +42,105 @@ class DashboardService
             'cards' => $cards,
             'recentProjects' => $this->getRecentProjects($projectQuery),
             'nextActions' => $this->getNextActions($user),
+        ];
+    }
+
+    public function getDetailProjectDashboard($id){
+        // get all data from only one project by id
+        $project = Project::with([
+            'owner',
+            'manager',
+            'wbsItems',
+            'timelineItems',
+            'proposal'
+        ])->findOrFail($id);
+
+        $remainingDays = null;
+
+        if ($project->end_date) {
+            $remainingDays = floor(Carbon::now()->diffInDays($project->end_date, false));
+        }
+
+        $tasks = $project->wbsItems;
+
+        // TOTAL
+        $totalTasks = $tasks->count();
+
+        // STATUS BASED (sesuaikan dengan enum kamu ya)
+        $todoTasks = $tasks->where('status', 'todo')->count();
+        $inProgressTasks = $tasks->where('status', 'in_progress')->count();
+        $doneTasks = $tasks->where('status', 'done')->count();
+
+        // OVERDUE (deadline lewat & belum done)
+        $overdueTasks = $tasks->filter(function ($task) {
+            return $task->end_date 
+                && $task->status !== 'done' 
+                && now()->gt($task->end_date);
+        })->count();
+
+        $cards = [
+        [
+            'label' => 'Total Task',
+            'value' => $totalTasks,
+            'background' => 'bg-gradient-to-br from-blue-500 to-gradientBlue',
+            'titleColor' => 'white',
+            'valueColor' => 'white',
+            'infoColor' => 'text-white',
+        ],
+        [
+            'label' => 'To Do',
+            'value' => $todoTasks,
+            'background' => 'bg-pink-400',
+            'titleColor' => '',
+            'valueColor' => '',
+            'infoColor' => '',
+        ],
+        [
+            'label' => 'In Progress',
+            'value' => $inProgressTasks,
+            'background' => 'bg-cyan-400',
+            'titleColor' => '',
+            'valueColor' => '',
+            'infoColor' => '',
+        ],
+        [
+            'label' => 'Overdue',
+            'value' => $overdueTasks,
+            'background' => 'bg-gradient-to-br from-orangeBg to-gradientOrange',
+            'titleColor' => 'white',
+            'valueColor' => 'white',
+            'infoColor' => 'text-white',
+        ],
+        [
+            'label' => 'Done',
+            'value' => $doneTasks,
+            'background' => 'bg-gradient-to-br from-greenBg to-gradientGreen',
+            'titleColor' => 'white',
+            'valueColor' => 'white',
+            'infoColor' => 'text-white',
+        ],
+    ];
+
+        return [
+            'cards' => $cards,
+            'showCards' => count($cards) > 0,
+            'project' => $project,
+            'title' => $project->title,
+            'background' => $project->proposal->background ?? '-',
+            'start_date' => $project-> start_date ?? '-',
+            'end_date' => $project-> end_date ?? '-',
+            'remainingDays' => $remainingDays,
+
+            // contoh data tambahan (biar dashboard lebih hidup)
+            'totalTasks' => $project->wbsItems->count(),
+            'completedTasks' => $project->wbsItems->where('status', 'done')->count(),
+            'pendingTasks' => $project->wbsItems->where('status', '!=', 'done')->count(),
+            'totalTimeline' => $project->timelineItems->count(),
+            'totalTasks' => $totalTasks,
+            'todoTasks' => $todoTasks,
+            'inProgressTasks' => $inProgressTasks,
+            'doneTasks' => $doneTasks,
+            'overdueTasks' => $overdueTasks,
         ];
     }
 

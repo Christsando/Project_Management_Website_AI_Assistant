@@ -19,6 +19,7 @@ class TaskManagementController extends Controller
             return view('project-executing.task-management.index', [
                 'projects' => $projects,
                 'allTasks' => collect(),
+                'allTasksRaw' => collect(),
                 'project' => null
             ]);
         }
@@ -28,32 +29,8 @@ class TaskManagementController extends Controller
         $query = $project->wbsItems()
             ->with(['humanResourceItems.teamMember', 'timelineItem']);
 
-        // FILTER ASSIGNED
-        if ($request->assigned === 'me') {
-            $user = auth()->user();
-
-            $query->whereHas('humanResourceItems.teamMember', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            });
-        }
-
-        // FILTER PRIORITY
-        if ($request->priority && $request->priority !== 'all') {
-            $query->where('priority', $request->priority);
-        }
-
-        // FILTER DUE DATE
-        if ($request->due === 'today') {
-            $query->whereHas('timelineItem', function ($q) {
-                $q->whereDate('end_date', now());
-            });
-        }
-
-        if ($request->due === 'overdue') {
-            $query->whereHas('timelineItem', function ($q) {
-                $q->whereDate('end_date', '<', now());
-            });
-        }
+        // for filtering
+        $query = $this->applyFilters($query, $request);
 
         $allTasksRaw = $query->get();
 
@@ -75,24 +52,114 @@ class TaskManagementController extends Controller
         ));
     }
 
-    public function updateStatus(Request $request, $id)
+    private function applyFilters($query, Request $request)
     {
-        \Log::info("ID MASUK: " . $id);
+        // filter by assigned task to user
+        if ($request->assigned === 'me') {
+            $user = auth()->user();
 
-        $task = WbsItem::find($id);
-
-        if (!$task) {
-            return response()->json([
-                'error' => 'Task tidak ditemukan',
-                'id' => $id
-            ], 404);
+            $query->whereHas('humanResourceItems.teamMember', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
         }
 
+        // filter by priority
+        if ($request->priority && $request->priority !== 'all') {
+            $query->where('priority', $request->priority);
+        }
+
+        // filter by due date
+        if ($request->due === 'today') {
+            $query->whereHas('timelineItem', function ($q) {
+                $q->whereDate('end_date', now());
+            });
+        }
+
+        if ($request->due === 'overdue') {
+            $query->whereHas('timelineItem', function ($q) {
+                $q->whereDate('end_date', '<', now());
+            });
+        }
+
+        if ($request->due === 'done') {
+            $query->where('kanban_status', 'done');
+        }
+
+        if ($request->due === 'approved') {
+            $query->where('kanban_status', 'approved');
+        }
+
+        // filter by status finished or not
+        if ($request->status === 'finished') {
+            $query->finished();
+        }
+
+        if ($request->status === 'unfinished') {
+            $query->unfinished();
+        }
+
+        return $query;
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $task = WbsItem::findOrFail($id);
+
+        $task->status_updated_by = auth()->id();
+        $task->status_updated_at = now();
+
         $task->kanban_status = $request->status;
+
+        if ($request->status === 'done' || $request->status === 'approved') {
+            $task->task_status_finished_at = now();
+        } else {
+            $task->task_status_finished_at = null;
+        }
+
         $task->save();
 
         return response()->json([
             'success' => true
+        ]);
+    }
+
+    public function getTaskInsight($projectId)
+    {
+        $project = Project::findOrFail($projectId);
+
+        $tasks = $project->wbsItems()
+            ->with(['timelineItem', 'humanResourceItems'])
+            ->get();
+
+        if ($tasks->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada task'
+            ]);
+        }
+
+        $importantTasks = $tasks->filter(function ($task) {
+            $due = optional($task->timelineItem)->end_date;
+            $days = $due ? now()->diffInDays($due, false) : null;
+
+            return $task->priority === 'high' || ($days !== null && $days <= 3);
+        })->values();
+
+        if ($importantTasks->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada task penting'
+            ]);
+        }
+
+
+        $service = app(\App\Services\TaskInsightService::class);
+
+        $result = $service->analyzeTasks($importantTasks);
+
+        return response()->json([
+            'success' => true,
+            'message' => $result
         ]);
     }
 }

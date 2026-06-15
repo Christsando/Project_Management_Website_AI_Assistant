@@ -21,6 +21,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/{id}', [DashboardController::class, 'detailDashboard'])->name('proyek.dashboard');
 
     // Project Initiation (Project Manager & Manager)
     Route::middleware('role:project_manager,manager')->group(function () {
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:project_manager,pmo,it')->group(function () {
         Route::get('/task-management/{projectId?}', [TaskManagementController::class, 'index'])->name('task.management');
         Route::post('/tasks/{id}/update-status', [TaskManagementController::class, 'updateStatus']);
+        Route::get('/task-insight/{id}', [TaskManagementController::class, 'getTaskInsight']);
     });
 
     Route::middleware('role:project_manager,manager,pmo')->group(function () {

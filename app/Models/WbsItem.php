@@ -14,6 +14,8 @@ class WbsItem extends Model
 
     protected $table = 'wbs_items';
 
+    protected $casts = ['task_status_finished_at' => 'datetime',];
+
     protected $fillable = [
         'project_id',
         'project_scope_id',
@@ -30,9 +32,24 @@ class WbsItem extends Model
         'updated_by',
     ];
 
+    public function statusUpdater()
+    {
+        return $this->belongsTo(User::class, 'status_updated_by');
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'task_user')->withPivot('role')->withTimestamps();
+    }
+
+    public function scopeFinished($query)
+    {
+        return $query->whereNotNull('task_status_finished_at');
+    }
+
+    public function scopeUnfinished($query)
+    {
+        return $query->whereNull('task_status_finished_at');
     }
 
     /**

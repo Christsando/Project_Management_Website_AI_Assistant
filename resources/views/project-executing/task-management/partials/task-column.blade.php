@@ -1,4 +1,4 @@
-<div class="bg-cardSection p-4 rounded-md flex flex-col h-[500px]">
+<div class="bg-cardSection p-4 rounded-2xl flex flex-col h-[500px]">
 
     <!-- HEADER -->
     <div class="flex items-center border-b-2 pt-2 pb-4 flex-shrink-0">

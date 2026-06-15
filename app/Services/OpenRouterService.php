@@ -9,6 +9,50 @@ use Exception;
 
 class OpenRouterService
 {
+
+    // core function to call openApi
+    public function chat(string $prompt, string $system = null): string
+    {
+        $apiKey = config('services.openrouter.api_key');
+        $baseUrl = config('services.openrouter.base_url', 'https://openrouter.ai/api/v1');
+        $model = config('services.openrouter.model', 'openai/gpt-oss-20b:free');
+
+        if (empty($apiKey)) {
+            throw new \Exception('API Key OpenRouter belum dikonfigurasi.');
+        }
+
+        $messages = [];
+
+        if ($system) {
+            $messages[] = [
+                'role' => 'system',
+                'content' => $system
+            ];
+        }
+
+        $messages[] = [
+            'role' => 'user',
+            'content' => $prompt
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Content-Type' => 'application/json',
+            'HTTP-Referer' => config('app.url'),
+            'X-Title' => 'Task Insight',
+        ])
+        ->post(rtrim($baseUrl, '/') . '/chat/completions', [
+            'model' => $model,
+            'messages' => $messages,
+        ]);
+
+        if ($response->failed()) {
+            throw new \Exception('OpenRouter error: ' . $response->body());
+        }
+
+        return $response->json()['choices'][0]['message']['content'] ?? '';
+    }
+
     /**
      * Generate suggestions for a Project Charter using OpenRouter API.
      *

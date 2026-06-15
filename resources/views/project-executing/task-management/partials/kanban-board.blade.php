@@ -24,7 +24,7 @@
     @include('project-executing.task-management.partials.task-column', [
         'title' => 'Approved',
         'status' => 'approved',
-        'color' => 'bg-green',
+        'color' => 'bg-blueStatus',
         'tasks' => $allTasks['approved'] ?? collect()
     ])
 

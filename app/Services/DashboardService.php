@@ -51,31 +51,55 @@ class DashboardService
             'owner',
             'manager',
             'wbsItems',
+            'wbsItems.humanResourceItems',
             'timelineItems',
             'proposal'
         ])->findOrFail($id);
 
         $remainingDays = null;
+        $tasks = $project->wbsItems;
+
+        $memberStats = $tasks->flatMap(function ($task) {
+            return $task->humanResourceItems->map(function ($hr) use ($task) {
+                return [
+                    'name' => $hr->person_in_charge,
+                    'role' => $hr->role_name,
+                    'status' => $task->status,
+                ];
+            });
+        })
+        ->groupBy('name')
+        ->map(function ($items, $name) {
+
+            $total = $items->count();
+            $done = $items->where('status', 'done')->count();
+
+            $progress = $total > 0 
+                ? round(($done / $total) * 100) 
+                : 0;
+
+            return [
+                'name' => $name,
+                'role' => $items->pluck('role')->unique()->implode(', ') ?: '-',
+                'total' => $total,
+                'done' => $done,
+                'progress' => $progress,
+            ];
+        })
+        ->values();
 
         if ($project->end_date) {
             $remainingDays = floor(Carbon::now()->diffInDays($project->end_date, false));
         }
 
-        $tasks = $project->wbsItems;
-
-        // TOTAL
         $totalTasks = $tasks->count();
-
-        // STATUS BASED (sesuaikan dengan enum kamu ya)
-        $todoTasks = $tasks->where('status', 'todo')->count();
-        $inProgressTasks = $tasks->where('status', 'in_progress')->count();
-        $doneTasks = $tasks->where('status', 'done')->count();
-
-        // OVERDUE (deadline lewat & belum done)
+        $todoTasks = $tasks->where('kanban_status', 'todo')->count();
+        $inProgressTasks = $tasks->where('kanban_status', 'ongoing')->count();
+        $doneTasks = $tasks->where('kanban_status', 'done')->count();
         $overdueTasks = $tasks->filter(function ($task) {
             return $task->end_date 
-                && $task->status !== 'done' 
-                && now()->gt($task->end_date);
+                && $task->kanban_status !== 'done' 
+                && now()->gt(Carbon::parse($task->end_date));
         })->count();
 
         $cards = [
@@ -136,11 +160,11 @@ class DashboardService
             'completedTasks' => $project->wbsItems->where('status', 'done')->count(),
             'pendingTasks' => $project->wbsItems->where('status', '!=', 'done')->count(),
             'totalTimeline' => $project->timelineItems->count(),
-            'totalTasks' => $totalTasks,
             'todoTasks' => $todoTasks,
             'inProgressTasks' => $inProgressTasks,
             'doneTasks' => $doneTasks,
             'overdueTasks' => $overdueTasks,
+            'memberStats' => $memberStats,
         ];
     }
 

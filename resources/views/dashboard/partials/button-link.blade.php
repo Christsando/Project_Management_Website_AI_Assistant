@@ -1,7 +1,0 @@
-@props=([
-    
-])
-
-<button class="">
-
-</button>

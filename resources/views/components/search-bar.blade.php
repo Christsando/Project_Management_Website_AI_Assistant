@@ -12,7 +12,7 @@
         placeholder="Cari proyek..."
         class="w-full pl-9 pr-4 py-2 bg-slate-100/60 border border-slate-200/50 rounded-full text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400">
 
-    {{-- DROPDOWN RESULT --}}
+    <!-- dropdown -->
     <div id="project-dropdown"
         class="absolute top-full mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg hidden max-h-60 overflow-y-auto z-50">
     </div>
@@ -21,9 +21,17 @@
 <script>
     const mode = @json($mode);
     const projects = @json($projects ?? []);
+    const issues = @json($issues ?? []);
+    // const risks = @json($risks ?? []);
 
     const input = document.getElementById('project-search');
     const dropdown = document.getElementById('project-dropdown');
+
+    const routes = {
+        dashboard: (id) => `/dashboard/${id}`,
+        task: (id) => `/task-management/${id}`,
+        issueRisk: (id) => `/issue?project_id=${id}`,
+    };
 
     input.addEventListener('input', function () {
         const keyword = this.value.toLowerCase();
@@ -63,13 +71,11 @@
         input.value = project.title;
         dropdown.classList.add('hidden');
 
-        if (mode === 'dashboard') {
-            window.location.href = `/dashboard/${project.id}`;
-
-        } else if (mode === 'task') {
-            window.location.href = `/task-management/${project.id}`;
+        if (routes[mode]) {
+            window.location.href = routes[mode](project.id);
         }
     }
+    
 
     // klik luar → tutup dropdown
     document.addEventListener('click', function(e) {

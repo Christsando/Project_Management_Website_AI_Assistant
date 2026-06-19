@@ -49,7 +49,9 @@
                                 $dueDate = optional($task->timelineItem)->end_date;
                             @endphp
 
-                            @if($dueDate)
+                            @if($task->kanban_status == "approved")
+                                -
+                            @elseif ($dueDate)
                                 {{ (int) now()->diffInDays($dueDate, false) }} hari
                             @else
                                 -

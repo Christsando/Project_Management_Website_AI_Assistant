@@ -13,6 +13,9 @@ use App\Http\Controllers\ProjectHumanResourceController;
 use App\Http\Controllers\ProjectRiskManagementController;
 use App\Http\Controllers\TaskManagementController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IssueAndRiskController;
+use App\Http\Controllers\ChangeRequestController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,6 +25,7 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/{id}', [DashboardController::class, 'detailDashboard'])->name('proyek.dashboard');
+    Route::get('/report/weekly/{projectId}', [ReportController::class, 'weekly'])->name('report.weekly');
 
     // Project Initiation (Project Manager & Manager)
     Route::middleware('role:project_manager,manager')->group(function () {
@@ -51,6 +55,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/task-management/{projectId?}', [TaskManagementController::class, 'index'])->name('task.management');
         Route::post('/tasks/{id}/update-status', [TaskManagementController::class, 'updateStatus']);
         Route::get('/task-insight/{id}', [TaskManagementController::class, 'getTaskInsight']);
+
+
+        Route::get('/issue', [IssueAndRiskController::class, 'index'])->name('issue');
+        Route::get('/issue-risk/{project}', [IssueAndRiskController::class, 'index'])->name('issue-risk.index');
+        Route::post('/issues', [IssueAndRiskController::class, 'store'])->name('issues.store');
+
+        Route::get('/change-request', [ChangeRequestController::class, 'index'])->name('change');
     });
 
     Route::middleware('role:project_manager,manager,pmo')->group(function () {

@@ -41,6 +41,8 @@ class OpenRouterService
             'HTTP-Referer' => config('app.url'),
             'X-Title' => 'Task Insight',
         ])
+        ->timeout(15)
+        ->connectTimeout(5)
         ->post(rtrim($baseUrl, '/') . '/chat/completions', [
             'model' => $model,
             'messages' => $messages,

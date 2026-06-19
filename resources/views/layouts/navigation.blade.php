@@ -32,24 +32,31 @@
             </x-nav-link>
 
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['it','project management officer']))
-            <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
-                <i class="fas fa-tasks text-base"></i>
-                <span>{{ __('Manajemen Task') }}</span>
-            </x-nav-link>
+                <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
+                    <i class="fas fa-tasks text-base"></i>
+                    <span>{{ __('Manajemen Task') }}</span>
+                </x-nav-link>
             @endif
 
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer']))
-            <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
-                <i class="fas fa-money-bill-wave text-base"></i>
-                <span>{{ __('Control Cost') }}</span>
-            </x-nav-link>
+                <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
+                    <i class="fas fa-money-bill-wave text-base"></i>
+                    <span>{{ __('Control Cost') }}</span>
+                </x-nav-link>
+            @endif
+
+            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer', 'it']))
+                <x-nav-link :active="request()->routeIs('issue')" href="{{ route('issue') }}">
+                    <i class="fas fa-bug text-base"></i>
+                    <span>{{ __('Issue and Risk') }}</span>
+                </x-nav-link>
             @endif
 
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer']))
-            <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
-                <i class="fas fa-bug text-base"></i>
-                <span>{{ __('Issue and Risk') }}</span>
-            </x-nav-link>
+                <x-nav-link :active="request()->routeIs('change')" href="{{ route('change') }}">
+                    <i class="fas fa-exchange-alt text-base"></i>
+                    <span>{{ __('Change Request') }}</span>
+                </x-nav-link>
             @endif
         </div>
     </div>

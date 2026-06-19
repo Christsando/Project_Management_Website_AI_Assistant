@@ -64,7 +64,7 @@ class DashboardService
                 return [
                     'name' => $hr->person_in_charge,
                     'role' => $hr->role_name,
-                    'status' => $task->status,
+                    'status' => $task->kanban_status,
                 ];
             });
         })

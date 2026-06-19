@@ -22,6 +22,9 @@ Route::get('/', function () {
     return view('auth/login');
 });
 
+        Route::post('/change-requests', [ChangeRequestController::class, 'store'])->name('change-requests.store');
+
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/{id}', [DashboardController::class, 'detailDashboard'])->name('proyek.dashboard');
@@ -51,7 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/projects/{project}/assign/{wbs}', [ProjectHumanResourceController::class, 'assignMembers']);
     });
 
-    Route::middleware('role:project_manager,pmo,it')->group(function () {
+    Route::middleware('role:project_manager,pmo,project management officer,it')->group(function () {
         Route::get('/task-management/{projectId?}', [TaskManagementController::class, 'index'])->name('task.management');
         Route::post('/tasks/{id}/update-status', [TaskManagementController::class, 'updateStatus']);
         Route::get('/task-insight/{id}', [TaskManagementController::class, 'getTaskInsight']);
@@ -61,7 +64,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/issue-risk/{project}', [IssueAndRiskController::class, 'index'])->name('issue-risk.index');
         Route::post('/issues', [IssueAndRiskController::class, 'store'])->name('issues.store');
 
-        Route::get('/change-request', [ChangeRequestController::class, 'index'])->name('change');
+        Route::get('/change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
+        // Route::resource('change-requests', ChangeRequestController::class);
     });
 
     Route::middleware('role:project_manager,manager,pmo')->group(function () {

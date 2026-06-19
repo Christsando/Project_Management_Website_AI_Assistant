@@ -53,7 +53,7 @@
             @endif
 
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer']))
-                <x-nav-link :active="request()->routeIs('change')" href="{{ route('change') }}">
+                <x-nav-link :active="request()->routeIs('change-requests.index')" href="{{ route('change-requests.index') }}">
                     <i class="fas fa-exchange-alt text-base"></i>
                     <span>{{ __('Change Request') }}</span>
                 </x-nav-link>

@@ -31,6 +31,7 @@
         dashboard: (id) => `/dashboard/${id}`,
         task: (id) => `/task-management/${id}`,
         issueRisk: (id) => `/issue?project_id=${id}`,
+        changeRequest: (id) => `/change-requests?project_id=${id}`,
     };
 
     input.addEventListener('input', function () {

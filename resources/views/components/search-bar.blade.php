@@ -32,6 +32,7 @@
         task: (id) => `/task-management/${id}`,
         issueRisk: (id) => `/issue?project_id=${id}`,
         changeRequest: (id) => `/change-requests?project_id=${id}`,
+        costControl: (id) => `/cost-control?project_id=${id}`,
     };
 
     input.addEventListener('input', function () {

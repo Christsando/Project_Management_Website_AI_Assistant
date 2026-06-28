@@ -39,7 +39,7 @@
             @endif
 
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer']))
-                <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
+                <x-nav-link :active="request()->routeIs('cost-control.index')" href="{{ route('cost-control.index') }}">
                     <i class="fas fa-money-bill-wave text-base"></i>
                     <span>{{ __('Control Cost') }}</span>
                 </x-nav-link>

@@ -11,7 +11,8 @@ use App\Http\Controllers\ProjectTimelineController;
 use App\Http\Controllers\ProjectBudgetController;
 use App\Http\Controllers\ProjectHumanResourceController;
 use App\Http\Controllers\ProjectRiskManagementController;
-use App\Http\Controllers\TaskManagementController;
+use App\Http\Controllers\TaskManagementController; 
+use App\Http\Controllers\CostController; 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IssueAndRiskController;
 use App\Http\Controllers\ChangeRequestController;
@@ -22,7 +23,7 @@ Route::get('/', function () {
     return view('auth/login');
 });
 
-        Route::post('/change-requests', [ChangeRequestController::class, 'store'])->name('change-requests.store');
+Route::post('/change-requests', [ChangeRequestController::class, 'store'])->name('change-requests.store');
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -45,7 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/team-management', [TeamManagementController::class, 'index'])->name('teamManagement');
-    
+
     Route::middleware('role:pmo')->group(function () {
         Route::post('/team-management', [TeamManagementController::class, 'store'])->name('teamManagement.store');
         Route::put('/team-management/{teamMember}', [TeamManagementController::class, 'update'])->name('teamManagement.update');
@@ -63,8 +64,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/issue', [IssueAndRiskController::class, 'index'])->name('issue');
         Route::get('/issue-risk/{project}', [IssueAndRiskController::class, 'index'])->name('issue-risk.index');
         Route::post('/issues', [IssueAndRiskController::class, 'store'])->name('issues.store');
+        Route::patch('/issues/{id}/status', [IssueAndRiskController::class, 'updateStatus'])->name('issues.updateStatus');
 
         Route::get('/change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
+        Route::patch('/change-requests/{changeRequest}/approve',[ChangeRequestController::class, 'approve'])->name('change-request.approve');
         // Route::resource('change-requests', ChangeRequestController::class);
     });
 
@@ -154,6 +157,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/projects/{project}/risk-management/items/{riskItem}', [ProjectRiskManagementController::class, 'deleteItem'])->name('projects.risk-management.items.delete');
         Route::post('/projects/{project}/risk-management/generate-ai', [ProjectRiskManagementController::class, 'generateAi'])->name('projects.risk-management.generate_ai');
         Route::post('/projects/{project}/risk-management/finalize', [ProjectRiskManagementController::class, 'finalize'])->name('projects.risk-management.finalize');
+
+        Route::get('/cost-control', [CostController::class, 'index'])->name('cost-control.index');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

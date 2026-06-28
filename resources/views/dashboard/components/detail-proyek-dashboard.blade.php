@@ -20,7 +20,7 @@
             <div class="flex justify-between items-center">
                 @include('dashboard.partials.project-date')
                 <a href="{{ route('report.weekly', $project->id) }}"
-                class="px-4 py-2 bg-gradient-to-br from-blue-600 to-gradientBlue text-white rounded-full text-lg">
+                    class="px-4 py-2 bg-gradient-to-br from-blue-600 to-gradientBlue text-white rounded-full text-lg">
                     <i class="fas fa-file-pdf mr-2"></i>Download Report
                 </a>
             </div>
@@ -29,8 +29,13 @@
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 mt-6">
                 @if ($showCards)
                     @foreach ($cards as $card)
-                        <x-status-card :label="$card['label']" :titleColor="$card['titleColor']" :infoColor="$card['infoColor']" :valueColor="$card['valueColor']"
-                            :value="$card['value']" :background="$card['background']" />
+                        <x-status-card 
+                        :label="$card['label']" 
+                        :titleColor="$card['titleColor']" 
+                        :infoColor="$card['infoColor']" 
+                        :valueColor="$card['valueColor']"
+                        :value="$card['value']" 
+                        :background="$card['background']" />
                     @endforeach
                 @endif
             </div>
@@ -54,7 +59,7 @@
                     </div>
 
                     <div>
-                        <x-button-link :url="url('/task-management/' . $project->id)"  buttonTitle="See Detail Task" />
+                        <x-button-link :url="url('/task-management/' . $project->id)" buttonTitle="See Detail Task" />
                     </div>
                 </div>
             </div>

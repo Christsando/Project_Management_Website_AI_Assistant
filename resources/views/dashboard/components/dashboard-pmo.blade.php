@@ -8,6 +8,7 @@
             :infoColor="$card['infoColor']" 
             :valueColor="$card['valueColor']" 
             :value="$card['value']" 
+            :route="$card['route']"
             :background="$card['background']" />
         @endforeach
     @endif

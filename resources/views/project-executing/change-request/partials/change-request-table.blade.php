@@ -1,7 +1,6 @@
-<div class="mt-4 bg-cardSection w-full rounded-2xl p-6">
-    <h1 class="card-title text-black">Change Request List</h1>
+<div class="bg-cardSection w-full rounded-2xl p-6">
 
-    <div class="mt-4 max-h-[400px] overflow-y-auto">
+    <div class="max-h-full overflow-y-auto">
         <table class="w-full">
             <thead class="border-b sticky top-0 bg-cardSection z-10">
                 <tr class="text-slate-400 text-sm border-b">
@@ -12,6 +11,7 @@
                     <th class="px-2 text-center">Status</th>
                     <th class="text-left px-2">Requested By</th>
                     <th class="w-32 px-2 text-center">Tanggal</th>
+                    <th class="w-32 px-2 text-center">Action</th>
                 </tr>
             </thead>
 
@@ -25,6 +25,7 @@
                             reason: @js($cr->reason ?? '-'),
                             status: @js($cr->status ?? '-'),
                             requested_by: @js($cr->requestedBy->name ?? '-'),
+                            requested_deadline: @js($cr->requested_deadline ? \Carbon\Carbon::parse($cr->requested_deadline)->format('d M Y') : '-'),
                             date: @js($cr->created_at?->format('d M Y') ?? '-')
                         })">
                         <td class="text-center py-2">{{ $index + 1 }}</td>
@@ -58,6 +59,23 @@
 
                         <td class="text-center py-2">
                             {{ $cr->created_at?->format('d M Y') ?? '-' }}
+                        </td>
+
+                        <td class="px-2 py-2 text-center">
+                            @if (Auth::check() && strtolower(Auth::user()->role) === 'project management officer' && $cr->status == 'pending')
+                                <form action="{{ route('change-request.approve', $cr->id) }}" method="POST"
+                                    onsubmit="return confirm('Approve change request ini?')">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    <button type="submit"
+                                        class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
+                                        Approve
+                                    </button>
+                                </form>
+                            @else
+                                <span class="text-slate-400 text-xs">-</span>
+                            @endif
                         </td>
                     </tr>
                 @empty

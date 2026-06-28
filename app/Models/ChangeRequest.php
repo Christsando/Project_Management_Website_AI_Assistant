@@ -12,6 +12,7 @@ class ChangeRequest extends Model
         'field_changed',
         'old_value',
         'new_value',
+        'requested_deadline',
         'reason',
         'status',
         'requested_by',

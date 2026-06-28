@@ -51,6 +51,11 @@
                 <p class="text-slate-400">Requested By</p>
                 <p id="crRequestedBy"></p>
             </div>
+
+            <div>
+                <p class="text-slate-400">Requested Deadline</p>
+                <p id="crRequestedDeadline"></p>
+            </div>
         </div>
 
         <div class="mt-6 pt-4 border-t flex justify-end gap-2">

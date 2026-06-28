@@ -3,7 +3,7 @@
         <x-header-component :projects="$projects" :showSearch="true" mode="task" />
     </x-slot>
 
-    <div class="bg-white p-4 rounded-2xl border border-slate-100 h-fit shadow-sm p-6 max-w-full mx-auto">
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 h-full shadow-sm p-6 max-w-full mx-auto">
         <div class="mb-6 flex justify-between items-center">
             <div>
                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -142,11 +142,19 @@
     }
 
     function submitChangeRequest() {
+        const deadline = document.getElementById('cr_deadline').value;
+
+        if (!deadline) {
+            alert('Requested Deadline wajib diisi');
+            return;
+        }
+
         const payload = {
             wbs_item_id: window.currentTask?.id,
             old_value: document.getElementById('cr_current_state').value,
             new_value: document.getElementById('cr_proposed_state').value,
             reason: document.getElementById('cr_reason').value,
+            requested_deadline: deadline,
             field_changed: 'flow',
         };
 

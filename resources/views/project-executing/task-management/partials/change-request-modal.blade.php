@@ -59,6 +59,18 @@
                 </select>
             </div>
 
+            <!-- DEADLINE -->
+            <div>
+                <p class="text-xs text-slate-400 mb-1">
+                    Requested Deadline <span class="text-red-500">*</span>
+                </p>
+
+                <input type="date" id="cr_deadline" class="w-full border rounded-md p-2" required>
+
+                <p id="error_deadline" class="text-red-500 text-xs hidden mt-1">
+                </p>
+            </div>
+
         </div>
 
         <!-- ACTION -->

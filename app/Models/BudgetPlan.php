@@ -26,6 +26,23 @@ class BudgetPlan extends Model
         'total_budget' => 'decimal:2',
     ];
 
+    public function items()
+    {
+        return $this->hasMany(BudgetItem::class);
+    }
+
+    public function getActualCostAttribute()
+    {
+        return $this->items->sum('actual_cost');
+    }
+
+    public function getUsageAttribute()
+    {
+        return $this->total_budget > 0
+            ? ($this->actual_cost / $this->total_budget) * 100
+            : 0;
+    }
+
     /**
      * Get the project that this budget plan belongs to.
      */

@@ -82,4 +82,23 @@ class IssueAndRiskController extends Controller
 
         return redirect()->back()->with('success', 'Issue berhasil dibuat');
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:' . implode(',', Issue::STATUSES),
+        ]);
+
+        $issue = Issue::findOrFail($id);
+
+        $issue->update([
+            'status' => $request->status,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status berhasil diupdate',
+            'status' => $issue->status,
+        ]);
+    }
 }

@@ -1,4 +1,4 @@
-<div class="border border-slate-200 bg-white rounded-2xl p-6 shadow-sm flex flex-col">
+<div class="border border-slate-200 bg-white col-span-2 rounded-2xl p-6 shadow-sm flex flex-col">
     <!-- title section -->
     <h2 class="card-title text-black mb-4">
         {{ __('Workload') }}

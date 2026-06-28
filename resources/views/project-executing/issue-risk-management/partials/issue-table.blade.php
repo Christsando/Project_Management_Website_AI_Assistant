@@ -34,10 +34,13 @@
     </table>
 </div>
 <script>
+    let currentIssueId = null;
     function openDetailModal(issue) {
+        currentIssueId = issue.id;
+
         document.getElementById('detail-title').innerText = issue.title ?? '-';
         document.getElementById('detail-description').innerText = issue.description ?? '-';
-        document.getElementById('detail-status').innerText = issue.status ?? '-';
+        document.getElementById('detail-status').value = issue.status ?? 'open';
         document.getElementById('detail-priority').innerText = issue.priority ?? '-';
         document.getElementById('detail-assignee').innerText = issue.assignee?.name ?? '-';
         document.getElementById('detail-reporter').innerText = issue.reporter?.name ?? '-';

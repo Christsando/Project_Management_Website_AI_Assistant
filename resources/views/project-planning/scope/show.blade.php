@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component :title="'Project Scope: ' . $project->title" icon="fa-solid fa-sitemap text-blue-600 text-lg" />
+        <x-header-component />
     </x-slot>
 
     <div class="px-4 py-2">
@@ -70,7 +70,7 @@
                 <!-- Steps Navigation Card -->
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">{{ __('Tahapan Pengisian') }}</h3>
-                    <nav class="space-y-1">
+                    <nav id="scope-navigation"class="space-y-1">
                         <a href="#section-1" class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50/50 transition">
                             <span class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shadow-blue-500/10">1</span>
                             <span>{{ __('Tujuan & Deskripsi') }}</span>
@@ -394,7 +394,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Update active state of sidebar links based on scroll/click
-            const navLinks = document.querySelectorAll('nav a');
+            const navLinks = document.querySelectorAll('#scope-navigation a');
             const sections = document.querySelectorAll('.scroll-mt-6');
 
             function updateActiveLink() {

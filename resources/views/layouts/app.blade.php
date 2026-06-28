@@ -42,7 +42,7 @@
                 </header>
             @endisset
 
-            <div class="flex-1 overflow-y-auto overflow-x-hidden">
+            <div class="h-full flex-1 overflow-y-auto overflow-x-hidden">
                 {{ $slot }}
             </div>
         </main>

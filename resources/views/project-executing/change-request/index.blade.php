@@ -38,8 +38,8 @@
             document.getElementById('crStatus').innerText = cr.status;
             document.getElementById('crDate').innerText = cr.date;
             document.getElementById('crRequestedBy').innerText = cr.requested_by;
-
             document.getElementById('changeRequestDetailModal').classList.remove('hidden');
+            document.getElementById('crRequestedDeadline').innerText = cr.requested_deadline ?? '-';
         };
 
         function closeChangeRequestDetailModal() {

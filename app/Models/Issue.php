@@ -18,6 +18,13 @@ class Issue extends Model
         'resolved_at',
     ];
 
+    const STATUSES = [
+        'open',
+        'in_progress',
+        'done',
+        'closed'
+    ];
+
     // relasi ke project
     public function project()
     {

@@ -11,13 +11,15 @@ use App\Http\Controllers\ProjectTimelineController;
 use App\Http\Controllers\ProjectBudgetController;
 use App\Http\Controllers\ProjectHumanResourceController;
 use App\Http\Controllers\ProjectRiskManagementController;
-use App\Http\Controllers\TaskManagementController; 
-use App\Http\Controllers\CostController; 
+use App\Http\Controllers\TaskManagementController;
+use App\Http\Controllers\CostController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IssueAndRiskController;
 use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/risk-suggestion/{projectId}/status', [IssueAndRiskController::class, 'riskSuggestionStatus'])->name('risk-suggestion.status');
 
 Route::get('/', function () {
     return view('auth/login');
@@ -67,7 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/issues/{id}/status', [IssueAndRiskController::class, 'updateStatus'])->name('issues.updateStatus');
 
         Route::get('/change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
-        Route::patch('/change-requests/{changeRequest}/approve',[ChangeRequestController::class, 'approve'])->name('change-request.approve');
+        Route::patch('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve'])->name('change-request.approve');
         // Route::resource('change-requests', ChangeRequestController::class);
     });
 

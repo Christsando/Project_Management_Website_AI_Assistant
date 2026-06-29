@@ -13,7 +13,7 @@
 
         <tbody>
             @forelse($issues as $issue)
-                <tr class="border-b text-sm hover:bg-slate-100" onclick='openDetailModal(@json($issue))'>
+                <tr class="border-b text-sm hover:bg-slate-100 cursor-pointer" onclick='openDetailModal(@json($issue))'>
                     <td class="text-center py-4">{{ $issue->status }}</td>
                     <td class="text-center py-4">ISS-{{ $issue->id }}</td>
                     <td class="py-4">{{ $issue->title }}</td>

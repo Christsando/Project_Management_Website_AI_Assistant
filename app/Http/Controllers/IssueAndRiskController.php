@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Issue;
 use App\Models\User;
-// use App\Models\RiskManagementPlan;
+use App\Models\RiskManagementPlan;
+use App\Models\RiskItem;
+use App\Helpers\RiskSuggestionHelper;
 
 
 class IssueAndRiskController extends Controller
@@ -14,11 +16,12 @@ class IssueAndRiskController extends Controller
     public function index(Request $request)
     {
         $projectId = $request->project_id;
+        $tab = $request->get('tab', 'issue');
         $users = User::all();
         $projects = Project::select('id', 'title')->get();
-
         $issues = null;
 
+        // Issue filtering based on project_id, priority, assigned, and due
         if ($projectId) {
             $query = Issue::with(['assignee', 'reporter'])
                 ->where('project_id', $projectId);
@@ -53,12 +56,32 @@ class IssueAndRiskController extends Controller
             $issues = $query->get();
         }
 
-        // $risks = RiskManagementPlan::where('project_id', $projectId)->get();
+        // risk
+        $risks = collect();
+        if ($projectId) {
+            $riskPlan = RiskManagementPlan::where('project_id', $projectId)->first();
 
+            if ($riskPlan) {
+                $risks = RiskItem::where('risk_management_plan_id', $riskPlan->id)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
+        }
+
+        $riskSuggestion = null;
+        if ($projectId && $tab === 'risk') {
+            $riskSuggestion = RiskSuggestionHelper::get($projectId);
+        }
+
+        // dd($riskSuggestion);
         return view('project-executing.issue-risk-management.index', [
             'projects' => $projects,
+            'risks' => $risks,
             'issues' => $issues,
+            'tab' => $tab,
             'users' => $users,
+            'projectId' => $projectId,
+            'riskSuggestion' => $riskSuggestion,
         ]);
     }
 
@@ -100,5 +123,12 @@ class IssueAndRiskController extends Controller
             'message' => 'Status berhasil diupdate',
             'status' => $issue->status,
         ]);
+    }
+
+    public function riskSuggestionStatus(Request $request, int $projectId)
+    {
+        $status = RiskSuggestionHelper::status($projectId);
+
+        return response()->json($status);
     }
 }

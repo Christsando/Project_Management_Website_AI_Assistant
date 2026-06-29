@@ -301,8 +301,8 @@ class ProjectHumanResourceController extends Controller
         }
 
         $this->checkPlanningAccess($project);
-
         $hrPlan = $project->humanResourcePlan;
+        
         if (!$hrPlan) {
             return redirect()->route('projects.human-resource.create', $project->id);
         }
@@ -312,12 +312,26 @@ class ProjectHumanResourceController extends Controller
         }
 
         $hrItems = $hrPlan->humanResourceItems()->with(['wbsItem', 'teamMember'])->orderBy('created_at', 'desc')->get();
+        $groupedItems = $hrItems->groupBy('team_member_id');
+        $memberWorkloads = $groupedItems->map(function ($items) {
+            return [
+                'total_workload' => $items->sum('workload_percentage'),
+                'total_days' => $items->sum('estimated_work_days'),
+            ];
+        });
 
         // Fetch project WBS items for dropdown selection (only finalized WBS tasks)
         $wbsItems = $project->wbsItems()->orderBy('title')->get();
 
         // Fetch active team members for assignment
-        $teamMembers = \App\Models\TeamMember::where('is_active', true)->orderBy('role_name')->get();
+        $usedMemberIds = $hrPlan->humanResourceItems()
+            ->whereNotNull('team_member_id')
+            ->pluck('team_member_id');
+
+        $teamMembers = TeamMember::where('is_active', true)
+            ->whereNotIn('id', $usedMemberIds)
+            ->orderBy('role_name')
+            ->get();
 
         // Calculate summary aggregates
         $totalResources = $hrItems->sum('quantity');
@@ -343,6 +357,8 @@ class ProjectHumanResourceController extends Controller
             'isPmo',
             'isDraft',
             'isEditable',
+            'groupedItems',
+            'memberWorkloads',
         ));
     }
 
@@ -425,6 +441,16 @@ class ProjectHumanResourceController extends Controller
             'workload_percentage.max' => 'Beban kerja maksimal 100%.',
             'estimated_work_days.min' => 'Estimasi hari kerja minimal 1 hari.',
         ]);
+
+        $exists = HumanResourceItem::where('human_resource_plan_id', $hrPlan->id)
+            ->where('team_member_id', $request->team_member_id)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withInput()
+                ->with('error', 'Anggota tim tersebut sudah menjadi bagian dari proyek ini.');
+        }
 
         if (!$request->team_member_id && !$request->wbs_item_id) {
             return back()

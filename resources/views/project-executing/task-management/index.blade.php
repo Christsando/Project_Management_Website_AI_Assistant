@@ -3,7 +3,7 @@
         <x-header-component :projects="$projects" :showSearch="true" mode="task" />
     </x-slot>
 
-    <div class="bg-white p-4 rounded-2xl border border-slate-100 h-fit shadow-sm p-6 max-w-full mx-auto">
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 h-full shadow-sm p-6 max-w-full mx-auto">
         <div class="mb-6 flex justify-between items-center">
             <div>
                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -38,6 +38,8 @@
             </div>
         @endif
     </div>
+    @include('project-executing.task-management.partials.task-detail-modal')
+    @include('project-executing.task-management.partials.change-request-modal')
 </x-app-layout>
 
 <script>
@@ -73,10 +75,7 @@
                         ${res.message}
                     </p>
 
-                    <button 
-                        onclick="this.parentElement.remove()" 
-                        class="text-xs mt-3 text-blue-500 hover:underline"
-                    >
+                    <button onclick="this.parentElement.remove()" class="text-xs mt-3 text-blue-500 hover:underline">
                         Tutup
                     </button>
                 `;
@@ -97,4 +96,96 @@
     window.addEventListener('DOMContentLoaded', () => {
         showTaskInsight();
     });
+
+    window.openTaskModal = function(task) {
+        console.log('modal open', task);
+        window.currentTask = task;
+
+        const modal = document.getElementById('taskDetailModal');
+
+        document.getElementById('modalTaskTitle').innerText = task.title ?? '-';
+        document.getElementById('modalTaskDesc').innerText = task.description ?? '-';
+        document.getElementById('modalTaskPriority').innerText = task.priority ?? '-';
+        document.getElementById('modalTaskDue').innerText = task.due_date ?? '-';
+        document.getElementById('modalTaskStatus').innerText = task.status ?? '-';
+
+        modal.classList.remove('hidden');
+    };
+
+    function closeTaskModal() {
+        const modal = document.getElementById('taskDetailModal');
+        modal.classList.add('hidden');
+    }
+
+    window.openChangeRequest = function() {
+        const task = window.currentTask;
+
+        if (!task) return;
+
+        // isi data ke modal
+        document.getElementById('cr_task_title').innerText = task.title ?? '-';
+
+        // optional: auto isi current state dari desc
+        document.getElementById('cr_current_state').value = task.description ?? '';
+
+        // reset field lain
+        document.getElementById('cr_proposed_state').value = '';
+        document.getElementById('cr_reason').value = '';
+        document.getElementById('cr_impact').value = 'medium';
+
+        // buka modal
+        document.getElementById('changeRequestModal').classList.remove('hidden');
+    }
+
+    function closeChangeRequestModal() {
+        document.getElementById('changeRequestModal').classList.add('hidden');
+    }
+
+    function submitChangeRequest() {
+        const deadline = document.getElementById('cr_deadline').value;
+
+        if (!deadline) {
+            alert('Requested Deadline wajib diisi');
+            return;
+        }
+
+        const payload = {
+            wbs_item_id: window.currentTask?.id,
+            old_value: document.getElementById('cr_current_state').value,
+            new_value: document.getElementById('cr_proposed_state').value,
+            reason: document.getElementById('cr_reason').value,
+            requested_deadline: deadline,
+            field_changed: 'flow',
+        };
+
+        fetch("{{ route('change-requests.store') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json', // <-- TAMBAHIN INI
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => {
+                        throw err;
+                    });
+                }
+                return res.json();
+            })
+            .then(res => {
+                if (res.success) {
+                    alert('Change Request berhasil dikirim');
+                    closeChangeRequestModal();
+                } else {
+                    alert('Gagal submit');
+                }
+            })
+            .catch(err => {
+                console.error('Validation/Error:', err);
+                alert(err.message ?? 'Gagal submit, cek console');
+            });
+    }
 </script>

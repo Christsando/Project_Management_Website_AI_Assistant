@@ -8,6 +8,7 @@
             :infoColor="$card['infoColor']" 
             :valueColor="$card['valueColor']" 
             :value="$card['value']" 
+            :route="$card['route']"
             :background="$card['background']" />
         @endforeach
     @endif
@@ -16,6 +17,6 @@
 <!-- Workflow Progress & Next Actions for second row-->
 <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
     @include('dashboard.partials.assigned-task')
-    @include('dashboard.partials.reminders')
+    {{-- @include('dashboard.partials.reminders') --}}
     @include('dashboard.partials.workload')
 </div>

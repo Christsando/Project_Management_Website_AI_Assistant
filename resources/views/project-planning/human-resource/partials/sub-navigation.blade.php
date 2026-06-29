@@ -1,4 +1,3 @@
-
 @php
     $tab = request('tab', 'hr');
 @endphp

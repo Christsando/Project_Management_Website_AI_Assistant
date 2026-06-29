@@ -28,6 +28,7 @@
                 <p class="text-xs font-bold text-slate-800 leading-tight">{{ Auth::user()->name }}</p>
                 <p class="text-[10px] font-semibold text-slate-400 mt-0.5">{{ Auth::user()->role }}</p>
             </div>
+            
             <!-- Avatar circle -->
             <div
                 class="w-9 h-9 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-blue-50 text-blue-600 font-bold text-xs shadow-sm">

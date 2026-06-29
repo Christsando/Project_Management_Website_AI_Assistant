@@ -62,4 +62,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function teamMember()
+    {
+        return $this->hasOne(TeamMember::class, 'user_id');
+    }
 }

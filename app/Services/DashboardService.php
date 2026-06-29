@@ -6,12 +6,16 @@ use App\Models\Project;
 use App\Models\WbsItem;
 use App\Models\TimelineItem;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Models\HumanResourceItem;
+use Illuminate\Support\Collection;
 
 class DashboardService
 {
     public function getDashboardData($user)
     {
         $projectQuery = $this->buildProjectQuery($user);
+        $itSummary = $this->getITTaskSummary($user);
 
         // take data
         $data = [
@@ -20,6 +24,7 @@ class DashboardService
             'submittedProjects' => $this->countByStatus($projectQuery, 'submitted'),
             'planningProjects' => $this->countPlanning($projectQuery),
             'completedProjects' => $this->countByStatus($projectQuery, 'completed'),
+            'projectAnalytics' => $this->getProjectAnalytics($projectQuery),
         ];
 
         $valueMap = [
@@ -28,6 +33,11 @@ class DashboardService
             'on_request' => $data['submittedProjects'],
             'planning' => $data['planningProjects'],
             'done' => $data['completedProjects'],
+
+            'on_progress_task' => $itSummary['on_progress_task'],
+            'todo_task'        => $itSummary['todo_task'],
+            'overdue_task'     => $itSummary['overdue_task'],
+            'done_task'        => $itSummary['done'],
         ];
 
         // config dan inject value to cards
@@ -42,10 +52,13 @@ class DashboardService
             'cards' => $cards,
             'recentProjects' => $this->getRecentProjects($projectQuery),
             'nextActions' => $this->getNextActions($user),
+            'assignedTask' => $this->getAssignedTask($user),
+            'projectAnalytics' => $data['projectAnalytics']
         ];
     }
 
-    public function getDetailProjectDashboard($id){
+    public function getDetailProjectDashboard($id)
+    {
         // get all data from only one project by id
         $project = Project::with([
             'owner',
@@ -64,29 +77,29 @@ class DashboardService
                 return [
                     'name' => $hr->person_in_charge,
                     'role' => $hr->role_name,
-                    'status' => $task->status,
+                    'status' => $task->kanban_status,
                 ];
             });
         })
-        ->groupBy('name')
-        ->map(function ($items, $name) {
+            ->groupBy('name')
+            ->map(function ($items, $name) {
 
-            $total = $items->count();
-            $done = $items->where('status', 'done')->count();
+                $total = $items->count();
+                $done = $items->where('status', 'done')->count();
 
-            $progress = $total > 0 
-                ? round(($done / $total) * 100) 
-                : 0;
+                $progress = $total > 0
+                    ? round(($done / $total) * 100)
+                    : 0;
 
-            return [
-                'name' => $name,
-                'role' => $items->pluck('role')->unique()->implode(', ') ?: '-',
-                'total' => $total,
-                'done' => $done,
-                'progress' => $progress,
-            ];
-        })
-        ->values();
+                return [
+                    'name' => $name,
+                    'role' => $items->pluck('role')->unique()->implode(', ') ?: '-',
+                    'total' => $total,
+                    'done' => $done,
+                    'progress' => $progress,
+                ];
+            })
+            ->values();
 
         if ($project->end_date) {
             $remainingDays = floor(Carbon::now()->diffInDays($project->end_date, false));
@@ -97,53 +110,58 @@ class DashboardService
         $inProgressTasks = $tasks->where('kanban_status', 'ongoing')->count();
         $doneTasks = $tasks->where('kanban_status', 'done')->count();
         $overdueTasks = $tasks->filter(function ($task) {
-            return $task->end_date 
-                && $task->kanban_status !== 'done' 
+            return $task->end_date
+                && $task->kanban_status !== 'done'
                 && now()->gt(Carbon::parse($task->end_date));
         })->count();
 
         $cards = [
-        [
-            'label' => 'Total Task',
-            'value' => $totalTasks,
-            'background' => 'bg-gradient-to-br from-blue-500 to-gradientBlue',
-            'titleColor' => 'white',
-            'valueColor' => 'white',
-            'infoColor' => 'text-white',
-        ],
-        [
-            'label' => 'To Do',
-            'value' => $todoTasks,
-            'background' => 'bg-pink-400',
-            'titleColor' => '',
-            'valueColor' => '',
-            'infoColor' => '',
-        ],
-        [
-            'label' => 'In Progress',
-            'value' => $inProgressTasks,
-            'background' => 'bg-cyan-400',
-            'titleColor' => '',
-            'valueColor' => '',
-            'infoColor' => '',
-        ],
-        [
-            'label' => 'Overdue',
-            'value' => $overdueTasks,
-            'background' => 'bg-gradient-to-br from-orangeBg to-gradientOrange',
-            'titleColor' => 'white',
-            'valueColor' => 'white',
-            'infoColor' => 'text-white',
-        ],
-        [
-            'label' => 'Done',
-            'value' => $doneTasks,
-            'background' => 'bg-gradient-to-br from-greenBg to-gradientGreen',
-            'titleColor' => 'white',
-            'valueColor' => 'white',
-            'infoColor' => 'text-white',
-        ],
-    ];
+            [
+                'label' => 'Total Task',
+                'value' => $totalTasks,
+                'background' => 'bg-gradient-to-br from-blue-500 to-gradientBlue',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'route' => null,
+                'infoColor' => 'text-white',
+            ],
+            [
+                'label' => 'To Do',
+                'value' => $todoTasks,
+                'background' => 'bg-pink-400',
+                'titleColor' => '',
+                'valueColor' => '',
+                'route' => null,
+                'infoColor' => '',
+            ],
+            [
+                'label' => 'In Progress',
+                'value' => $inProgressTasks,
+                'background' => 'bg-cyan-400',
+                'titleColor' => '',
+                'valueColor' => '',
+                'route' => null,
+                'infoColor' => '',
+            ],
+            [
+                'label' => 'Overdue',
+                'value' => $overdueTasks,
+                'background' => 'bg-gradient-to-br from-orangeBg to-gradientOrange',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'route' => null,
+                'infoColor' => 'text-white',
+            ],
+            [
+                'label' => 'Done',
+                'value' => $doneTasks,
+                'background' => 'bg-gradient-to-br from-greenBg to-gradientGreen',
+                'titleColor' => 'white',
+                'valueColor' => 'white',
+                'route' => null,
+                'infoColor' => 'text-white',
+            ],
+        ];
 
         return [
             'cards' => $cards,
@@ -151,8 +169,8 @@ class DashboardService
             'project' => $project,
             'title' => $project->title,
             'background' => $project->proposal->background ?? '-',
-            'start_date' => $project-> start_date ?? '-',
-            'end_date' => $project-> end_date ?? '-',
+            'start_date' => $project->start_date ?? '-',
+            'end_date' => $project->end_date ?? '-',
             'remainingDays' => $remainingDays,
 
             // contoh data tambahan (biar dashboard lebih hidup)
@@ -166,6 +184,94 @@ class DashboardService
             'overdueTasks' => $overdueTasks,
             'memberStats' => $memberStats,
         ];
+    }
+
+    private function getITTaskSummary($user)
+    {
+        if (!$user->teamMember) {
+            return [
+                'on_progress_task' => 0,
+                'todo_task' => 0,
+                'overdue_task' => 0,
+                'done' => 0,
+            ];
+        }
+
+        $tasks = WbsItem::query()
+            ->join('human_resource_items', 'wbs_items.id', '=', 'human_resource_items.wbs_item_id')
+            ->where('human_resource_items.team_member_id', $user->teamMember->id);
+
+        return [
+            'on_progress_task' => (clone $tasks)
+                ->where('wbs_items.kanban_status', 'ongoing')
+                ->count(),
+
+            'todo_task' => (clone $tasks)
+                ->where('wbs_items.kanban_status', 'todo')
+                ->count(),
+
+            'done' => (clone $tasks)
+                ->where('wbs_items.kanban_status', 'done')
+                ->count(),
+
+            'overdue_task' => (clone $tasks)
+                ->where('wbs_items.kanban_status', '!=', 'done')
+                ->whereRaw("
+                wbs_items.created_at
+                + (wbs_items.estimated_duration_days * interval '1 day')
+                < NOW()
+            ")
+                ->count(),
+        ];
+    }
+
+    private function getAssignedTask($user)
+    {
+        // kalau bukan user IT
+        if (!$user->teamMember) {
+            return collect();
+        }
+
+        return HumanResourceItem::query()
+            ->join('wbs_items', 'human_resource_items.wbs_item_id', '=', 'wbs_items.id')
+            ->join('projects', 'wbs_items.project_id', '=', 'projects.id')
+            ->where('human_resource_items.team_member_id', $user->teamMember->id)
+            ->where('wbs_items.kanban_status', '!=', 'done')
+            ->orderByRaw("
+            CASE
+                WHEN wbs_items.priority = 'high' THEN 1
+                WHEN wbs_items.priority = 'medium' THEN 2
+                ELSE 3
+            END
+        ")
+            ->select([
+                'projects.id as project_id',
+                'projects.title as project_name',
+                'wbs_items.title as task_name',
+                'wbs_items.priority',
+                'wbs_items.kanban_status',
+                DB::raw("
+                    wbs_items.created_at
+                    + (wbs_items.estimated_duration_days * interval '1 day')
+                    as due_date
+                "),
+            ])
+
+            ->orderByRaw("
+                CASE
+                    WHEN wbs_items.priority = 'high' THEN 1
+                    WHEN wbs_items.priority = 'medium' THEN 2
+                    ELSE 3
+                END
+            ")
+
+            ->orderByRaw("
+                wbs_items.created_at
+                + (wbs_items.estimated_duration_days * interval '1 day')
+            ")
+
+            ->limit(5)
+            ->get();
     }
 
     // Query blueprint for projects table
@@ -320,7 +426,7 @@ class DashboardService
     }
 
     // control user card
-   public function getCards($user)
+    public function getCards($user)
     {
         $role = $user->role;
         $defaultCards = [
@@ -330,6 +436,7 @@ class DashboardService
                 'titleColor' => 'white',
                 'valueColor' => 'white',
                 'infoColor' => 'text-white',
+                'route' => route('projects.index'),
                 'background' => 'bg-gradient-to-br from-blue-500 to-gradientBlue',
             ],
             [
@@ -338,6 +445,7 @@ class DashboardService
                 'titleColor' => '',
                 'valueColor' => '',
                 'infoColor' => '',
+                'route' => route('projects.index'),
                 'background' => '',
             ],
             [
@@ -346,6 +454,7 @@ class DashboardService
                 'titleColor' => '',
                 'valueColor' => '',
                 'infoColor' => '',
+                'route' => route('projects.index'),
                 'background' => '',
             ],
             [
@@ -354,6 +463,7 @@ class DashboardService
                 'titleColor' => 'white',
                 'valueColor' => 'white',
                 'infoColor' => 'text-white',
+                'route' => route('projects.index'),
                 'background' => 'bg-gradient-to-br from-orangeBg to-gradientOrange',
             ],
             [
@@ -362,6 +472,7 @@ class DashboardService
                 'titleColor' => 'white',
                 'valueColor' => 'white',
                 'infoColor' => 'text-white',
+                'route' => route('projects.index'),
                 'background' => 'bg-gradient-to-br from-greenBg to-gradientGreen',
             ],
         ];
@@ -373,6 +484,7 @@ class DashboardService
                 'titleColor' => 'white',
                 'valueColor' => 'white',
                 'infoColor' => 'text-white',
+                'route' => null,
                 'background' => 'bg-gradient-to-br from-blue-500 to-gradientBlue',
             ],
             [
@@ -381,6 +493,7 @@ class DashboardService
                 'titleColor' => '',
                 'valueColor' => '',
                 'infoColor' => '',
+                'route' => null,
                 'background' => 'bg-cyan-400',
             ],
             [
@@ -389,22 +502,25 @@ class DashboardService
                 'titleColor' => '',
                 'valueColor' => '',
                 'infoColor' => '',
+                'route' => null,
                 'background' => 'bg-pink-400',
             ],
             [
-                'type' => 'planning',
-                'label' => 'Planning',
+                'type' => 'overdue_task',
+                'label' => 'Overdue',
                 'titleColor' => 'white',
                 'valueColor' => 'white',
                 'infoColor' => 'text-white',
+                'route' => null,
                 'background' => 'bg-gradient-to-br from-orangeBg to-gradientOrange',
             ],
             [
-                'type' => 'done',
+                'type' => 'done_task',
                 'label' => 'Done',
                 'titleColor' => 'white',
                 'valueColor' => 'white',
                 'infoColor' => 'text-white',
+                'route' => null,
                 'background' => 'bg-gradient-to-br from-greenBg to-gradientGreen',
             ],
         ];
@@ -493,5 +609,32 @@ class DashboardService
             'status_label' => $statusLabel,
             'status_class' => $statusClass,
         ];
+    }
+
+    private function getProjectAnalytics($query)
+    {
+        $months = collect(range(1, 6))->map(function ($i) {
+            return now()->subMonths(5 - $i + 1)->startOfMonth();
+        });
+
+        return $months->map(function ($month) use ($query) {
+
+            $planned = (clone $query)
+                ->whereYear('start_date', $month->year)
+                ->whereMonth('start_date', $month->month)
+                ->count();
+
+            $done = (clone $query)
+                ->where('status', 'completed')
+                ->whereYear('updated_at', $month->year)
+                ->whereMonth('updated_at', $month->month)
+                ->count();
+
+            return [
+                'month' => $month->format('M'),
+                'planned' => $planned,
+                'done' => $done,
+            ];
+        });
     }
 }

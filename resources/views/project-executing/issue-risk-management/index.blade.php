@@ -39,9 +39,7 @@
         <!-- content here -->
         @if ($tab === 'issue')
             @if (!is_null($issues))
-                @include('project-executing.issue-risk-management.partials.issue-table', [
-                    'issues' => $issues,
-                ])
+                @include('project-executing.issue-risk-management.partials.issue-table', ['issues' => $issues,])
             @else
                 <div class="text-center py-32 text-slate-400">
                     <i class="fas fa-folder text-5xl"></i>
@@ -134,9 +132,7 @@
 </x-app-layout>
 <script>
     document.getElementById('issue-modal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
+        if (e.target === this) {closeModal();}
     });
 
     function openModal() {

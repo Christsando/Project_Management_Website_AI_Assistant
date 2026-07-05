@@ -57,21 +57,7 @@ class IssueAndRiskController extends Controller
         }
 
         // risk
-        $risks = collect();
-        if ($projectId) {
-            $riskPlan = RiskManagementPlan::where('project_id', $projectId)->first();
-
-            if ($riskPlan) {
-                $risks = RiskItem::where('risk_management_plan_id', $riskPlan->id)
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-            }
-        }
-
-        $riskSuggestion = null;
-        if ($projectId && $tab === 'risk') {
-            $riskSuggestion = RiskSuggestionHelper::get($projectId);
-        }
+        [$risks, $riskSuggestion] = $this->getRiskData($projectId, $tab);
 
         // dd($riskSuggestion);
         return view('project-executing.issue-risk-management.index', [
@@ -83,6 +69,28 @@ class IssueAndRiskController extends Controller
             'projectId' => $projectId,
             'riskSuggestion' => $riskSuggestion,
         ]);
+    }
+
+    private function getRiskData($projectId, $tab)
+    {
+        $risks = collect();
+        $riskSuggestion = null;
+
+        if ($projectId) {
+            $riskPlan = RiskManagementPlan::where('project_id', $projectId)->first();
+
+            if ($riskPlan) {
+                $risks = RiskItem::where('risk_management_plan_id', $riskPlan->id)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
+
+            if ($tab === 'risk') {
+                $riskSuggestion = RiskSuggestionHelper::get($projectId);
+            }
+        }
+
+        return [$risks, $riskSuggestion];
     }
 
     public function store(Request $request)

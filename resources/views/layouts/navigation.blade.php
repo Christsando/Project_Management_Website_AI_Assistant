@@ -32,7 +32,7 @@
             </x-nav-link>
 
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['it','project management officer']))
-                <x-nav-link :active="request()->routeIs('task.management')" href="{{ route('task.management') }}">
+                <x-nav-link :active="request()->routeIs('task-management.index')" href="{{ route('task-management.index') }}">
                     <i class="fas fa-tasks text-base"></i>
                     <span>{{ __('Manajemen Task') }}</span>
                 </x-nav-link>

@@ -11,27 +11,31 @@ use Illuminate\Http\Request;
 
 class TaskManagementController extends Controller
 {
-    public function index(Request $request, $projectId = null)
+    public function index()
     {
-        $projects = Project::select('id', 'title')->get();
+        $projects = Project::with(['owner', 'projectManager'])
+            ->select(
+                'id',
+                'title',
+                'owner_id',
+                'manager_id',
+                'start_date',
+                'end_date'
+            )
+            ->get();
 
-        if (!$projectId) {
-            return view('project-executing.task-management.index', [
-                'projects' => $projects,
-                'allTasks' => collect(),
-                'allTasksRaw' => collect(),
-                'project' => null
-            ]);
-        }
+        return view('project-executing.task-management.index', compact('projects'));
+    }
 
-        $project = Project::findOrFail($projectId);
-
+    public function show(Request $request, Project $project)
+    {
         $query = $project->wbsItems()
-            ->with(['humanResourceItems.teamMember', 'timelineItem']);
+        ->with([
+            'humanResourceItems.teamMember',
+            'timelineItem'
+        ]);
 
-        // for filtering
         $query = $this->applyFilters($query, $request);
-
         $allTasksRaw = $query->get();
 
         $allTasks = $allTasksRaw->groupBy(function ($task) {
@@ -44,12 +48,14 @@ class TaskManagementController extends Controller
             };
         });
 
-        return view('project-executing.task-management.index', compact(
-            'project',
-            'projects',
-            'allTasks',
-            'allTasksRaw'
-        ));
+        return view(
+            'project-executing.task-management.show',
+            compact(
+                'project',
+                'allTasks',
+                'allTasksRaw'
+            )
+        );
     }
 
     private function applyFilters($query, Request $request)
@@ -57,46 +63,16 @@ class TaskManagementController extends Controller
         // filter by assigned task to user
         if ($request->assigned === 'me') {
             $user = auth()->user();
-
-            $query->whereHas('humanResourceItems.teamMember', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            });
+            $query->whereHas('humanResourceItems.teamMember', function ($q) use ($user) {$q->where('user_id', $user->id);});
         }
 
-        // filter by priority
-        if ($request->priority && $request->priority !== 'all') {
-            $query->where('priority', $request->priority);
-        }
-
-        // filter by due date
-        if ($request->due === 'today') {
-            $query->whereHas('timelineItem', function ($q) {
-                $q->whereDate('end_date', now());
-            });
-        }
-
-        if ($request->due === 'overdue') {
-            $query->whereHas('timelineItem', function ($q) {
-                $q->whereDate('end_date', '<', now());
-            });
-        }
-
-        if ($request->due === 'done') {
-            $query->where('kanban_status', 'done');
-        }
-
-        if ($request->due === 'approved') {
-            $query->where('kanban_status', 'approved');
-        }
-
-        // filter by status finished or not
-        if ($request->status === 'finished') {
-            $query->finished();
-        }
-
-        if ($request->status === 'unfinished') {
-            $query->unfinished();
-        }
+        if ($request->priority && $request->priority !== 'all') {$query->where('priority', $request->priority);}
+        if ($request->due === 'today') {$query->whereHas('timelineItem', function ($q) {$q->whereDate('end_date', now());});}
+        if ($request->due === 'overdue') {$query->whereHas('timelineItem', function ($q) {$q->whereDate('end_date', '<', now());});}
+        if ($request->due === 'done') {$query->where('kanban_status', 'done');}
+        if ($request->due === 'approved') {$query->where('kanban_status', 'approved');}
+        if ($request->status === 'finished') {$query->finished();}
+        if ($request->status === 'unfinished') {$query->unfinished();}
 
         return $query;
     }
@@ -152,9 +128,7 @@ class TaskManagementController extends Controller
             ]);
         }
 
-
         $service = app(\App\Services\TaskInsightService::class);
-
         $result = $service->analyzeTasks($importantTasks);
 
         return response()->json([

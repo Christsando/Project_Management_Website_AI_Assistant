@@ -26,6 +26,11 @@ class Project extends Model
         'end_date' => 'date',
     ];
 
+    public function projectManager()
+    {
+        return $this->belongsTo(User::class, 'project_manager_id');
+    }
+
     /**
      * Get the user who owns/created the project.
      */

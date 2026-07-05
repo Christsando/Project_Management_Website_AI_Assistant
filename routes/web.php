@@ -58,10 +58,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware('role:project_manager,pmo,project management officer,it')->group(function () {
-        Route::get('/task-management/{projectId?}', [TaskManagementController::class, 'index'])->name('task.management');
+        Route::get('/task-management', [TaskManagementController::class, 'index'])->name('task-management.index');
+        Route::get('/task-management/{project}', [TaskManagementController::class, 'show'])->name('task-management.show');
         Route::post('/tasks/{id}/update-status', [TaskManagementController::class, 'updateStatus']);
-        Route::get('/task-insight/{id}', [TaskManagementController::class, 'getTaskInsight']);
-
+        Route::get('/task-insight/{project}', [TaskManagementController::class, 'getTaskInsight'])->name('task-insight');
 
         Route::get('/issue', [IssueAndRiskController::class, 'index'])->name('issue');
         Route::get('/issue-risk/{project}', [IssueAndRiskController::class, 'index'])->name('issue-risk.index');

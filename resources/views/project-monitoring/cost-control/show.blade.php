@@ -49,8 +49,7 @@
 
                     <div class="bg-white rounded-xl p-4 shadow">
                         <p class="text-slate-500 text-sm">Usage</p>
-                        <h2
-                            class="text-2xl font-bold {{ $usage > 100 ? 'text-red-500' : ($usage > 80 ? 'text-yellow-500' : 'text-green-500') }}">
+                        <h2 class="text-2xl font-bold {{ $usage > 100 ? 'text-red-500' : ($usage > 80 ? 'text-yellow-500' : 'text-green-500') }}">
                             {{ number_format($usage, 0) }}%
                         </h2>
                     </div>

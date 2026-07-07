@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-header-component :projects="$projects" :showSearch="true" mode="costControl" />
+        <x-header-component mode="costControl" />
     </x-slot>
 
     <div class="bg-white p-4 rounded-2xl border border-slate-100 h-full shadow-sm p-6 max-w-full mx-auto">

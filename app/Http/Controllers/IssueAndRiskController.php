@@ -13,81 +13,67 @@ use App\Helpers\RiskSuggestionHelper;
 
 class IssueAndRiskController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $projectId = $request->project_id;
+        $projects = Project::with(['owner', 'projectManager'])->select('id', 'title', 'owner_id', 'manager_id', 'start_date', 'end_date')->get();
+
+        return view('project-executing.issue-risk-management.index', compact('projects'));
+    }
+
+    public function show(Request $request,  Project $project)
+    {
         $tab = $request->get('tab', 'issue');
         $users = User::all();
-        $projects = Project::select('id', 'title')->get();
         $issues = null;
+        $query = Issue::with(['assignee', 'reporter'])->where('project_id', $project->id);
 
-        // Issue filtering based on project_id, priority, assigned, and due
-        if ($projectId) {
-            $query = Issue::with(['assignee', 'reporter'])
-                ->where('project_id', $projectId);
-
-            if ($request->priority) {
-                $query->where('priority', $request->priority);
-            }
-
-            if ($request->assigned === 'me') {
-                $query->where('assignee_id', auth()->id());
-            }
-
-            if ($request->due) {
-                if ($request->due === 'today') {
-                    $query->whereDate('due_date', today());
-                }
-
-                if ($request->due === 'overdue') {
-                    $query->whereDate('due_date', '<', today())
-                        ->where('status', '!=', 'done');
-                }
-
-                if ($request->due === 'done') {
-                    $query->where('status', 'done');
-                }
-
-                if ($request->due === 'approved') {
-                    $query->where('status', 'approved');
-                }
-            }
-
-            $issues = $query->get();
+        if ($request->priority) {
+            $query->where('priority', $request->priority);
+        }
+        if ($request->assigned === 'me') {
+            $query->where('assignee_id', auth()->id());
+        }
+        if ($request->due === 'today') {
+            $query->whereDate('due_date', today());
+        }
+        if ($request->due === 'overdue') {
+            $query->whereDate('due_date', '<', today())->where('status', '!=', 'done');
+        }
+        if ($request->due === 'done') {
+            $query->where('status', 'done');
+        }
+        if ($request->due === 'approved') {
+            $query->where('status', 'approved');
         }
 
-        // risk
-        [$risks, $riskSuggestion] = $this->getRiskData($projectId, $tab);
+        $issues = $query->get();
+        [$risks, $riskSuggestion] = $this->getRiskData($project, $tab);
 
-        // dd($riskSuggestion);
-        return view('project-executing.issue-risk-management.index', [
-            'projects' => $projects,
-            'risks' => $risks,
+        return view('project-executing.issue-risk-management.show', [
+            'project' => $project,
             'issues' => $issues,
+            'risks' => $risks,
             'tab' => $tab,
             'users' => $users,
-            'projectId' => $projectId,
             'riskSuggestion' => $riskSuggestion,
         ]);
     }
 
-    private function getRiskData($projectId, $tab)
+    private function getRiskData(Project $project, string $tab)
     {
         $risks = collect();
         $riskSuggestion = null;
 
-        if ($projectId) {
-            $riskPlan = RiskManagementPlan::where('project_id', $projectId)->first();
+        $riskPlan = RiskManagementPlan::where('project_id', $project->id)->first();
 
-            if ($riskPlan) {
-                $risks = RiskItem::where('risk_management_plan_id', $riskPlan->id)
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-            }
+        if ($riskPlan) {
+            $risks = RiskItem::where('risk_management_plan_id', $riskPlan->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
-            if ($tab === 'risk') {
-                $riskSuggestion = RiskSuggestionHelper::get($projectId);
-            }
+        if ($tab === 'risk') {
+            $riskSuggestion = RiskSuggestionHelper::get($project->id);
         }
 
         return [$risks, $riskSuggestion];
@@ -111,7 +97,7 @@ class IssueAndRiskController extends Controller
             'reported_by' => auth()->id(),
         ]);
 
-        return redirect()->back()->with('success', 'Issue berhasil dibuat');
+        return redirect()->route('issue-risk.show', ['project' => $request->project_id])->with('success', 'Issue berhasil dibuat');
     }
 
     public function updateStatus(Request $request, $id)

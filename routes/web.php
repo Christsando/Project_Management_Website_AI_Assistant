@@ -58,17 +58,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware('role:project_manager,pmo,project management officer,it')->group(function () {
-        Route::get('/task-management/{projectId?}', [TaskManagementController::class, 'index'])->name('task.management');
+        // task-management section
+        Route::get('/task-management', [TaskManagementController::class, 'index'])->name('task-management.index');
+        Route::get('/task-management/{project}', [TaskManagementController::class, 'show'])->name('task-management.show');
         Route::post('/tasks/{id}/update-status', [TaskManagementController::class, 'updateStatus']);
-        Route::get('/task-insight/{id}', [TaskManagementController::class, 'getTaskInsight']);
+        Route::get('/task-insight/{project}', [TaskManagementController::class, 'getTaskInsight'])->name('task-insight');
 
-
-        Route::get('/issue', [IssueAndRiskController::class, 'index'])->name('issue');
-        Route::get('/issue-risk/{project}', [IssueAndRiskController::class, 'index'])->name('issue-risk.index');
+        Route::get('/issue', [IssueAndRiskController::class, 'index'])->name('issue-risk.index');
+        Route::get('/issue-risk/{project}', [IssueAndRiskController::class, 'show'])->name('issue-risk.show');
         Route::post('/issues', [IssueAndRiskController::class, 'store'])->name('issues.store');
         Route::patch('/issues/{id}/status', [IssueAndRiskController::class, 'updateStatus'])->name('issues.updateStatus');
 
         Route::get('/change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
+        Route::get('/change-requests/{project}', [ChangeRequestController::class, 'show'])->name('change-requests.show');
         Route::patch('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve'])->name('change-request.approve');
         // Route::resource('change-requests', ChangeRequestController::class);
     });
@@ -160,7 +162,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/projects/{project}/risk-management/generate-ai', [ProjectRiskManagementController::class, 'generateAi'])->name('projects.risk-management.generate_ai');
         Route::post('/projects/{project}/risk-management/finalize', [ProjectRiskManagementController::class, 'finalize'])->name('projects.risk-management.finalize');
 
+        // control-budget section
         Route::get('/cost-control', [CostController::class, 'index'])->name('cost-control.index');
+        Route::get('/cost-control/{project}', [CostController::class, 'show'])->name('cost-control.show');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

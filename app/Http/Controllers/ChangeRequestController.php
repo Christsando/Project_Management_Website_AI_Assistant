@@ -12,27 +12,32 @@ use Illuminate\Support\Facades\DB;
 
 class ChangeRequestController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $projectId = $request->project_id;
-        $changeRequests = collect();
+        $projects = Project::with(['owner', 'projectManager'])
+            ->select(
+                'id',
+                'title',
+                'owner_id',
+                'manager_id',
+                'start_date',
+                'end_date'
+            )
+            ->get();
 
-        if ($projectId) {
-            $query = ChangeRequest::with(['wbsItem', 'requestedBy'])
-                ->where('project_id', $projectId);
+        return view('project-executing.change-request.index', compact('projects'));
+    }
 
-            if ($request->status) {
-                $query->where('status', $request->status);
-            }
+    public function show(Request $request, Project $project)
+    {
+        $query = ChangeRequest::with(['wbsItem','requestedBy'])->where('project_id', $project->id);
 
-            $changeRequests = $query->latest()->get();
-        }
+        if ($request->status) {$query->where('status', $request->status);}
+        $changeRequests = $query->latest()->get();
 
-        $projects = Project::select('id', 'title')->get();
-        return view('project-executing.change-request.index', [
-            'projects' => $projects,
+        return view('project-executing.change-request.show', [
+            'project' => $project,
             'changeRequests' => $changeRequests,
-            'selectedProjectId' => $projectId,
         ]);
     }
 
@@ -82,7 +87,7 @@ class ChangeRequestController extends Controller
             ]);
 
             // update timeline
-            $timeline = TimelineItem::where('wbs_item_id',$wbsItem->id)->first();
+            $timeline = TimelineItem::where('wbs_item_id', $wbsItem->id)->first();
 
             if ($timeline) {
 

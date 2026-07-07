@@ -13,37 +13,6 @@
                 <p class="text-sm text-slate-500">{{ __('Need to evaluate about the task? Let us help!') }}</p>
             </div>
         </div>
-
-        @if (empty($selectedProjectId))
-            <div class="text-center py-32 text-slate-400">
-                <i class="fas fa-folder text-5xl"></i>
-                <p class="text-xl font-semibold">Belum ada project dipilih</p>
-                <p class="text-sm">Silakan pilih project melalui search di atas</p>
-            </div>
-        @else
-            <div class="flex flex-col gap-1">
-                @include('project-executing.change-request.partials.change-request-table', [
-                    'changeRequests' => $changeRequests,
-                ])
-            </div>
-        @endif
+        <x-project-list-table :projects="$projects" route="change-requests.show" />
     </div>
-    @include('project-executing.change-request.partials.change-request-modal')
-    <script>
-        window.openChangeRequestDetail = function(cr) {
-            document.getElementById('crTaskTitle').innerText = cr.title;
-            document.getElementById('crOldValue').innerText = cr.old_value;
-            document.getElementById('crNewValue').innerText = cr.new_value;
-            document.getElementById('crReason').innerText = cr.reason;
-            document.getElementById('crStatus').innerText = cr.status;
-            document.getElementById('crDate').innerText = cr.date;
-            document.getElementById('crRequestedBy').innerText = cr.requested_by;
-            document.getElementById('changeRequestDetailModal').classList.remove('hidden');
-            document.getElementById('crRequestedDeadline').innerText = cr.requested_deadline ?? '-';
-        };
-
-        function closeChangeRequestDetailModal() {
-            document.getElementById('changeRequestDetailModal').classList.add('hidden');
-        }
-    </script>
 </x-app-layout>

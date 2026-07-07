@@ -48,9 +48,7 @@
                         <label for="notes" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             {{ __('Catatan Perencanaan SDM (Opsional)') }}
                         </label>
-                        <textarea name="notes" id="notes" rows="4" 
-                                  class="w-full rounded-xl border-slate-200 shadow-sm focus:border-slate-850 focus:ring focus:ring-slate-100 text-xs font-semibold text-slate-700 placeholder-slate-400/80 bg-slate-50/10"
-                                  placeholder="Tuliskan catatan umum atau asumsi dasar perencanaan alokasi SDM proyek di sini...">{{ old('notes') }}</textarea>
+                        <textarea name="notes" id="notes" rows="4" class="w-full rounded-xl border-slate-200 shadow-sm focus:border-slate-850 focus:ring focus:ring-slate-100 text-xs font-semibold text-slate-700 placeholder-slate-400/80 bg-slate-50/10" placeholder="Tuliskan catatan umum atau asumsi dasar perencanaan alokasi SDM proyek di sini...">{{ old('notes') }}</textarea>
                         @error('notes')
                             <p class="text-rose-600 text-xs mt-2 font-bold flex items-center gap-1">
                                 <i class="fas fa-exclamation-circle"></i>

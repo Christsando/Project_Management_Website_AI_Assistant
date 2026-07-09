@@ -77,29 +77,18 @@ class ChangeRequestController extends Controller
         }
 
         DB::transaction(function () use ($changeRequest) {
-
             $wbsItem = $changeRequest->wbsItem;
 
             // update task
-            $wbsItem->update([
-                'description' => $changeRequest->new_value,
-                'kanban_status' => 'todo',
-            ]);
-
-            // update timeline
+            $wbsItem->update(['description' => $changeRequest->new_value,'kanban_status' => 'todo',]);
             $timeline = TimelineItem::where('wbs_item_id', $wbsItem->id)->first();
 
             if ($timeline) {
-
                 $duration = Carbon::parse($timeline->start_date)
                     ->diffInDays(
                         Carbon::parse($changeRequest->requested_deadline)
                     ) + 1;
-
-                $timeline->update([
-                    'end_date' => $changeRequest->requested_deadline,
-                    'duration_days' => $duration,
-                ]);
+                $timeline->update(['end_date' => $changeRequest->requested_deadline,'duration_days' => $duration,]);
             }
 
             // approve CR
@@ -112,6 +101,23 @@ class ChangeRequestController extends Controller
         return back()->with(
             'success',
             'Change Request berhasil disetujui'
+        );
+    }
+
+    public function reject(ChangeRequest $changeRequest)
+    {
+        if ($changeRequest->status !== 'pending') {
+            return back()->with(
+                'error',
+                'Change Request sudah diproses'
+            );
+        }
+
+        $changeRequest->update(['status' => 'rejected',]);
+
+        return back()->with(
+            'success',
+            'Change Request berhasil ditolak'
         );
     }
 }

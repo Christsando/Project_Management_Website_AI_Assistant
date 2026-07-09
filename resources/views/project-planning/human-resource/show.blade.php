@@ -113,15 +113,18 @@
                 @endif
             @elseif ($tab === 'gantt')
                 <!-- ================= GANTT ================= -->
-
                 @include('project-planning.timeline.partials.gantt-chart', [
                     'wbsItems' => $wbsItems,
                     'projectDurationDays' => $projectDurationDays,
                     'minDate' => $minDate,
                 ])
+
+                @include('project-planning.timeline.partials.assign-modal',[
+                    'project'=>$project,
+                    'teamMembers'=>$teamMembers
+                ])
             @elseif ($tab === 'budget')
                 <!-- ================= BUDGET ================= -->
-
                 <div class="p-10 text-center text-slate-400">
                     Budget page belum dibuat
                 </div>

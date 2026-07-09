@@ -63,16 +63,28 @@
 
                         <td class="px-2 py-2 text-center">
                             @if (Auth::check() && strtolower(Auth::user()->role) === 'project management officer' && $cr->status == 'pending')
-                                <form action="{{ route('change-request.approve', $cr->id) }}" method="POST"
-                                    onsubmit="return confirm('Approve change request ini?')">
-                                    @csrf
-                                    @method('PATCH')
+                                <div class="flex gap-2">
+                                    <form action="{{ route('change-request.approve', $cr->id) }}" method="POST"
+                                        onsubmit="return confirm('Approve change request ini?')">
+                                        @csrf
+                                        @method('PATCH')
 
-                                    <button type="submit"
-                                        class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
-                                        Approve
-                                    </button>
-                                </form>
+                                        <button type="submit" name="status" value="approved"
+                                            class="w-20 px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
+                                            Approve
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('change-request.reject', $cr->id) }}" method="POST"
+                                        onsubmit="return confirm('Reject change request ini?')">
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <button type="submit"
+                                            class="w-20 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
+                                            Reject
+                                        </button>
+                                    </form>
+                                </div>
                             @else
                                 <span class="text-slate-400 text-xs">-</span>
                             @endif

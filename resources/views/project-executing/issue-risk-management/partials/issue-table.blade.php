@@ -18,7 +18,14 @@
                     <td class="text-center py-4">ISS-{{ $issue->id }}</td>
                     <td class="py-4">{{ $issue->title }}</td>
                     <td class="py-4">{{ $issue->description }}</td>
-                    <td class="py-4">{{ $issue->assignee->name ?? '-' }}</td>
+                    <td class="py-4">
+                        <div class="flex gap-2 items-center">
+                        <div class="w-7 h-7 rounded-full bg-[#0B1329] text-white flex items-center justify-center font-black text-[9px] shadow-sm uppercase tracking-wider">
+                            {{ strtoupper(substr($project->owner ? $project->owner->name : 'PM', 0, 2)) }}
+                        </div>
+                        {{ $issue->assignee->name ?? '-' }}
+                    </div>
+                    </td>
                     <td class="py-4">{{ $issue->reporter->name ?? '-' }}</td>
                 </tr>
             @empty

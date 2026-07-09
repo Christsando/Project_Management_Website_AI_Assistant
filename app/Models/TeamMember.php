@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class TeamMember extends Model
 {
@@ -45,14 +46,6 @@ class TeamMember extends Model
     }
 
     /**
-     * Accessor for current workload percentage.
-     */
-    public function getCurrentWorkloadPercentageAttribute(): int
-    {
-        return (int) $this->humanResourceItems()->sum('workload_percentage');
-    }
-
-    /**
      * Accessor for remaining capacity percentage.
      */
     public function getRemainingCapacityPercentageAttribute(): int
@@ -76,5 +69,14 @@ class TeamMember extends Model
         } else {
             return 'Full';
         }
+    }
+
+    public function getCurrentWorkloadPercentageAttribute(): int
+    {
+        if (!$this->user_id) {return 0;}
+
+        return (int) DB::table('task_user')
+            ->where('user_id', $this->user_id)
+            ->sum('workload_percentage');
     }
 }

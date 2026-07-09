@@ -10,10 +10,11 @@ use App\Models\WbsItem;
 use App\Models\HumanResourceItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class HumanResourceService
 {
-    // chrvk user access role
+    // check user access role
     public function checkBaseAccess(): string
     {
         if (!Auth::check()) {
@@ -107,102 +108,112 @@ class HumanResourceService
         ];
     }
 
-    public function getMemberWorkloads($hrItems)
+    public function getMemberWorkloads($teamMembers)
     {
-        $teamMembers = TeamMember::whereIn(
-            'id',
-            $hrItems->pluck('team_member_id')->filter()
-        )->get();
+        $memberWorkloads = [];
+        foreach ($teamMembers as $member) {
 
-        $groupedItems = $hrItems->groupBy('team_member_id');
+            if (!$member->user) {
+                $memberWorkloads[$member->id] = [
+                    'total_workload'=>0,
+                    'total_days'=>0
+                ];
+                continue;
+            }
 
-        $memberWorkloads = $groupedItems->map(function ($items) {
-            return [
-                'total_workload' => $items->sum('workload_percentage'),
-                'total_days' => $items->sum('estimated_work_days'),
+            $tasks = $member->user
+                ->wbsItems()
+                ->wherePivot('is_inherited', false)
+                ->with('timelineItem')
+                ->get();
+
+            $memberWorkloads[$member->id] = [
+                'total_workload' => $tasks->sum(fn($task)=> $task->pivot->workload_percentage ?? 0),
+                'total_days'=>$tasks->sum(fn($task)=>optional($task->timelineItem)->duration_days ?? 0),
             ];
-        });
+        }
 
-        return [
-            'teamMembers' => $teamMembers,
-            'groupedItems' => $groupedItems,
-            'memberWorkloads' => $memberWorkloads,
-        ];
+
+        return collect($memberWorkloads);
+    }
+
+    public function getMemberTasks($teamMembers)
+    {
+        $memberTasks = [];
+        foreach ($teamMembers as $member) {
+            if (!$member->user) {
+                $memberTasks[$member->id] = collect();
+                continue;
+            }
+            $directTasks = $member->user
+            ->wbsItems()
+            ->wherePivot('is_inherited', false)
+            ->with([
+                'children.timelineItem',
+                'timelineItem'
+            ])
+            ->get();
+            $memberTasks[$member->id] = $this->getExpandedTasks($directTasks);
+        }
+        return collect($memberTasks);
+    }
+
+    public function getExpandedTasks($wbsItems)
+    {
+        $tasks = collect();
+        foreach ($wbsItems as $wbs) {
+            $tasks->push($wbs);
+            if ($wbs->children->count()) {$tasks = $tasks->merge($this->getExpandedTasks($wbs->children));}
+        }
+
+        return $tasks;
     }
 
     public function getAllChildWbsIds($wbsId)
     {
         $ids = [$wbsId];
-        $children = WbsItem::where('parent_id', $wbsId)->get();
 
-        foreach ($children as $child) {
-            $ids = array_merge($ids, $this->getAllChildWbsIds($child->id));
+        $children = WbsItem::where('parent_id', $wbsId)
+            ->pluck('id');
+
+        foreach ($children as $childId) {
+            $ids = array_merge(
+                $ids,
+                $this->getAllChildWbsIds($childId)
+            );
         }
 
         return $ids;
     }
 
-    private function assignMemberToWbs(HumanResourcePlan $hrPlan, int $wbsId, int $memberId, float $workload)
-    {
-        $member = TeamMember::findOrFail($memberId);
-
-        $template = HumanResourceItem::where('human_resource_plan_id', $hrPlan->id)
-            ->where('team_member_id', $memberId)
-            ->whereNull('wbs_item_id')
-            ->first();
-
-        if ($template) {
-
-            $template->update([
-                'wbs_item_id' => $wbsId,
-                'job_description' => null,
-                'workload_percentage' => $workload,
-                'estimated_work_days' => 1,
-                'person_in_charge' => $member->name,
-                'role_name' => $member->role_name,
-                'required_skill' => $member->skills,
-                'updated_by' => Auth::id(),
-            ]);
-        } else {
-
-            HumanResourceItem::create([
-                'human_resource_plan_id' => $hrPlan->id,
-                'wbs_item_id' => $wbsId,
-                'team_member_id' => $memberId,
-                'person_in_charge' => $member->name,
-                'role_name' => $member->role_name,
-                'required_skill' => $member->skills,
-                'job_description' => null,
-                'workload_percentage' => $workload,
-                'estimated_work_days' => 1,
-                'quantity' => 1,
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
-        }
-    }
-
     public function assignMembers(Project $project, int $wbsId, array $memberIds, array $workloads)
     {
-        $hrPlan = $project->humanResourcePlan;
+        DB::transaction(function () use ($project, $wbsId, $memberIds, $workloads) {
+            $wbsIds = $this->getAllChildWbsIds($wbsId);
 
-        if (!$hrPlan) {
-            throw new \Exception('HR Plan belum ada.');
-        }
-
-        $wbsIds = $this->getAllChildWbsIds($wbsId);
-
-        foreach ($wbsIds as $id) {
             foreach ($memberIds as $index => $memberId) {
+                $member = TeamMember::with('user')->findOrFail($memberId);
 
-                $this->assignMemberToWbs(
-                    $hrPlan,
-                    $id,
-                    $memberId,
-                    $workloads[$index] ?? 0
-                );
+                foreach ($wbsIds as $id) {
+                    DB::table('task_user')->updateOrInsert(
+                        [
+                            'project_id' => $project->id,
+                            'wbs_item_id' => $id,
+                            'user_id' => $member->user_id,
+                        ],
+                        [
+                            'role' => $member->role_name,
+                            'workload_percentage' => $id == $wbsId 
+                                ? ($workloads[$index] ?? 0)
+                                : 0,
+                            'is_inherited' => $id != $wbsId,
+                            'updated_at' => now(),
+                            'created_at' => now(),
+                        ]
+                    );
+                }
             }
-        }
+        });
     }
 
     public function getAvailableTeamMembers($hrPlan)
@@ -220,14 +231,8 @@ class HumanResourceService
     public function addItem(Project $project, Request $request)
     {
         $hrPlan = $project->humanResourcePlan;
-
-        if (!$hrPlan) {
-            abort(404, 'HR Plan tidak ditemukan.');
-        }
-
-        if ($hrPlan->status === 'finalized') {
-            abort(403, 'HR Plan sudah difinalisasi.');
-        }
+        if (!$hrPlan) {abort(404, 'HR Plan tidak ditemukan.');}
+        if ($hrPlan->status === 'finalized') {abort(403, 'HR Plan sudah difinalisasi.');}
 
         $this->validateDuplicateMember($hrPlan, $request);
         $this->validateRequiredSelection($request);
@@ -241,12 +246,7 @@ class HumanResourceService
             : null;
 
         $this->validateMemberCapacity($teamMember, $request);
-        $this->createHrItem(
-            $hrPlan,
-            $teamMember,
-            $wbs,
-            $request
-        );
+        $this->createHrItem($hrPlan,$teamMember,$wbs,$request);
     }
 
     private function validateDuplicateMember($hrPlan, Request $request)
@@ -281,13 +281,9 @@ class HumanResourceService
 
     private function validateMemberCapacity($teamMember, Request $request)
     {
-        if (!$teamMember) {
-            return;
-        }
-
+        if (!$teamMember) {return;}
         $newWorkload = $request->workload_percentage ?: 0;
         $totalWorkload = $teamMember->current_workload_percentage + $newWorkload;
-
         if ($totalWorkload > $teamMember->default_capacity_percentage) {
 
             return back()
@@ -305,14 +301,10 @@ class HumanResourceService
         $item = new HumanResourceItem();
 
         $item->human_resource_plan_id = $hrPlan->id;
-        $item->wbs_item_id = $request->wbs_item_id;
-        $item->job_description = $wbs?->description;
         $item->required_skill = $teamMember?->skills;
         $item->role_name = $teamMember?->user->role ?? $teamMember?->role_name;
         $item->team_member_id = $request->team_member_id;
-        $item->workload_percentage = $request->workload_percentage;
         $item->person_in_charge = $teamMember?->name;
-        $item->estimated_work_days = $request->estimated_work_days;
         $item->quantity = $request->input('quantity', 1);
         $item->notes = $request->notes;
         $item->created_by = Auth::id();
@@ -325,13 +317,8 @@ class HumanResourceService
     {
         $hrPlan = $project->humanResourcePlan;
 
-        if (!$hrPlan || $humanResourceItem->human_resource_plan_id !== $hrPlan->id) {
-            abort(404, 'Item perencanaan SDM tidak sesuai dengan proyek ini.');
-        }
-
-        if ($hrPlan->status === 'finalized') {
-            abort(403, 'HR Plan sudah difinalisasi.');
-        }
+        if (!$hrPlan || $humanResourceItem->human_resource_plan_id !== $hrPlan->id) {abort(404, 'Item perencanaan SDM tidak sesuai dengan proyek ini.');}
+        if ($hrPlan->status === 'finalized') {abort(403, 'HR Plan sudah difinalisasi.');}
 
         $wbs = $request->wbs_item_id
             ? WbsItem::find($request->wbs_item_id)
@@ -385,7 +372,7 @@ class HumanResourceService
         }
     }
 
-    private function saveUpdatedItem(HumanResourceItem $humanResourceItem, ?TeamMember $teamMember, ?WbsItem $wbs, Request $request) 
+    private function saveUpdatedItem(HumanResourceItem $humanResourceItem, ?TeamMember $teamMember, ?WbsItem $wbs, Request $request)
     {
         $humanResourceItem->wbs_item_id = $request->wbs_item_id;
         $humanResourceItem->team_member_id = $request->team_member_id;

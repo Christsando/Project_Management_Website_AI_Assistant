@@ -453,7 +453,8 @@
                                                             <span class="text-[10px] text-slate-400 font-semibold">{{ $spec['relevance'] }}</span>
                                                         </div>
                                                     </div>
-                                                    <p class="text-xs text-slate-600 leading-relaxed" id="ai-suggest-{{ $field }}">{{ $suggestions[$field] }}</p>
+                                                    {{-- <p class="text-xs text-slate-600 leading-relaxed" id="ai-suggest-{{ $field }}">{{ $suggestions[$field] }}</p> --}}
+                                                    <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line" id="ai-suggest-{{ $field }}">{{is_array($suggestions[$field])? implode("\n• ", $suggestions[$field]): $suggestions[$field]}}</p>
                                                     <div class="flex justify-end">
                                                         <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ai-suggest-{{ $field }}').innerText); alert('Salin berhasil!');" 
                                                                 class="px-2.5 py-1 bg-white border border-slate-200 text-slate-500 hover:text-slate-700 rounded-lg transition text-[9px] font-bold flex items-center gap-1">

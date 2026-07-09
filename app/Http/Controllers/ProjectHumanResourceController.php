@@ -9,6 +9,7 @@ use App\Models\WbsItem;
 use App\Services\HrSummaryService;
 use App\Services\HumanResourceService;
 use Illuminate\Http\Request;
+use App\Models\TeamMember;
 use Illuminate\Support\Facades\Auth;
 
 class ProjectHumanResourceController extends Controller
@@ -47,25 +48,31 @@ class ProjectHumanResourceController extends Controller
 
         $wbsItems = WbsItem::where('project_id', $project->id)
             ->whereNull('parent_id')
-            ->with(['children', 'timelineItem'])
-            ->get();
+            ->with([
+                'children',
+                'timelineItem',
+            ])->get();
 
-        $hrItems = $hrPlan ? $hrPlan->humanResourceItems()->with(['wbsItem', 'teamMember'])->orderBy('created_at', 'desc')->get() : collect();
+        $hrItems = $hrPlan ? $hrPlan->humanResourceItems()->with('teamMember')->orderBy('created_at', 'desc')->get() : collect();
         $isHrFinalized = $hrPlan && $hrPlan->status === 'finalized';
-        $summary = $summaryService->calculate($hrPlan, $hrItems);
-
+        
         // get project duration for timeline display
         ['minDate' => $minDate, 'projectDurationDays' => $projectDurationDays,] = $hrService->getProjectDuration($project);
         ['totalResources' => $totalResources, 'roleCount' => $roleCount, 'picCount' => $picCount,] = $hrService->getHrStatistics($hrItems);
         ['isPmo' => $isPmo, 'isDraft' => $isDraft, 'isEditable' => $isEditable,] = $hrService->getEditPermission($hrPlan);
-        ['teamMembers' => $teamMembers, 'groupedItems' => $groupedItems, 'memberWorkloads' => $memberWorkloads,] = $hrService->getMemberWorkloads($hrItems);
-
+        $teamMembers = TeamMember::whereIn('id',$hrItems->pluck('team_member_id')->filter())->with('user')->get();
+        $groupedItems = $hrItems->groupBy('team_member_id');
+        $memberWorkloads = $hrService->getMemberWorkloads($teamMembers);
+        $memberTasks = $hrService->getMemberTasks($teamMembers);
+        $summary = $summaryService->calculate($memberWorkloads);
+        
         return view('project-planning.human-resource.show', compact(
             'project',
             'hrPlan',
             'hrItems',
             'isHrFinalized',
             'totalResources',
+            'memberTasks',
             'roleCount',
             'picCount',
             'summary',
@@ -233,7 +240,7 @@ class ProjectHumanResourceController extends Controller
     /**
      * Add an HR item to the plan.
      */
-    public function addItem(Request $request, Project $project, HumanResourceService $hrService) 
+    public function addItem(Request $request, Project $project, HumanResourceService $hrService)
     {
         $role = $hrService->checkBaseAccess();
 

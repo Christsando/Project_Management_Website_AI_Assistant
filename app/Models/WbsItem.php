@@ -39,7 +39,7 @@ class WbsItem extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'task_user')->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(User::class, 'task_user')->withPivot(['project_id', 'role', 'workload_percentage',])->withTimestamps();
     }
 
     public function scopeFinished($query)
@@ -109,46 +109,22 @@ class WbsItem extends Model
     }
 
     /**
-     * Get the human resource items assigned to this WBS task.
-     */
-    public function humanResourceItems(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(HumanResourceItem::class, 'wbs_item_id');
-    }
-
-    /**
      * Get the risk items associated with this WBS task.
      */
     public function riskItems(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(RiskItem::class, 'related_wbs_item_id');
     }
-    
-    public function isFullyAssigned($hrItems)
+
+    public function isFullyAssigned()
     {
-        // 1. cek diri sendiri
-        $selfAssigned = $hrItems->where('wbs_item_id', $this->id)->count() > 0;
-
-        if ($selfAssigned) {
-            return true;
+        if ($this->children->isNotEmpty()) {
+            return $this->children->every(
+                fn($child) => $child->isFullyAssigned()
+            );
         }
 
-        // 2. cek parent (naik ke atas)
-        if ($this->parent) {
-            $parentAssigned = $hrItems->where('wbs_item_id', $this->parent->id)->count() > 0;
-
-            if ($parentAssigned) {
-                return true;
-            }
-        }
-
-        // 3. cek child (turun ke bawah)
-        if ($this->children->isEmpty()) {
-            return false;
-        }
-
-        return $this->children->every(function ($child) use ($hrItems) {
-            return $child->isFullyAssigned($hrItems);
-        });
+        // leaf node wajib punya user
+        return $this->users->isNotEmpty();
     }
 }

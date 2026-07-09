@@ -4,12 +4,12 @@
     </x-slot>
 
     <div class="bg-white p-4 rounded-2xl border border-slate-100 h-full shadow-sm p-6 max-w-full mx-auto">
-        <div class="mb-6 flex justify-between items-center">
+        <div class="mb-6 flex justify-between items-center border-b border-slate-100 pb-5">
             <div>
                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {{ __('TASK MANAGEMENT') }}
+                    {{ __('Task Management') }}
                 </div>
-                <h1 class="font-semibold text-3xl">{{ __('TASK MANAGEMENT') }}</h1>
+                <h1 class="font-semibold text-3xl">{{ __('Task Management') }}</h1>
                 <p class="text-sm text-slate-500">{{ __('Manage your tasks efficiently.') }}</p>
             </div>
         </div>

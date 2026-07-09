@@ -38,7 +38,7 @@
                 </x-nav-link>
             @endif
 
-            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer']))
+            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer', 'manager']))
                 <x-nav-link :active="request()->routeIs('cost-control.index')" href="{{ route('cost-control.index') }}">
                     <i class="fas fa-money-bill-wave text-base"></i>
                     <span>{{ __('Control Cost') }}</span>
@@ -46,7 +46,7 @@
             @endif
 
             @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer', 'it']))
-                <x-nav-link :active="request()->routeIs('issue')" href="{{ route('issue-risk.index') }}">
+                <x-nav-link :active="request()->routeIs('issue-risk.index')" href="{{ route('issue-risk.index') }}">
                     <i class="fas fa-bug text-base"></i>
                     <span>{{ __('Issue and Risk') }}</span>
                 </x-nav-link>

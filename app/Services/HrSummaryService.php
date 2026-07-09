@@ -4,30 +4,23 @@ namespace App\Services;
 
 class HrSummaryService
 {
-    public function calculate($hrPlan, $hrItems)
+    public function calculate($memberWorkloads)
     {
         $avgWorkload = 0;
         $overloadCount = 0;
         $optimalCount = 0;
         $underloadCount = 0;
 
-        if ($hrPlan && $hrItems->count() > 0) {
-            $grouped = $hrItems->groupBy('team_member_id');
-            $totalWorkloads = [];
+        if ($memberWorkloads->isNotEmpty()) {
 
-            foreach ($grouped as $items) {
-                $wl = $items->sum('workload_percentage');
-                $totalWorkloads[] = $wl;
-
-                // kategori
-                if ($wl > 85) $overloadCount++;
-                elseif ($wl >= 60) $optimalCount++;
-                else $underloadCount++;
+            foreach ($memberWorkloads as $member) {
+                $wl = $member['total_workload'];
+                if ($wl > 85) {$overloadCount++;} 
+                elseif ($wl >= 60) {$optimalCount++;} 
+                else {$underloadCount++;}
             }
 
-            if (count($totalWorkloads) > 0) {
-                $avgWorkload = round(array_sum($totalWorkloads) / count($totalWorkloads));
-            }
+            $avgWorkload = round($memberWorkloads->avg('total_workload'));
         }
 
         return compact(

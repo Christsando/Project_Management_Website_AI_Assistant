@@ -10,24 +10,21 @@
             @csrf
 
             <!-- hidden project_id -->
-            <input type="hidden" name="project_id" value="{{ request('project_id') }}">
+            <input type="hidden" name="project_id" value="{{ $project->id }}">
 
             <div>
                 <label class="text-xs text-slate-500">Title</label>
-                <input type="text" name="title" required
-                    class="w-full mt-1 px-3 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-blue-500">
+                <input type="text" name="title" required class="w-full mt-1 px-3 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-blue-500">
             </div>
 
             <div>
                 <label class="text-xs text-slate-500">Description</label>
-                <textarea name="description"
-                    class="w-full mt-1 px-3 py-2 border rounded-lg text-sm"></textarea>
+                <textarea name="description" required class="w-full mt-1 px-3 py-2 border rounded-lg text-sm"></textarea>
             </div>
 
             <div>
                 <label class="text-xs text-slate-500">Assignee</label>
-                <select name="assignee_id"
-                    class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
+                <select name="assignee_id" required class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
                     <option value="">-</option>
                     @foreach($users as $user)
                         <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -37,8 +34,7 @@
 
             <div>
                 <label class="text-xs text-slate-500">Priority</label>
-                <select name="priority"
-                    class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
+                <select name="priority" required class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
                     <option value="low">Low</option>
                     <option value="medium" selected>Medium</option>
                     <option value="high">High</option>
@@ -47,8 +43,7 @@
 
             <div>
                 <label class="text-xs text-slate-500">Due Date</label>
-                <input type="date" name="due_date"
-                    class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
+                <input type="date" name="due_date" required class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
             </div>
 
             <div class="flex justify-end gap-2 pt-3">

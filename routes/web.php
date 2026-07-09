@@ -72,6 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
         Route::get('/change-requests/{project}', [ChangeRequestController::class, 'show'])->name('change-requests.show');
         Route::patch('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve'])->name('change-request.approve');
+        Route::patch('/change-requests/{changeRequest}/reject',[ChangeRequestController::class, 'reject'])->name('change-request.reject');
         // Route::resource('change-requests', ChangeRequestController::class);
     });
 
@@ -165,6 +166,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // control-budget section
         Route::get('/cost-control', [CostController::class, 'index'])->name('cost-control.index');
         Route::get('/cost-control/{project}', [CostController::class, 'show'])->name('cost-control.show');
+        Route::post('/projects/{project}/budget-items',[CostController::class, 'storeItem'])->name('projects.budget.items.store');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

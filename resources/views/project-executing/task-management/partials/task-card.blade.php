@@ -34,26 +34,30 @@
 
         <!-- Assignees -->
         <div class="flex flex-col gap-2">
-            @foreach ($task->humanResourceItems as $hr)
-                @if ($hr->teamMember)
+            @if($task->users && $task->users->count())
+                @foreach ($task->users as $user)
                     <div class="flex items-center gap-2">
-                        <div
-                            class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold">
-                            {{ strtoupper(substr($hr->teamMember->name, 0, 2)) }}
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold">
+                            {{ strtoupper(substr($user->name, 0, 2)) }}
                         </div>
                         <span class="text-xs text-slate-600">
-                            {{ $hr->teamMember->name }}
+                            {{ $user->name }}
                         </span>
                     </div>
-                @endif
-            @endforeach
+                @endforeach
+            @else
+                <span class="text-xs text-slate-400">
+                    Belum ada PIC
+                </span>
+            @endif
         </div>
 
         <!-- Date -->
         <p class="text-sm text-slate-500">
             {{ $task->due_date
                 ? \Carbon\Carbon::parse($task->due_date)->translatedFormat('d M Y')
-                : $task->created_at->format('d M Y') }}
+                : $task->created_at->format('d M Y') 
+                }}
         </p>
     </div>
 </div>

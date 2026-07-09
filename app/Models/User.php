@@ -67,4 +67,13 @@ class User extends Authenticatable
     {
         return $this->hasOne(TeamMember::class, 'user_id');
     }
+
+    public function wbsItems()
+    {
+        return $this->belongsToMany(WbsItem::class,'task_user')->withPivot([
+            'project_id',
+            'role',
+            'workload_percentage',
+        ])->withTimestamps();
+    }
 }

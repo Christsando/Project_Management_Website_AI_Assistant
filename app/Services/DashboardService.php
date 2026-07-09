@@ -7,7 +7,6 @@ use App\Models\WbsItem;
 use App\Models\TimelineItem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Models\HumanResourceItem;
 use Illuminate\Support\Collection;
 
 class DashboardService
@@ -63,8 +62,7 @@ class DashboardService
         $project = Project::with([
             'owner',
             'manager',
-            'wbsItems',
-            'wbsItems.humanResourceItems',
+            'wbsItems.users',
             'timelineItems',
             'proposal'
         ])->findOrFail($id);
@@ -73,10 +71,10 @@ class DashboardService
         $tasks = $project->wbsItems;
 
         $memberStats = $tasks->flatMap(function ($task) {
-            return $task->humanResourceItems->map(function ($hr) use ($task) {
+            return $task->users->map(function ($user) use ($task) {
                 return [
-                    'name' => $hr->person_in_charge,
-                    'role' => $hr->role_name,
+                    'name' => $user->name,
+                    'role' => $user->pivot->role ?? '-',
                     'status' => $task->kanban_status,
                 ];
             });
@@ -175,8 +173,8 @@ class DashboardService
 
             // contoh data tambahan (biar dashboard lebih hidup)
             'totalTasks' => $project->wbsItems->count(),
-            'completedTasks' => $project->wbsItems->where('status', 'done')->count(),
-            'pendingTasks' => $project->wbsItems->where('status', '!=', 'done')->count(),
+            'completedTasks' => $project->wbsItems->where('kanban_status', 'done')->count(),
+            'pendingTasks' => $project->wbsItems->where('kanban_status', '!=', 'done')->count(),
             'totalTimeline' => $project->timelineItems->count(),
             'todoTasks' => $todoTasks,
             'inProgressTasks' => $inProgressTasks,
@@ -188,7 +186,7 @@ class DashboardService
 
     private function getITTaskSummary($user)
     {
-        if (!$user->teamMember) {
+        if (!$user) {
             return [
                 'on_progress_task' => 0,
                 'todo_task' => 0,
@@ -198,8 +196,8 @@ class DashboardService
         }
 
         $tasks = WbsItem::query()
-            ->join('human_resource_items', 'wbs_items.id', '=', 'human_resource_items.wbs_item_id')
-            ->where('human_resource_items.team_member_id', $user->teamMember->id);
+            ->join('task_user', 'wbs_items.id', '=', 'task_user.wbs_item_id')
+            ->where('task_user.user_id', $user->id);
 
         return [
             'on_progress_task' => (clone $tasks)
@@ -232,10 +230,10 @@ class DashboardService
             return collect();
         }
 
-        return HumanResourceItem::query()
-            ->join('wbs_items', 'human_resource_items.wbs_item_id', '=', 'wbs_items.id')
+        return DB::table('task_user')
+            ->join('wbs_items', 'task_user.wbs_item_id', '=', 'wbs_items.id')
             ->join('projects', 'wbs_items.project_id', '=', 'projects.id')
-            ->where('human_resource_items.team_member_id', $user->teamMember->id)
+            ->where('task_user.user_id', $user->id)
             ->where('wbs_items.kanban_status', '!=', 'done')
             ->orderByRaw("
             CASE
@@ -251,25 +249,11 @@ class DashboardService
                 'wbs_items.priority',
                 'wbs_items.kanban_status',
                 DB::raw("
-                    wbs_items.created_at
-                    + (wbs_items.estimated_duration_days * interval '1 day')
-                    as due_date
-                "),
-            ])
-
-            ->orderByRaw("
-                CASE
-                    WHEN wbs_items.priority = 'high' THEN 1
-                    WHEN wbs_items.priority = 'medium' THEN 2
-                    ELSE 3
-                END
-            ")
-
-            ->orderByRaw("
                 wbs_items.created_at
                 + (wbs_items.estimated_duration_days * interval '1 day')
-            ")
-
+                as due_date
+            "),
+            ])
             ->limit(5)
             ->get();
     }

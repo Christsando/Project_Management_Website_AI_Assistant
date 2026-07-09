@@ -83,7 +83,7 @@ class GenerateRiskSuggestionJob implements ShouldQueue
                 'trace' => $e->getTraceAsString()
             ]);
 
-            //  penting: biar queue aware ini gagal
+            // penting: biar queue aware ini gagal
             throw $e;
         } finally {
             Cache::forget($lockKey);

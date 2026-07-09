@@ -16,9 +16,8 @@ class DashboardController extends Controller
     {
         $projects = Project::select('id', 'title')->get();
         $members = TeamMember::where('is_active', true)
-            ->withSum('humanResourceItems', 'workload_percentage')
             ->get()
-            ->sortByDesc('current_workload_percentage') // sekarang aman
+            ->sortByDesc('current_workload_percentage')
             ->take(5);
 
         $data = $dashboardService->getDashboardData(auth()->user());
@@ -30,15 +29,15 @@ class DashboardController extends Controller
         ]));
     }
 
-    public function detailDashboard($id,DashboardService $dashboardService){
+    public function detailDashboard($id, DashboardService $dashboardService)
+    {
         $project = Project::findOrFail($id);
         $data = $dashboardService->getDetailProjectDashboard($id);
         $projects = Project::select('id', 'title')->get();
         $projectsProposal = ProjectProposal::select('id', 'background')->get();
         $members = TeamMember::where('is_active', true)
-            ->withSum('humanResourceItems', 'workload_percentage')
             ->get()
-            ->sortByDesc('current_workload_percentage') // sekarang aman
+            ->sortByDesc('current_workload_percentage')
             ->take(5);
 
         return view('dashboard.components.detail-proyek-dashboard', array_merge($data, [

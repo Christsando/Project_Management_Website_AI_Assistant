@@ -10,6 +10,11 @@
             <div class="flex justify-between items-center pb-5">
                 <div class="flex flex-col">
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <a href="{{ route('dashboard') }}"
+                            class="text-[10px] hover:text-slate-500 font-bold text-slate-400 uppercase tracking-widest">
+                            <i class="fas fa-arrow-left text-[8px]"></i>
+                            {{ __('Kembali | ') }}
+                        </a>
                         {{ __('DASHBOARD' . ' / ' . 'PROJECT DETAIL' . ' - ' . $title) }}
                     </div>
                     <h1 class="font-semibold text-3xl">{{ $title ?? '-' }}</h1>
@@ -29,13 +34,8 @@
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 mt-6">
                 @if ($showCards)
                     @foreach ($cards as $card)
-                        <x-status-card 
-                        :label="$card['label']" 
-                        :titleColor="$card['titleColor']" 
-                        :infoColor="$card['infoColor']" 
-                        :valueColor="$card['valueColor']"
-                        :value="$card['value']" 
-                        :background="$card['background']" />
+                        <x-status-card :label="$card['label']" :titleColor="$card['titleColor']" :infoColor="$card['infoColor']" :valueColor="$card['valueColor']"
+                            :value="$card['value']" :background="$card['background']" />
                     @endforeach
                 @endif
             </div>

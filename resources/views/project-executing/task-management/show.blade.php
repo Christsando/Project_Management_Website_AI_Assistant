@@ -3,11 +3,16 @@
         <x-header-component mode="task" />
     </x-slot>
 
-    <div class="bg-white p-4 rounded-2xl border border-slate-100 h-full shadow-sm p-6 max-w-full mx-auto">
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 min-h-full h-fit shadow-sm p-6 max-w-full mx-auto">
         <div class="mb-6 flex justify-between items-center">
             <div>
                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {{ __('TASK MANAGEMENT') }}
+                    <a href="{{ route('task-management.index') }}"
+                        class="text-[10px] hover:text-slate-500 font-bold text-slate-400 uppercase tracking-widest">
+                        <i class="fas fa-arrow-left text-[8px]"></i>
+                        {{ __('Kembali | ') }}
+                    </a>
+                    {{ __('TASK MANAGEMENT') . __(' / ') . __($project->title ?? '-') }}
                 </div>
                 <h1 class="font-semibold text-3xl">{{ __('Manajamen Task') }}</h1>
                 <p class="text-sm text-slate-500">{{ __('Manage all your project task with us!') }}</p>
@@ -24,17 +29,8 @@
             </div>
         @else
             <div class="flex flex-col gap-1">
-                <div>
-                    @include('project-executing.task-management.partials.kanban-board', [
-                        'tasks' => $allTasks->groupBy('status'),
-                    ])
-                </div>
-
-                <div>
-                    @include('project-executing.task-management.partials.task-list', [
-                        'tasks' => $allTasksRaw,
-                    ])
-                </div>
+                <div>@include('project-executing.task-management.partials.kanban-board', ['tasks' => $allTasks->groupBy('status'),])</div>
+                <div>@include('project-executing.task-management.partials.task-list', ['tasks' => $allTasksRaw,])</div>
             </div>
         @endif
     </div>
@@ -44,18 +40,13 @@
 
 <script>
     const projectId = {{ $project->id ?? 'null' }};
-
     function showTaskInsight() {
         if (!projectId) return;
 
         fetch(`/task-insight/${projectId}`)
             .then(res => res.json())
             .then(res => {
-
-                if (!res.success) {
-                    console.log(res.message);
-                    return;
-                }
+                if (!res.success) {console.log(res.message);return;}
 
                 const toast = document.createElement('div');
                 toast.className = `
@@ -67,30 +58,18 @@
                 `;
 
                 toast.innerHTML = `
-                    <div class="font-semibold text-sm mb-1">
-                        Task Insight Summary
-                    </div>
-
-                    <p class="text-sm text-slate-700 text-justify">
-                        ${res.message}
-                    </p>
-
-                    <button onclick="this.parentElement.remove()" class="text-xs mt-3 text-blue-500 hover:underline">
-                        Tutup
-                    </button>
+                    <div class="font-semibold text-sm mb-1">Task Insight Summary</div>
+                    <p class="text-sm text-slate-700 text-justify">${res.message}</p>
+                    <button onclick="this.parentElement.remove()" class="text-xs mt-3 text-blue-500 hover:underline">Tutup</button>
                 `;
 
                 document.body.appendChild(toast);
 
                 // optional: auto close after 10s
-                setTimeout(() => {
-                    toast.remove();
-                }, 100000);
+                setTimeout(() => {toast.remove();}, 100000);
 
             })
-            .catch(err => {
-                console.error('Task insight error:', err);
-            });
+            .catch(err => {console.error('Task insight error:', err);});
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -145,7 +124,26 @@
         const deadline = document.getElementById('cr_deadline').value;
 
         if (!deadline) {
-            alert('Requested Deadline wajib diisi');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Peringatan',
+                text: 'Requested Deadline wajib diisi.'
+            });
+            return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const selectedDate = new Date(deadline);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        if (selectedDate < today) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Tanggal Tidak Valid',
+                text: 'Requested Deadline tidak boleh lebih kecil dari tanggal hari ini.'
+            });
             return;
         }
 
@@ -177,15 +175,32 @@
             })
             .then(res => {
                 if (res.success) {
-                    alert('Change Request berhasil dikirim');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Change Request berhasil dikirim.',
+                        confirmButtonColor: '#0f172a'
+                    });
                     closeChangeRequestModal();
                 } else {
-                    alert('Gagal submit');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: res.message ?? 'Gagal mengirim Change Request.',
+                        confirmButtonColor: '#dc2626'
+                    });
+
                 }
             })
             .catch(err => {
-                console.error('Validation/Error:', err);
-                alert(err.message ?? 'Gagal submit, cek console');
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    text: err.message ?? 'Gagal submit. Silakan coba lagi.',
+                    confirmButtonColor: '#dc2626'
+                });
+
             });
     }
 </script>

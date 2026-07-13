@@ -1,60 +1,120 @@
-<div class="max-h-full overflow-y-auto">
-    <table class="w-full">
-        <thead class="border-b-2 border-slate-400 sticky top-0 bg-white">
-            <tr class="text-slate-400">
-                <td class="w-32 text-center py-2">Status</td>
-                <td class="w-40 text-center py-2">Key</td>
-                <td class="w-60 text-left py-2">Title</td>
-                <td class="py-2">Summary</td>
-                <td class="w-40 py-2">Assigned</td>
-                <td class="w-40 py-2">Report By</td>
-            </tr>
-        </thead>
+<div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+    <div class="h-full overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr
+                    class="bg-slate-50/50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th class="px-6 py-4 w-32 text-center">Status</th>
+                    <th class="px-6 py-4 w-40 text-center">Key</th>
+                    <th class="px-6 py-4 w-64">Title</th>
+                    <th class="px-6 py-4">Summary</th>
+                    <th class="px-6 py-4 w-52">Assigned</th>
+                    <th class="px-6 py-4 w-52">Reported By</th>
+                </tr>
+            </thead>
 
-        <tbody>
-            @forelse($issues as $issue)
-                <tr class="border-b text-sm hover:bg-slate-100 cursor-pointer" onclick='openDetailModal(@json($issue))'>
-                    <td class="text-center py-4">{{ $issue->status }}</td>
-                    <td class="text-center py-4">ISS-{{ $issue->id }}</td>
-                    <td class="py-4">{{ $issue->title }}</td>
-                    <td class="py-4">{{ $issue->description }}</td>
-                    <td class="py-4">{{ $issue->assignee->name ?? '-' }}</td>
-                    <td class="py-4">{{ $issue->reporter->name ?? '-' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" class="text-center py-40 text-slate-400">
-                        <i class="fas fa-file text-5xl"></i>
-                        <p class="text-xl font-semibold">Belum ada issue</p>
-                        <p class="text-sm">Silakan membuat issue terlebih dahulu</p>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+                @forelse($issues as $issue)
+                    <tr class="hover:bg-slate-50 transition duration-150 cursor-pointer"
+                        onclick='openDetailModal(@json($issue))'>
+                        <td class="px-6 py-4 text-center">
+                            @php
+                                $statusClass = match (strtolower($issue->status)) {
+                                    'open' => 'bg-red-100 text-red-700',
+                                    'in progress' => 'bg-amber-100 text-amber-700',
+                                    'resolved' => 'bg-emerald-100 text-emerald-700',
+                                    'closed' => 'bg-slate-200 text-slate-700',
+                                    default => 'bg-slate-100 text-slate-600',
+                                };
+                            @endphp
+                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
+                                {{ ucfirst($issue->status) }}
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-4 text-center font-medium text-slate-500">
+                            ISS-{{ str_pad($issue->id, 3, '0', STR_PAD_LEFT) }}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-800">
+                                {{ $issue->title }}
+                            </div>
+
+                            @if ($issue->priority)
+                                <div class="text-[10px] text-slate-400 mt-1">
+                                    Priority : {{ ucfirst($issue->priority) }}
+                                </div>
+                            @endif
+                        </td>
+
+                        <td class="px-6 py-4 max-w-sm truncate" title="{{ $issue->description }}">
+                            {{ $issue->description }}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-7 h-7 rounded-full bg-[#0B1329] text-white flex items-center justify-center font-black text-[9px] uppercase tracking-wider">
+                                    {{ strtoupper(substr($issue->assignee->name ?? 'NA', 0, 2)) }}
+                                </div>
+                                {{ $issue->assignee->name ?? '-' }}
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-7 h-7 rounded-full bg-slate-600 text-white flex items-center justify-center font-black text-[9px] uppercase tracking-wider">
+                                    {{ strtoupper(substr($issue->reporter->name ?? 'NA', 0, 2)) }}
+                                </div>
+                                {{ $issue->reporter->name ?? '-' }}
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-20">
+                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                <i class="far fa-folder-open text-5xl mb-4"></i>
+                                <p class="text-lg font-semibold text-slate-500">
+                                    Belum ada issue
+                                </p>
+
+                                <p class="text-sm">
+                                    Silakan membuat issue terlebih dahulu.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 <script>
     let currentIssueId = null;
+
     function openDetailModal(issue) {
         currentIssueId = issue.id;
 
-        document.getElementById('detail-title').innerText = issue.title ?? '-';
-        document.getElementById('detail-description').innerText = issue.description ?? '-';
+        document.getElementById('detail-title').textContent = issue.title ?? '-';
+        document.getElementById('detail-description').textContent = issue.description ?? '-';
         document.getElementById('detail-status').value = issue.status ?? 'open';
-        document.getElementById('detail-priority').innerText = issue.priority ?? '-';
-        document.getElementById('detail-assignee').innerText = issue.assignee?.name ?? '-';
-        document.getElementById('detail-reporter').innerText = issue.reporter?.name ?? '-';
-        document.getElementById('detail-due').innerText = issue.due_date ?? '-';
+        document.getElementById('detail-priority').textContent = issue.priority ?? '-';
+        document.getElementById('detail-assignee').textContent = issue.assignee?.name ?? '-';
+        document.getElementById('detail-reporter').textContent = issue.reporter?.name ?? '-';
+        document.getElementById('detail-due').textContent = issue.due_date ?? '-';
 
-        const modal = document.getElementById('issue-detail-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        document
+            .getElementById('issue-detail-modal')
+            .classList.remove('hidden');
     }
 
     function closeDetailModal() {
-        const modal = document.getElementById('issue-detail-modal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        document
+            .getElementById('issue-detail-modal')
+            .classList.add('hidden');
     }
 
     // klik luar modal = close

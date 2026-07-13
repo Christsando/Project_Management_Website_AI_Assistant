@@ -31,7 +31,7 @@ class TaskManagementController extends Controller
     {
         $query = $project->wbsItems()
         ->with([
-            'humanResourceItems.teamMember',
+            'users',
             'timelineItem'
         ]);
 
@@ -63,7 +63,10 @@ class TaskManagementController extends Controller
         // filter by assigned task to user
         if ($request->assigned === 'me') {
             $user = auth()->user();
-            $query->whereHas('humanResourceItems.teamMember', function ($q) use ($user) {$q->where('user_id', $user->id);});
+            $query->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+
         }
 
         if ($request->priority && $request->priority !== 'all') {$query->where('priority', $request->priority);}
@@ -83,7 +86,6 @@ class TaskManagementController extends Controller
 
         $task->status_updated_by = auth()->id();
         $task->status_updated_at = now();
-
         $task->kanban_status = $request->status;
 
         if ($request->status === 'done' || $request->status === 'approved') {
@@ -103,9 +105,7 @@ class TaskManagementController extends Controller
     {
         $project = Project::findOrFail($projectId);
 
-        $tasks = $project->wbsItems()
-            ->with(['timelineItem', 'humanResourceItems'])
-            ->get();
+        $tasks = $project->wbsItems()->with(['timelineItem','users'])->get();
 
         if ($tasks->isEmpty()) {
             return response()->json([

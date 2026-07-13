@@ -6,7 +6,7 @@
     <div class="pb-12">
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 max-w-full mx-auto">
             <!-- Title section -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between pb-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-5 border-b border-slate-100 mb-6">
                 <div>
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         {{ __('PLANNING') }}</div>

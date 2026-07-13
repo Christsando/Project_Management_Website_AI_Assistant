@@ -6,7 +6,12 @@
         <div class="mb-6 flex justify-between items-center">
             <div>
                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {{ $tab === 'issue' ? 'ISSUE MANAGEMENT' : 'RISK MANAGEMENT' }}
+                    <a href="{{ route('issue-risk.index') }}"
+                        class="text-[10px] hover:text-slate-500 font-bold text-slate-400 uppercase tracking-widest">
+                        <i class="fas fa-arrow-left text-[8px]"></i>
+                        {{ __('Kembali | ') }}
+                    </a>
+                    {{ $tab === 'issue' ? 'ISSUE MANAGEMENT / ' . $project->title : 'RISK MANAGEMENT / ' . $project->title }}
                 </div>
 
                 <h1 class="font-semibold text-3xl">

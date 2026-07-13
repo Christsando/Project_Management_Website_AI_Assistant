@@ -1,23 +1,27 @@
-<div class="bg-cardSection w-full rounded-2xl p-6">
+<div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
 
-    <div class="max-h-full overflow-y-auto">
-        <table class="w-full">
-            <thead class="border-b sticky top-0 bg-cardSection z-10">
-                <tr class="text-slate-400 text-sm border-b">
-                    <th class="w-10 px-2 text-center">No.</th>
-                    <th class="text-left px-2">Task</th>
-                    <th class="text-left px-2">Before</th>
-                    <th class="text-left px-2">After</th>
-                    <th class="px-2 text-center">Status</th>
-                    <th class="text-left px-2">Requested By</th>
-                    <th class="w-32 px-2 text-center">Tanggal</th>
-                    <th class="w-32 px-2 text-center">Action</th>
+    <div class="h-full overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+
+            <thead>
+                <tr
+                    class="bg-slate-50/50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th class="px-6 py-4 w-16 text-center">No</th>
+                    <th class="px-6 py-4">Task</th>
+                    <th class="px-6 py-4">Before</th>
+                    <th class="px-6 py-4">After</th>
+                    <th class="px-6 py-4 text-center">Status</th>
+                    <th class="px-6 py-4">Requested By</th>
+                    <th class="px-6 py-4 text-center whitespace-nowrap">Tanggal</th>
+                    <th class="px-6 py-4 text-center">Aksi</th>
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+
                 @forelse ($changeRequests as $index => $cr)
-                    <tr class="border-b hover:bg-slate-50 text-sm cursor-pointer"
+
+                    <tr class="hover:bg-slate-50 transition duration-150 cursor-pointer"
                         onclick="openChangeRequestDetail({
                             title: @js($cr->wbsItem->title ?? '-'),
                             old_value: @js($cr->old_value ?? '-'),
@@ -28,64 +32,127 @@
                             requested_deadline: @js($cr->requested_deadline ? \Carbon\Carbon::parse($cr->requested_deadline)->format('d M Y') : '-'),
                             date: @js($cr->created_at?->format('d M Y') ?? '-')
                         })">
-                        <td class="text-center py-2">{{ $index + 1 }}</td>
 
-                        <td class="px-2 py-2 font-medium">
-                            {{ $cr->wbsItem->title ?? '-' }}
+                        <td class="px-6 py-4 text-center">
+                            {{ $loop->iteration }}
                         </td>
 
-                        <td class="px-2 py-2 text-slate-500 max-w-[160px] truncate" title="{{ $cr->old_value }}">
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-800">
+                                {{ $cr->wbsItem->title ?? '-' }}
+                            </div>
+
+                            <div class="text-[10px] text-slate-400 mt-1">
+                                <i class="far fa-calendar-alt text-slate-300 mr-1.5"></i>
+                                Deadline :
+                                {{ $cr->requested_deadline ? \Carbon\Carbon::parse($cr->requested_deadline)->format('d M Y') : '-' }}
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 max-w-[180px] truncate text-slate-500"
+                            title="{{ $cr->old_value }}">
                             {{ $cr->old_value ?? '-' }}
                         </td>
 
-                        <td class="px-2 py-2 text-slate-700 max-w-[160px] truncate" title="{{ $cr->new_value }}">
+                        <td class="px-6 py-4 max-w-[180px] truncate"
+                            title="{{ $cr->new_value }}">
                             {{ $cr->new_value ?? '-' }}
                         </td>
 
-                        <td class="px-2 py-2 text-center">
-                            <span
-                                class="inline-block py-1 px-2 rounded-md text-xs
-                                @if ($cr->status == 'pending') bg-orangeStatus border border-gradientOrange text-gradientOrange
-                                @elseif($cr->status == 'approved') bg-blueStatus border border-gradientBlue text-gradientBlue
-                                @elseif($cr->status == 'rejected') bg-red-400 border border-red-700 text-red-900
-                                @else bg-gray-400 @endif">
-                                {{ ucfirst($cr->status ?? '-') }}
+                        <td class="px-6 py-4 text-center">
+
+                            @php
+                                $statusClass = match($cr->status){
+                                    'pending' => 'bg-amber-100 text-amber-700',
+                                    'approved' => 'bg-emerald-100 text-emerald-700',
+                                    'rejected' => 'bg-red-100 text-red-700',
+                                    default => 'bg-slate-100 text-slate-600'
+                                };
+                            @endphp
+
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
+                                {{ ucfirst($cr->status) }}
                             </span>
+
                         </td>
 
-                        <td class="px-2 py-2">
-                            {{ $cr->requestedBy->name ?? '-' }}
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+
+                                <div
+                                    class="w-7 h-7 rounded-full bg-[#0B1329] text-white flex items-center justify-center font-black text-[9px] uppercase tracking-wider">
+
+                                    {{ strtoupper(substr($cr->requestedBy->name ?? 'PM',0,2)) }}
+
+                                </div>
+
+                                {{ $cr->requestedBy->name ?? '-' }}
+
+                            </div>
                         </td>
 
-                        <td class="text-center py-2">
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
                             {{ $cr->created_at?->format('d M Y') ?? '-' }}
                         </td>
 
-                        <td class="px-2 py-2 text-center">
-                            @if (Auth::check() && strtolower(Auth::user()->role) === 'project management officer' && $cr->status == 'pending')
-                                <form action="{{ route('change-request.approve', $cr->id) }}" method="POST"
-                                    onsubmit="return confirm('Approve change request ini?')">
-                                    @csrf
-                                    @method('PATCH')
+                        <td class="px-6 py-4 text-center">
 
-                                    <button type="submit"
-                                        class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
-                                        Approve
-                                    </button>
-                                </form>
+                            @if (Auth::check() && strtolower(Auth::user()->role) === 'project management officer' && $cr->status == 'pending')
+
+                                <div class="flex justify-center gap-2">
+
+                                    <form action="{{ route('change-request.approve', $cr->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Approve change request ini?')">
+
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <button type="submit"
+                                            class="inline-flex items-center justify-center px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition">
+                                            Approve
+                                        </button>
+
+                                    </form>
+
+                                    <form action="{{ route('change-request.reject', $cr->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Reject change request ini?')">
+
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <button type="submit"
+                                            class="inline-flex items-center justify-center px-3 py-2 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition">
+                                            Reject
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
                             @else
-                                <span class="text-slate-400 text-xs">-</span>
+
+                                <span class="text-slate-300">-</span>
+
                             @endif
+
                         </td>
+
                     </tr>
+
                 @empty
+
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-slate-400 text-sm">
-                            Belum ada change request untuk project ini
+                        <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                            Belum ada change request untuk project ini.
                         </td>
                     </tr>
+
                 @endforelse
+
             </tbody>
+
         </table>
     </div>
 </div>

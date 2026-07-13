@@ -1,6 +1,7 @@
 <table class="w-full text-left border-collapse">
     <thead>
-        <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <tr
+            class="bg-slate-50/50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
             @if ($isEditable)
                 <th class="py-4 px-6">{{ __('ITEM WBS') }}</th>
             @endif
@@ -19,37 +20,35 @@
     </thead>
     <tbody class="divide-y divide-slate-50 text-xs">
         @foreach ($groupedItems as $memberId => $items)
-        @php
-            $item = $items->first();
+            @php
+                $item = $items->first();
 
-            $memberData = $memberWorkloads[$item->team_member_id] ?? null;
-            $total = $memberData['total_workload'] ?? 0;
+                $memberData = $memberWorkloads[$item->team_member_id] ?? null;
+                $total = $memberData['total_workload'] ?? 0;
 
-            if ($total > 85) {
-                $barColor = 'bg-rose-500';
-                $label = 'OVERLOAD';
-                $labelClass = 'text-rose-500';
-            } elseif ($total >= 60) {
-                $barColor = 'bg-slate-700';
-                $label = 'OPTIMAL';
-                $labelClass = 'text-slate-700';
-            } else {
-                $barColor = 'bg-slate-400';
-                $label = 'UNDERLOAD';
-                $labelClass = 'text-slate-500';
-            }
-        @endphp
+                if ($total > 85) {
+                    $barColor = 'bg-rose-500';
+                    $label = 'OVERLOAD';
+                    $labelClass = 'text-rose-500';
+                } elseif ($total >= 60) {
+                    $barColor = 'bg-slate-700';
+                    $label = 'OPTIMAL';
+                    $labelClass = 'text-slate-700';
+                } else {
+                    $barColor = 'bg-slate-400';
+                    $label = 'UNDERLOAD';
+                    $labelClass = 'text-slate-500';
+                }
+            @endphp
             <tr class="hover:bg-slate-50/30 transition duration-150">
 
                 <!-- wbs item koom -->
                 @if ($isEditable)
                     <td class="py-4 px-6 max-w-[160px]">
-                        @foreach ($items as $task)
-                            @if ($task->wbsItem)
-                                <div class="font-extrabold text-slate-800 text-xs truncate">
-                                    • {{ $task->wbsItem->title }}
-                                </div>
-                            @endif
+                        @foreach ($memberTasks[$item->team_member_id] ?? collect() as $task)
+                            <div class="font-extrabold text-slate-800 text-xs truncate" title="{{ $task->title }}">
+                                • {{ $task->title }}
+                            </div>
                         @endforeach
                     </td>
                 @endif
@@ -106,12 +105,13 @@
                                 @php
                                     $memberData = $memberWorkloads[$item->team_member_id] ?? null;
                                 @endphp
-                                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden flex-1 mr-2 border border-slate-200/50">
+                                <div
+                                    class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden flex-1 mr-2 border border-slate-200/50">
                                     <div class="h-full rounded-full {{ $barColor }}"
                                         style="width: {{ $total }}%">
                                     </div>
                                 </div>
-                                
+
                                 <span class="font-mono">
                                     {{ $memberData['total_workload'] ?? 0 }}%
                                 </span>
@@ -128,7 +128,8 @@
                 @if ($isEditable)
                     <td class="py-4 px-6 ">
                         @if ($item->estimated_work_days)
-                            <p class="font-extrabold text-right text-xs text-slate-600">{{ $memberData['total_days'] ?? 0 }} Hari</p>
+                            <p class="font-extrabold text-right text-xs text-slate-600">
+                                {{ $memberData['total_days'] ?? 0 }} Hari</p>
                         @else
                             -
                         @endif
@@ -154,7 +155,9 @@
                                 </button>
                             </div>
                             <div class="py-1">
-                                <form action="{{ route('projects.human-resource.items.delete', [$project->id, $item->id]) }}" method="POST" class="w-full"
+                                <form
+                                    action="{{ route('projects.human-resource.items.delete', [$project->id, $item->id]) }}"
+                                    method="POST" class="w-full"
                                     onsubmit="return confirm('Apakah Anda yakin ingin menghapus item perencanaan SDM ini?');">
                                     @csrf
                                     @method('DELETE')

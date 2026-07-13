@@ -11,17 +11,9 @@
             <span class="text-xs font-bold text-slate-700 truncate">
                 {{ $wbs->title }}
             </span>
-            @php
-                $assignedMembers = $hrItems->where('wbs_item_id', $wbs->id);
-                $names = $assignedMembers
-                    ->map(function ($item) {
-                        return $item->teamMember->name;
-                    })
-                    ->implode(', ');
-            @endphp
 
             <span class="text-xs text-slate-400">
-                PIC: {{ $names ?: '-' }}
+                PIC: {{ $wbs->users->pluck('name')->implode(', ') ?: '-' }}
             </span>
         </div>
     </div>

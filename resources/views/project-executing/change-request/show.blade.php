@@ -7,7 +7,12 @@
         <div class="mb-6 flex justify-between items-center">
             <div>
                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {{ __('CHANGE REQUEST') }}
+                    <a href="{{ route('change-requests.index') }}"
+                        class="text-[10px] hover:text-slate-500 font-bold text-slate-400 uppercase tracking-widest">
+                        <i class="fas fa-arrow-left text-[8px]"></i>
+                        {{ __('Kembali | ') }}
+                    </a>
+                    {{ __('CHANGE REQUEST') . __(' / ') . __($project->title ?? '-')}}
                 </div>
                 <h1 class="font-semibold text-3xl">{{ __('Change Request') }}</h1>
                 <p class="text-sm text-slate-500">{{ __('Need to evaluate about the task? Let us help!') }}</p>

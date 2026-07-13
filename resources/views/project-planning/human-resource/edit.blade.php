@@ -362,7 +362,7 @@
             if (selectedOpt && selectedOpt.value !== '') {
                 const role = selectedOpt.getAttribute('data-role');
                 const skills = selectedOpt.getAttribute('data-skills');
-                const workload = selectedOpt.getAttribute('data-workload'); // ✅ FIX
+                const workload = selectedOpt.getAttribute('data-workload');
                 const remaining = selectedOpt.getAttribute('data-remaining');
                 const status = selectedOpt.getAttribute('data-status');
 

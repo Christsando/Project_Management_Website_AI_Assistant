@@ -1,29 +1,58 @@
-<div id="issue-detail-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-xl rounded-2xl shadow-lg p-6 relative overflow-visible">
+<div id="issue-detail-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
 
-        <!-- header -->
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold">Issue Detail</h2>
-            <button onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+
+        <!-- Overlay -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeDetailModal()">
         </div>
 
-        <!-- content -->
-        <div class="space-y-3 text-sm">
-            <div>
-                <span class="text-slate-400">Title</span>
-                <p id="detail-title" class="font-medium"></p>
-            </div>
+        <!-- Modal -->
+        <div
+            class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between">
 
-            <div>
-                <span class="text-slate-400">Description</span>
-                <p id="detail-description"></p>
-            </div>
+                <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-bug"></i>
+                    Issue Detail
+                </h3>
 
-            <div class="grid grid-cols-2 gap-4">
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="px-6 py-5 space-y-5">
+
+                <!-- Title -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Title
+                    </label>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p id="detail-title" class="text-sm font-semibold"></p>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Description
+                    </label>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 min-h-[100px]">
+                        <p id="detail-description" class="text-sm whitespace-pre-line"></p>
+                    </div>
+                </div>
+
+                <!-- Status & Priority -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <span class="text-slate-400">Status</span>
-                        <select id="detail-status" class="w-full border rounded px-2 py-1 text-sm">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            Status
+                        </label>
+
+                        <select id="detail-status"
+                            class="w-full rounded-xl border-slate-200 text-xs shadow-sm focus:border-slate-800 focus:ring-slate-100">
                             <option value="open">Open</option>
                             <option value="in_progress">In Progress</option>
                             <option value="done">Done</option>
@@ -32,30 +61,63 @@
                     </div>
 
                     <div>
-                        <span class="text-slate-400">Priority</span>
-                        <p id="detail-priority"></p>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            Priority
+                        </label>
+
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p id="detail-priority"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignee & Reporter -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            Assignee
+                        </label>
+
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p id="detail-assignee"></p>
+                        </div>
                     </div>
 
                     <div>
-                        <span class="text-slate-400">Assignee</span>
-                        <p id="detail-assignee"></p>
-                    </div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            Reporter
+                        </label>
 
-                    <div>
-                        <span class="text-slate-400">Reporter</span>
-                        <p id="detail-reporter"></p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p id="detail-reporter"></p>
+                        </div>
                     </div>
+                </div>
 
-                    <div>
-                        <span class="text-slate-400">Due Date</span>
+                <!-- Due Date -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Due Date
+                    </label>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <p id="detail-due"></p>
                     </div>
                 </div>
             </div>
 
-            <button onclick="updateStatus(currentIssueId)" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
-                Update Status
-            </button>
+            <!-- Footer -->
+            <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex justify-end gap-2">
+                <button onclick="closeDetailModal()"
+                    class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold hover:bg-slate-100">
+                    Close
+                </button>
+
+                <button onclick="updateStatus(currentIssueId)"
+                    class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">
+                    Update Status
+                </button>
+            </div>
         </div>
     </div>
 </div>

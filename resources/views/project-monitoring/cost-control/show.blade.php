@@ -39,7 +39,6 @@
             <!-- KPI -->
             <div class="w-80 shrink-0">
                 <div class="grid gap-4">
-
                     <div
                         class="rounded-xl p-4 shadow-sm bg-gradient-to-br from-green-500 to-emerald-600 text-white hover:scale-[1.01] transition-all">
                         <p class="text-sm text-white/80">Remaining</p>

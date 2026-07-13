@@ -115,8 +115,8 @@ class HumanResourceService
 
             if (!$member->user) {
                 $memberWorkloads[$member->id] = [
-                    'total_workload'=>0,
-                    'total_days'=>0
+                    'total_workload' => 0,
+                    'total_days' => 0
                 ];
                 continue;
             }
@@ -128,8 +128,8 @@ class HumanResourceService
                 ->get();
 
             $memberWorkloads[$member->id] = [
-                'total_workload' => $tasks->sum(fn($task)=> $task->pivot->workload_percentage ?? 0),
-                'total_days'=>$tasks->sum(fn($task)=>optional($task->timelineItem)->duration_days ?? 0),
+                'total_workload' => $tasks->sum(fn($task) => $task->pivot->workload_percentage ?? 0),
+                'total_days' => $tasks->sum(fn($task) => optional($task->timelineItem)->duration_days ?? 0),
             ];
         }
 
@@ -146,13 +146,13 @@ class HumanResourceService
                 continue;
             }
             $directTasks = $member->user
-            ->wbsItems()
-            ->wherePivot('is_inherited', false)
-            ->with([
-                'children.timelineItem',
-                'timelineItem'
-            ])
-            ->get();
+                ->wbsItems()
+                ->wherePivot('is_inherited', false)
+                ->with([
+                    'children.timelineItem',
+                    'timelineItem'
+                ])
+                ->get();
             $memberTasks[$member->id] = $this->getExpandedTasks($directTasks);
         }
         return collect($memberTasks);
@@ -163,7 +163,9 @@ class HumanResourceService
         $tasks = collect();
         foreach ($wbsItems as $wbs) {
             $tasks->push($wbs);
-            if ($wbs->children->count()) {$tasks = $tasks->merge($this->getExpandedTasks($wbs->children));}
+            if ($wbs->children->count()) {
+                $tasks = $tasks->merge($this->getExpandedTasks($wbs->children));
+            }
         }
 
         return $tasks;
@@ -188,11 +190,35 @@ class HumanResourceService
 
     public function assignMembers(Project $project, int $wbsId, array $memberIds, array $workloads)
     {
+        if (count($memberIds) !== count(array_unique($memberIds))) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Member yang sama tidak boleh dipilih lebih dari satu kali.')
+                ->throwResponse();
+        }
+
         DB::transaction(function () use ($project, $wbsId, $memberIds, $workloads) {
             $wbsIds = $this->getAllChildWbsIds($wbsId);
 
             foreach ($memberIds as $index => $memberId) {
                 $member = TeamMember::with('user')->findOrFail($memberId);
+                $currentWorkload = DB::table('task_user')
+                    ->where('user_id', $member->user_id)
+                    ->sum('workload_percentage');
+
+                $newWorkload = $workloads[$index] ?? 0;
+
+                if (($currentWorkload + $newWorkload) > 90) {
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with(
+                            'error',
+                            "{$member->name} tidak memiliki workload yang cukup. Sisa workload: " . (90 - $currentWorkload) . "%"
+                        )
+                        ->throwResponse();
+                }
 
                 foreach ($wbsIds as $id) {
                     DB::table('task_user')->updateOrInsert(
@@ -203,7 +229,7 @@ class HumanResourceService
                         ],
                         [
                             'role' => $member->role_name,
-                            'workload_percentage' => $id == $wbsId 
+                            'workload_percentage' => $id == $wbsId
                                 ? ($workloads[$index] ?? 0)
                                 : 0,
                             'is_inherited' => $id != $wbsId,
@@ -231,8 +257,12 @@ class HumanResourceService
     public function addItem(Project $project, Request $request)
     {
         $hrPlan = $project->humanResourcePlan;
-        if (!$hrPlan) {abort(404, 'HR Plan tidak ditemukan.');}
-        if ($hrPlan->status === 'finalized') {abort(403, 'HR Plan sudah difinalisasi.');}
+        if (!$hrPlan) {
+            abort(404, 'HR Plan tidak ditemukan.');
+        }
+        if ($hrPlan->status === 'finalized') {
+            abort(403, 'HR Plan sudah difinalisasi.');
+        }
 
         $this->validateDuplicateMember($hrPlan, $request);
         $this->validateRequiredSelection($request);
@@ -246,7 +276,7 @@ class HumanResourceService
             : null;
 
         $this->validateMemberCapacity($teamMember, $request);
-        $this->createHrItem($hrPlan,$teamMember,$wbs,$request);
+        $this->createHrItem($hrPlan, $teamMember, $wbs, $request);
     }
 
     private function validateDuplicateMember($hrPlan, Request $request)
@@ -281,7 +311,9 @@ class HumanResourceService
 
     private function validateMemberCapacity($teamMember, Request $request)
     {
-        if (!$teamMember) {return;}
+        if (!$teamMember) {
+            return;
+        }
         $newWorkload = $request->workload_percentage ?: 0;
         $totalWorkload = $teamMember->current_workload_percentage + $newWorkload;
         if ($totalWorkload > $teamMember->default_capacity_percentage) {
@@ -317,8 +349,12 @@ class HumanResourceService
     {
         $hrPlan = $project->humanResourcePlan;
 
-        if (!$hrPlan || $humanResourceItem->human_resource_plan_id !== $hrPlan->id) {abort(404, 'Item perencanaan SDM tidak sesuai dengan proyek ini.');}
-        if ($hrPlan->status === 'finalized') {abort(403, 'HR Plan sudah difinalisasi.');}
+        if (!$hrPlan || $humanResourceItem->human_resource_plan_id !== $hrPlan->id) {
+            abort(404, 'Item perencanaan SDM tidak sesuai dengan proyek ini.');
+        }
+        if ($hrPlan->status === 'finalized') {
+            abort(403, 'HR Plan sudah difinalisasi.');
+        }
 
         $wbs = $request->wbs_item_id
             ? WbsItem::find($request->wbs_item_id)

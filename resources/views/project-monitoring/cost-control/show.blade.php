@@ -41,7 +41,7 @@
                 <div class="grid gap-4">
                     <div
                         class="rounded-xl p-4 shadow-sm bg-gradient-to-br from-green-500 to-emerald-600 text-white hover:scale-[1.01] transition-all">
-                        <p class="text-sm text-white/80">Remaining</p>
+                        <p class="text-sm text-white/80">Remaining / Variance</p>
                         <h2 class="text-2xl font-black">
                             Rp {{ number_format($remaining, 0, ',', '.') }},-
                         </h2>
@@ -63,32 +63,38 @@
                         </h2>
                     </div>
 
-                    <div
-                        class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:scale-[1.01] transition-all">
-                        <p class="text-sm text-slate-500">Usage</p>
-                        <h2
-                            class="text-2xl font-bold {{ $usage > 100 ? 'text-red-500' : ($usage > 80 ? 'text-yellow-500' : 'text-green-500') }}">
-                            {{ number_format($usage, 0) }}%
-                        </h2>
+                    <div class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:scale-[1.01] transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-slate-500">Budget Usage</p>
+
+                            <span
+                                class="text-lg font-bold
+                                {{ $usage > 100 ? 'text-red-500' : ($usage > 80 ? 'text-yellow-500' : 'text-green-500') }}">
+                                {{ number_format($usage, 0) }}%
+                            </span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                                class="h-full rounded-full transition-all duration-700
+                                {{ $usage > 100 ? 'bg-red-500' : ($usage > 80 ? 'bg-yellow-500' : 'bg-green-500') }}"
+                                style="width: {{ min($usage, 100) }}%">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between mt-2 text-[11px] text-slate-400 font-medium">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Alerts -->
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-            <h3 class="font-semibold text-red-600">
-                Cost Alerts
-            </h3>
-
-            <ul class="mt-2 text-sm list-disc pl-5">
-                @forelse($alerts as $alert)
-                    <li class="text-red-500">{{ $alert }}</li>
-                @empty
-                    <li class="text-green-500">Semua biaya masih aman</li>
-                @endforelse
-            </ul>
-        </div>
+        @include('project-monitoring.cost-control.partials.footer-ai-analysis')
     </div>
     @include('project-monitoring.cost-control.partials.add-item-modal')
 </x-app-layout>

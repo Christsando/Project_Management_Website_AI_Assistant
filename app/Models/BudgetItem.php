@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\BudgetExpense;
 
 class BudgetItem extends Model
 {
@@ -30,6 +31,26 @@ class BudgetItem extends Model
         'unit_cost' => 'decimal:2',
         'total_cost' => 'decimal:2',
     ];
+    
+    public function expenses()
+    {
+        return $this->hasMany(BudgetExpense::class);
+    }
+
+    public function getActualCostAttribute()
+    {
+        return $this->expenses()->sum('amount');
+    }
+
+    public function getVarianceAttribute()
+    {
+        return $this->total_cost - $this->actual_cost;
+    }
+
+    public function getRemainingBudgetAttribute()
+    {
+        return max(0, $this->variance);
+    }
 
     /**
      * Get the budget plan this item belongs to.

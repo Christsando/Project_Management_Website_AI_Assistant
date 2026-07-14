@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\BudgetPlan;
 use App\Models\BudgetItem;
+use App\Models\BudgetExpense;
+use App\Services\CostInsightService;
 
 class CostController extends Controller
 {
@@ -56,16 +58,25 @@ class CostController extends Controller
 
         $budgetItems = \App\Models\BudgetItem::where('budget_plan_id', $budgetPlan->id)->get();
         $planned = $budgetPlan->total_budget;
-        $actual = $budgetItems->sum('actual_cost');
+        $budgetItems = BudgetItem::with('expenses')
+            ->where('budget_plan_id', $budgetPlan->id)
+            ->get();
+        $actual = $budgetItems->sum(function ($item) {
+            return $item->expenses->sum('amount');
+        });
         $remaining = $planned - $actual;
         $usage = $planned > 0 ? ($actual / $planned) * 100 : 0;
+        $breakdown = $budgetItems->map(function ($item) {
 
-        $breakdown = $budgetItems->groupBy('category')->map(function ($items) {
+            $actual = $item->expenses->sum('amount');
+
             return [
-                'description' => $items->pluck('description')->implode(', '),
-                'planned' => $items->sum('total_cost'),
-                'actual' => $items->sum('actual_cost'),
-                'variance' => $items->sum('total_cost') - $items->sum('actual_cost'),
+                'id' => $item->id,
+                'category' => $item->category,
+                'description' => $item->description,
+                'planned' => $item->total_cost,
+                'actual' => $actual,
+                'variance' => $item->total_cost - $actual,
             ];
         });
 
@@ -135,5 +146,50 @@ class CostController extends Controller
         ]);
 
         return back()->with('success', 'Budget item berhasil ditambahkan.');
+    }
+
+    public function storeExpense(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'budget_item_id' => 'required|exists:budget_items,id',
+            'amount' => 'required|numeric|min:1',
+            'expense_date' => 'required|date',
+            'description' => 'nullable|string',
+        ]);
+
+        $budgetItem = BudgetItem::findOrFail($validated['budget_item_id']);
+
+        BudgetExpense::create([
+            'budget_item_id' => $budgetItem->id,
+            // isi title mengikuti budget item
+            'title' => $budgetItem->category,
+            'description' => $budgetItem->description,
+            'amount' => $validated['amount'],
+            'expense_date' => $validated['expense_date'],
+            'created_by' => auth()->id(),
+        ]);
+
+        return back()->with(
+            'success',
+            'Expense berhasil dicatat.'
+        );
+    }
+
+    public function generateInsight(Project $project, CostInsightService $costInsightService) {
+        $result = $costInsightService->analyze($project);
+        // return response()->json($result);
+
+        if (!$result['success']) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => json_decode($result['data'], true)
+        ]);
     }
 }

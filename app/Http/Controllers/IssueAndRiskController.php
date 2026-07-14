@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Models\RiskManagementPlan;
 use App\Models\RiskItem;
 use App\Helpers\RiskSuggestionHelper;
+use App\Models\HumanResourcePlan;
+use App\Models\HumanResourceItem;
 
 
 class IssueAndRiskController extends Controller
@@ -23,7 +25,20 @@ class IssueAndRiskController extends Controller
     public function show(Request $request,  Project $project)
     {
         $tab = $request->get('tab', 'issue');
-        $users = User::all();
+        $plan = HumanResourcePlan::where('project_id', $project->id)->first();
+
+        $users = collect();
+
+        if ($plan) {
+            $users = HumanResourceItem::with('teamMember.user')
+                ->where('human_resource_plan_id', $plan->id)
+                ->get()
+                ->pluck('teamMember.user')
+                ->filter()
+                ->unique('id')
+                ->values();
+        }
+
         $issues = null;
         $query = Issue::with(['assignee', 'reporter'])->where('project_id', $project->id);
 
@@ -82,8 +97,11 @@ class IssueAndRiskController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required',
-            'priority' => 'required',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'assignee_id' => 'required|exists:users,id',
+            'priority' => 'required|in:low,medium,high',
+            'due_date' => 'required|date|after_or_equal:today',
         ]);
 
         Issue::create([

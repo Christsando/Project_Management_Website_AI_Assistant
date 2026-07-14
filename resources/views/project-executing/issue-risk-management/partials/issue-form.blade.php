@@ -43,7 +43,7 @@
 
             <div>
                 <label class="text-xs text-slate-500">Due Date</label>
-                <input type="date" name="due_date" required class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
+                <input type="date" name="due_date" min="{{ now()->toDateString() }}" required class="w-full mt-1 px-3 py-2 border rounded-lg text-sm">
             </div>
 
             <div class="flex justify-end gap-2 pt-3">

@@ -166,6 +166,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // control-budget section
         Route::get('/cost-control', [CostController::class, 'index'])->name('cost-control.index');
         Route::get('/cost-control/{project}', [CostController::class, 'show'])->name('cost-control.show');
+        Route::post('/cost-control/{project}/expense',[CostController::class, 'storeExpense'])->name('cost-control.expense.store');
+        Route::post('/cost-control/{project}/generate-insight',[CostController::class, 'generateInsight'])->name('cost-control.generate-insight');
         Route::post('/projects/{project}/budget-items',[CostController::class, 'storeItem'])->name('projects.budget.items.store');
     });
 

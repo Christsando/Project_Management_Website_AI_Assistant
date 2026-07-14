@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
@@ -74,7 +75,7 @@ class Project extends Model
     /**
      * Get the WBS items associated with the project.
      */
-    public function wbsItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function wbsItems(): HasMany
     {
         return $this->hasMany(WbsItem::class, 'project_id');
     }
@@ -82,7 +83,7 @@ class Project extends Model
     /**
      * Get the timeline items associated with the project.
      */
-    public function timelineItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function timelineItems(): HasMany
     {
         return $this->hasMany(TimelineItem::class, 'project_id');
     }
@@ -109,5 +110,10 @@ class Project extends Model
     public function riskPlan(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(RiskManagementPlan::class, 'project_id');
+    }
+
+    public function meetingSchedules(): HasMany
+    {
+        return $this->hasMany(MeetingSchedule::class);
     }
 }

@@ -15,7 +15,7 @@
                     {{ __('COST CONTROL') . __(' / ') . __($project->title ?? '-') }}
                 </div>
                 <h1 class="font-semibold text-3xl">{{ __('Cost Control') }}</h1>
-                <p class="text-sm text-slate-500">{{ __('Monitoring your ptoject budget here.') }}</p>
+                <p class="text-sm text-slate-500">{{ __('Monitoring your project budget here.') }}</p>
             </div>
         </div>
 

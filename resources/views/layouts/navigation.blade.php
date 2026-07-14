@@ -26,6 +26,14 @@
                 </x-nav-link>
             @endif
 
+            @if (Auth::check() && in_array(strtolower(Auth::user()->role), ['project management officer','project manager','manager','it']))
+                <x-nav-link :active="request()->routeIs('meeting-schedules.*')"
+                    href="{{ route('meeting-schedules.index') }}">
+                    <i class="fas fa-calendar-check text-base"></i>
+                    <span>{{ __('Meeting Schedule') }}</span>
+                </x-nav-link>
+            @endif
+
             <x-nav-link :active="request()->routeIs('teamManagement')" href="{{ route('teamManagement') }}">
                 <i class="fas fa-users text-base"></i>
                 <span>{{ __('Manajemen Tim') }}</span>

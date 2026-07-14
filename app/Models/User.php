@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -75,5 +76,10 @@ class User extends Authenticatable
             'role',
             'workload_percentage',
         ])->withTimestamps();
+    }
+
+    public function createdMeetings(): HasMany
+    {
+        return $this->hasMany(MeetingSchedule::class, 'created_by');
     }
 }

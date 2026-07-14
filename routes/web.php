@@ -17,14 +17,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IssueAndRiskController;
 use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\MeetingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/risk-suggestion/{projectId}/status', [IssueAndRiskController::class, 'riskSuggestionStatus'])->name('risk-suggestion.status');
-
-Route::get('/', function () {
-    return view('auth/login');
-});
-
+Route::get('/', function () {return view('auth/login');});
 Route::post('/change-requests', [ChangeRequestController::class, 'store'])->name('change-requests.store');
 
 
@@ -32,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/{id}', [DashboardController::class, 'detailDashboard'])->name('proyek.dashboard');
     Route::get('/report/weekly/{projectId}', [ReportController::class, 'weekly'])->name('report.weekly');
+    Route::resource('meeting-schedules', MeetingController::class);
 
     // Project Initiation (Project Manager & Manager)
     Route::middleware('role:project_manager,manager')->group(function () {

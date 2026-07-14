@@ -8,6 +8,7 @@ use App\Models\TimelineItem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use App\Models\MeetingSchedule;
 
 class DashboardService
 {
@@ -46,13 +47,27 @@ class DashboardService
                 return $card;
             });
 
+        $nextMeeting = MeetingSchedule::with('project')
+            ->where('status', 'Scheduled')
+            ->where(function ($query) {
+                $query->whereDate('meeting_date', '>', now()->toDateString())
+                    ->orWhere(function ($query) {
+                        $query->whereDate('meeting_date', now()->toDateString())
+                            ->whereTime('start_time', '>=', now()->format('H:i:s'));
+                    });
+            })
+            ->orderBy('meeting_date')
+            ->orderBy('start_time')
+            ->first();
+
         return [
             'showCards' => count($cards) > 0,
             'cards' => $cards,
             'recentProjects' => $this->getRecentProjects($projectQuery),
             'nextActions' => $this->getNextActions($user),
             'assignedTask' => $this->getAssignedTask($user),
-            'projectAnalytics' => $data['projectAnalytics']
+            'projectAnalytics' => $data['projectAnalytics'],
+            'nextMeeting' => $nextMeeting,
         ];
     }
 
